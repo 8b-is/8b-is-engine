@@ -1,9 +1,19 @@
 # Integrations — UE · Unity · Blender · Steam
 
 *The rule: the **seed is the source of truth; the engines are renders.**
-One deterministic world — Blender gets it as a scene, Unity as a prefab,
-Unreal as a UClass, Steam as a platform. The theory: a world is a geometry
-of admissible continuation; these are its surfaces.*
+One deterministic world — Blender gets it as a scene, Unity as an
+importer, Unreal as a UClass, Steam as the storefront. The I/O HAL speaks
+everything since the 60s/70s; the *shipping* platforms are **macOS
+(Apple Silicon) + Linux (Ubuntu) on Steam**.*
+
+## the platform truth
+
+| Question | Answer |
+|---|---|
+| Dev hosts (current) | macOS Apple Silicon + Linux (Ubuntu) |
+| Player targets (current) | macOS (Metal) + Linux (Vulkan) — shipped on **Steam** |
+| Portability doctrine | the I/O HAL: every device since the 60s/70s (TTY/RS-232 110–115200 baud, HID/evdev, VT100/ANSI, Steam Input) is a device class — one engine, every surface |
+| UE / Unity / Blender | integration *seams* — renders of the seed, never the shipping requirement |
 
 ---
 
@@ -12,9 +22,9 @@ of admissible continuation; these are its surfaces.*
 | Target | The seam | Status | Ships |
 |---|---|---|---|
 | **Blender** | `scene` modality → `scene_builder.ts` → EEVEE | **native, verified** | `seed → manifest → .scene.py → PNG` (2 renders shipped) |
-| **Unity** | vaked-mcp (`unity_batch`, `unity_peek`) + the Unity Cloud Python SDK | **wired** | batch editor methods; asset-manager upload/download |
+| **Unity** | vaked-mcp (`unity_batch`, `unity_peek`) + `unity3d/scene_builder.ts` importer + the Cloud SDK | **wired** | seed manifest → `VakedSceneImporter.Build` in the editor |
 | **Unreal Engine 5** | [Uika](https://github.com/VioletHelianthus/uika) (Rust↔UE FFI) + vaked-lsp (clangd/UE C++) | **seam documented** | Rust DLL → UE plugin; hot reload via `Uika.Reload` |
-| **Steam** | Steamworks SDK; the I/O HAL's Steam Input device class | **target** | macOS + Linux via wgpu; Steam Deck native Vulkan |
+| **Steam** | Steamworks SDK; the I/O HAL's Steam Input device class | **the shipping lane** | macOS (Metal) + Linux (Vulkan) via wgpu; Steam Deck native Vulkan |
 
 ## Blender — the export lane (live)
 
@@ -34,13 +44,14 @@ blender --background --python out/<n>.scene.py            → out/<n>.png (EEVEE
 - **vaked-mcp**: `unity_batch "<EditorMethod>"` runs a method in batch mode
   (`-batchmode -quit -executeMethod ...`); `unity_peek <asset>` inspects a
   scene asset with no editor. The umbrella dispatches both.
+- **The exporter** (`centerfugeq/unity3d/scene_builder.ts`): consumes the
+  *same* seed manifest as the Blender lane and emits
+  `VakedSceneImporter.cs`; run it in the editor via `unity_batch
+  VakedSceneImporter.Build`. One manifest, two hosts.
 - **Unity Cloud SDK** (`vaked-lsp/unity-cloud`, `uv run python cli.py`):
   auth (user or service account), projects/assets/search, dataset
-  upload/download — wire the exported seed manifest + PNGs into Cloud
+  upload/download — wire the exported seed manifest + renders into Cloud
   Asset Manager.
-- **The prefab seam**: export the seed board as a Unity-compatible layout —
-  a `scene_builder-unity.ts` sibling that emits a `.prefab`/scene from the
-  same manifest `scene_builder.ts` consumes (one manifest, two hosts).
 
 ## Unreal Engine 5
 

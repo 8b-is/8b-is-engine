@@ -304,8 +304,11 @@ Large binaries (sprites, audio, renders) are git-LFS pointers tracked by
 
 - **Browser floors**: any modern browser, no install — the current playable
   surface (pocoo.vaked.dev).
-- **Steam target**: macOS (Metal) + Linux (Vulkan) via wgpu; Steam Deck
-  native Vulkan; mobile + Windows via the Unity/Uika surfaces.
+- **Steam (the shipping lane)**: **macOS (Metal) + Linux/Ubuntu (Vulkan)**
+  via wgpu; Steam Deck native Vulkan. UE/Unity/Blender are integration
+  seams (renders of the seed), not shipping requirements — the I/O HAL
+  speaks everything since the 60s/70s, so every future surface is a device
+  class, not a port.
 
 ---
 
