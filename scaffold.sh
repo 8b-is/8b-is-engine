@@ -16,7 +16,7 @@ warn() { printf '%s!!%s  %s\n' "$YEL" "$RST" "$*"; }
 die()  { printf '%sxx%s  %s\n' "$RED" "$RST" "$*" >&2; exit 1; }
 
 # ── the utility deps the engine lanes need ────────────────────────────────
-UTILS=(jj uv cargo go just node gh wrangler)
+UTILS=(jj uv cargo go just node gh wrangler rg bat fd eza zoxide delta container)
 JJ_VERSION="v0.45.1"
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -57,6 +57,8 @@ install_dep() {
     node)    if have brew; then brew install node; elif have dnf; then sudo dnf install -y nodejs; else warn "install node manually"; fi;;
     gh)      if have brew; then brew install gh; elif have dnf; then sudo dnf install -y gh; else warn "install gh manually"; fi;;
     wrangler) if have npm; then npm install -g wrangler; else warn "install wrangler via npm"; fi;;
+    rg|bat|fd|eza|zoxide|delta) if have brew; then brew install "$d"; elif have cargo; then cargo install "$d"; else warn "install $d manually"; fi;;
+    container) warn "Apple Containers: see github.com/apple/container (macOS 26+, Apple Silicon)";;
     *) warn "unknown dep $d";;
   esac
 }

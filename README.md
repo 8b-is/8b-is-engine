@@ -68,6 +68,7 @@ world.
 | Add-ons | Luau via mlua | WoW-style Interface/AddOns, Vaked API, capability-gated |
 | Editor LSP | [vaked-lsp](https://github.com/peterlodri-sec/vaked-lsp) | one gateway: clangd + rust-analyzer + gopls + luau-lsp behind one endpoint |
 | Installer | scaffold.sh | self-contained bash: deps + QWave + project scaffold |
+| VCS | [jj](https://github.com/martinvonz/jj) | jujutsu on the git backend — `jj st` · `jj describe` · `jj git push` (wired in by scaffold.sh) |
 | Toolchain | just / Taskfile | mold/wild linkers, Naga shader validation, wasm32 targets |
 | Deployment | K8s + sidecar mesh | SpatialNode CRDs, chat zone pods, NATS master bus |
 | Platform | macOS + Linux + Steam | Steam Deck native Vulkan, macOS Metal, mobile, web |
