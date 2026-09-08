@@ -37,6 +37,24 @@ seed line below it; the whole stack is replayable from a single seed.
 - **UI** — WebGPU glassmorphic + VT100/ANSI terminal fallback.
 - **Add-ons** — Luau via mlua, WoW-style Interface/AddOns, capability-gated.
 - **Editor LSP** — vaked-lsp (Rust, tower-lsp): one gateway, many languages.
+
+## the UE integration seam — Uika
+
+[Uika](https://github.com/VioletHelianthus/uika) (MIT OR Apache-2.0) is a
+Rust bindings layer for Unreal Engine 5.7+: gameplay in pure Rust
+(`#[uclass]`, `#[ufunction]`, `#[uproperty]`), compiled to a Windows DLL
+loaded by a small C++ plugin, with every UE call crossing an FFI
+function-pointer table and a hot-reload console command (`Uika.Reload`).
+
+It validates the constellation's oldest pattern at the runtime level: the
+same "one door, many lanes" shape as vaked-lsp (one LSP gateway in front
+of clangd/rust-analyzer/gopls) and the 8b.is gateway (one OpenAI endpoint
+in front of many models). If the engine ever targets UE as a rendering
+backend, Uika's codegen + hot-reload pipeline is the integration seam —
+and its Slate/UMG bindings mean the glassmorphic UI could render through
+UE's native widget system on platforms where wgpu is not ideal. Caveats:
+early-stage, Windows x64 only, author notes Verse (UE6) may supersede
+Rust-for-UE.
 - **Fauna** — 5 layers: Platonic skeleton → sacred voxel shell → 90s
   kinematics → swarm & persona AI → shader & palette.
 
