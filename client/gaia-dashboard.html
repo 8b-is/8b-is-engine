@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⟦ GAIA ⟧ · the world-memory · 8b-is</title>
+<style>
+@layer base,cards,overlay;
+:root{color-scheme:dark;--gold:oklch(.85 .16 85);--cyan:oklch(.8 .13 200);--pink:oklch(.68 .2 350);--indigo:oklch(.18 .05 265);--panel:oklch(.16 .03 265 / .9);--dim:oklch(.6 .02 265)}
+@layer base{
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,var(--indigo),#08090f 70%);color:oklch(.9 .02 265);font-family:ui-monospace,monospace;min-height:100vh;letter-spacing:.4px}
+header{padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid color-mix(in oklch,var(--cyan) 25%,transparent)}
+h1{font-size:15px;letter-spacing:6px;color:var(--gold);margin:0;font-weight:600}
+#status{font-size:11px;color:var(--dim)}
+#status[data-up="1"]::before{content:"● ";color:oklch(.72 .18 150)}
+#status[data-up="0"]::before{content:"○ ";color:var(--pink)}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;padding:22px;container-type:inline-size}
+.card{background:var(--panel);border:1px solid color-mix(in oklch,var(--gold) 20%,transparent);border-radius:14px;padding:16px;backdrop-filter:blur(8px)}
+.card h2{font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin:0 0 10px}
+.card .v{font-size:20px;color:var(--gold);font-weight:700}
+.card .sub{font-size:10px;color:var(--dim);margin-top:6px}
+#wire{grid-column:1/-1;font-size:10.5px;color:var(--dim);word-break:break-all;white-space:pre-wrap}
+#entropy-canvas{width:100%;height:46px;display:block}
+#publish{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#publish input{flex:1;min-width:220px;background:oklch(.12 .02 265);border:1px solid color-mix(in oklch,var(--pink) 40%,transparent);border-radius:9px;color:oklch(.9 .02 265);font:11px ui-monospace,monospace;padding:9px 12px;outline:none}
+#publish button{background:color-mix(in oklch,var(--cyan) 15%,transparent);border:1px solid color-mix(in oklch,var(--cyan) 50%,transparent);border-radius:9px;color:var(--cyan);font:700 11px ui-monospace,monospace;padding:9px 16px;cursor:pointer;letter-spacing:1px}
+}
+@layer overlay{
+body:has(#publish button:active) .card{transition:border-color .15s}
+.card:has(.v.alert){border-color:var(--pink)}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>⟦ GAIA ⟧ · the world-memory</h1>
+  <span id="status" data-up="0">connecting to gaia.state …</span>
+</header>
+<main>
+  <div class="card"><h2>time</h2><div class="v" id="t">—</div><div class="sub" id="t-sub">tick · epoch</div></div>
+  <div class="card"><h2>weather</h2><div class="v" id="w">—</div><div class="sub">one word per 5-minute window</div></div>
+  <div class="card"><h2>entropy</h2><div class="v" id="e">—</div><canvas id="entropy-canvas"></canvas><div class="sub">monotone — the universe only forgets forward</div></div>
+  <div class="card"><h2>gravity</h2><div class="v" id="g">—</div><div class="sub">the zone's constant field</div></div>
+  <div class="card"><h2>wind</h2><div class="v" id="v">—</div><div class="sub" id="v-sub">direction · speed · gust</div></div>
+  <div class="card"><h2>temp</h2><div class="v" id="p">—</div><div class="sub">the season's breath</div></div>
+  <div class="card"><h2>light</h2><div class="v" id="l">—</div><div class="sub">the sun's arc, 0..1</div></div>
+  <div class="card"><h2>memory</h2><div class="v" id="m">—</div><div class="sub">the history pointer</div></div>
+  <div class="card" id="wire">waiting for the first frame …</div>
+  <div id="publish">
+    <input id="pub-input" placeholder="publish to actor.ལྷ.inbox — e.g. {&quot;s&quot;:0.2} (disturb the actor)">
+    <button id="pub-btn">⚡ disturb the actor</button>
+    <span class="sub" id="pub-result"></span>
+  </div>
+</main>
+<script type="module">
+import { Mesh } from './mesh.js'
+
+const $ = (id) => document.getElementById(id)
+const status = $('status')
+const entropy = []
+const MAX = 200
+const canvas = $('entropy-canvas')
+const ctx = canvas.getContext('2d')
+
+const mesh = await new Mesh('ws://127.0.0.1:9222').connect()
+status.dataset.up = '1'
+status.textContent = `connected · ${mesh.info?.server_name ?? 'nats'} · subject gaia.state`
+
+mesh.subscribe('gaia.state', (msg) => {
+  if (!msg) { status.dataset.up = '0'; status.textContent = 'mesh closed'; return }
+  const s = JSON.parse(msg.data)
+  $('t').textContent = s.t
+  $('t-sub').textContent = `day ${Math.floor(s.t / 86400)} · ${(s.t % 86400 / 3600).toFixed(2)}h`
+  $('w').textContent = s.w
+  $('w').className = 'v' + (s.w === 'storm' || s.w === 'frost' ? ' alert' : '')
+  $('e').textContent = s.e
+  $('g').textContent = s.g + ' m/s²'
+  $('v').textContent = `${s.v[0]}° @ ${s.v[1]} m/s`
+  $('v-sub').textContent = `gust ${s.v[2]} m/s`
+  $('p').textContent = s.p + ' °C'
+  $('l').textContent = Math.round(s.l * 100) + '%'
+  $('m').textContent = s.m
+  $('wire').textContent = 'wire: ' + msg.data
+  entropy.push(s.e)
+  if (entropy.length > MAX) entropy.shift()
+  drawEntropy()
+})
+
+function drawEntropy() {
+  const w = canvas.clientWidth, h = canvas.clientHeight
+  canvas.width = w * devicePixelRatio
+  canvas.height = h * devicePixelRatio
+  ctx.scale(devicePixelRatio, devicePixelRatio)
+  ctx.clearRect(0, 0, w, h)
+  if (entropy.length < 2) return
+  const min = Math.min(...entropy), max = Math.max(...entropy) || 1
+  ctx.strokeStyle = 'oklch(.85 .16 85)'
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  entropy.forEach((v, i) => {
+    const x = (i / MAX) * w
+    const y = h - ((v - min) / (max - min || 1)) * (h - 6) - 3
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
+  })
+  ctx.stroke()
+}
+
+$('pub-btn').addEventListener('click', () => {
+  const input = $('pub-input').value.trim()
+  if (!input) return
+  try { JSON.parse(input) } catch { $('pub-result').textContent = 'not valid JSON'; return }
+  mesh.publish('actor.ལྷ.inbox', input)
+  $('pub-result').textContent = `published ${input.length}B to actor.ལྷ.inbox`
+})
+</script>
+</body>
+</html>

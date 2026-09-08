@@ -24,6 +24,38 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
 - [x] the research: the MMO bibles applied, Flyxion's layers, the
   Rust+Go gist
 
+## v0.3 — the world runs without you (the current edge)
+
+- [x] **GAIA** — the world-memory: one seed, eight layers (time, weather,
+  entropy, gravity, wind, temp, light, memory), deterministic across
+  Node and Python ([gaia-world-memory.md](gaia-world-memory.md))
+- [x] **the zone keeper** (`examples/world-keep.py`) — the M/Q/H fold on
+  the mesh: admissions, durable refusals (poisoned actions, replays,
+  duplicate ticks), `fold(seed, H) = M` replay verification
+- [x] the NPC grown up: pre-action attestation (the action proves its own
+  need) + a live inbox (disturbances wake the actor)
+- [x] the compact wire — single-char keys on `actor.*.state` /
+  `gaia.state` (event-vocabulary minimality, the ternary-wire discipline)
+- [x] **the local model lanes** (mlx-sidecar): Qwen2.5-VL 3B vision
+  (render/art QA — caught and fixed a black-frame EEVEE render) +
+  FLUX.2-klein diffuser (concept art)
+- [x] the render pipeline fixed: tracked camera (TRACK_TO) + dawn world +
+  raking sun in `scene_builder.ts` — every EEVEE frame now lands on the
+  board
+- [x] IPC hardened: alloc-free framing + reusable frame buffers +
+  id-matched sub-server reads (the gateway answers again); both MCP
+  sidecars on protocol `2025-11-25`; `vaked-nats` publish on the shared
+  runtime (no per-call runtime build)
+- [x] the client stack pinned: latest CSS (`oklch`, `@layer`, `:has`) +
+  HTML + WebAssembly + WebGPU + workers + WebTransport, Tauri shell for
+  Steam ([client-ui.md](client-ui.md))
+- [x] **`world-core`** (`crates/world-core`) — tern + GAIA + the fold in
+  Rust, compiled natively and to `wasm32-unknown-unknown`; the browser
+  calls `gaia_wire_c` (see the crate README + smoke.js). One source of
+  truth, three surfaces — four-language determinism pinned by fixtures.
+- [x] **the browser ↔ the mesh** (`client/mesh.js` + `client/gaia-dashboard.html`) — a dependency-free NATS client over WebSocket (nats.ws): zones = actor subjects from the browser, the GAIA dashboard renders the eight layers live, disturbances publish to the actor inbox. WebTransport is the QUIC upgrade when the relay lands.
+- [ ] WebTransport (QUIC) upgrade: the relay + Durable-Object zone endpoints
+
 ## v1.x — the core engine (the Rust/Go runtime)
 
 - [ ] the Rust core: tick loop, frame arenas, entity structs (wgpu +

@@ -98,6 +98,27 @@ subsystem, and name the gaps — then build the gaps as features. The theory
 says a world is a space of admissible continuations; the engine makes that
 space *playable*.
 
+## 5. the two folds (commitment before appearance)
+
+Flyxion's *Commitment Before Appearance* (Sept 2026, recorded in
+`8b-is/raw_research/`) is the engine's architecture written back to it:
+one append-only log, **two folds** — a physical fold $M_t =
+\text{Fold}_M(H_t; M_0)$ for the operative world and a semantic fold $S_t =
+\text{Fold}_S(H_t; S_0)$ for provenance, refusal, and admissibility —
+with rendering reading only $M_t$ and **attestation** as the sole bridge
+from a disposable look to a durable constraint. The keeper is both folds;
+replay is the certification; the dashboard renders the material fold and
+never the log; the NPC's pre-action attestation is the attestation
+boundary; a refusal is materially silent and semantically decisive. Two
+jurisdictions, never substituted for each other: the zone state never
+answers provenance, the ledger never sits on the render path. The named
+failure mode is **jurisdictional drift** — and *Motion Before Mechanism*
+(also recorded) supplies the label discipline that keeps drift out of the
+vocabulary: a witness's reliability (replay matches) never inherits
+mechanism-identifying confidence; the fiber above any wire frame stays
+honest. The engine reports the witness, keeps the axes separate, and lets
+the ledger earn every name.
+
 ---
 
 *the constellation · 0 + 1 · fine touch from within · vaked.dev*

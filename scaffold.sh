@@ -84,6 +84,7 @@ cmd_doctor() {
   if [[ -x "$HERE/../vaked-lsp/target/debug/vaked-nats" ]]; then echo "  vaked-nats   built (the actor-mesh sidecar)"; else echo "  vaked-nats   not built — cd ../vaked-lsp && cargo build --bin vaked-nats"; fi
   # NATS running?
   if lsof -iTCP:4222 -sTCP:LISTEN >/dev/null 2>&1; then echo "  nats-server  running on :4222"; else echo "  nats-server  down — ./scaffold.sh mesh"; fi
+  if lsof -iTCP:9222 -sTCP:LISTEN >/dev/null 2>&1; then echo "  nats-ws      running on ws://:9222 — open client/gaia-dashboard.html"; else echo "  nats-ws      down — ./scaffold.sh mesh (the browser's door to the mesh)"; fi
   # git-lfs
   if have git-lfs; then echo "  git-lfs     $(git lfs version 2>/dev/null | head -1)"; fi
   # the swarm config
@@ -136,11 +137,18 @@ EOF
 }
 
 cmd_mesh() {
-  info "starting nats-server on :4222 (if down)"
+  info "starting nats-server on :4222 + ws :9222 (if down)"
   if ! lsof -iTCP:4222 -sTCP:LISTEN >/dev/null 2>&1; then
-    nats-server -p 4222 >/tmp/nats-server.log 2>&1 &
+    cat > /tmp/nats-ws.conf <<EOF
+port: 4222
+websocket {
+  port: 9222
+  no_tls: true
+}
+EOF
+    nats-server -c /tmp/nats-ws.conf >/tmp/nats-server.log 2>&1 &
     sleep 1
-    echo "  nats-server pid $!"
+    echo "  nats-server pid $! — ws://127.0.0.1:9222 (open client/gaia-dashboard.html)"
   fi
   info "running the needs/goals NPC actor (the world runs without you)"
   if command -v uv >/dev/null 2>&1; then

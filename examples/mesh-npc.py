@@ -7,6 +7,10 @@ when a need spikes or a disturbance lands on its inbox, acts (forage /
 sleep / flee), and publishes every state delta to its subject — an
 append-only, observable history.
 
+The wire is compact — single-char keys (t/n/a/z), the ternary-wire
+discipline: minimal event vocabulary, minimal bytes, the mesh's
+lowest-latency publisher.
+
 Run with uv (needs a nats-server on 4222):
     uv run --with nats-py python examples/mesh-npc.py            # default
     uv run --with nats-py python examples/mesh-npc.py --name ཧ --seed 42
@@ -21,13 +25,14 @@ import nats
 
 HOST = os.environ.get("NATS_URL", "nats://127.0.0.1:4222")
 
-# the needs — each 0..1, comfortable when high
-NEEDS = {"hunger": 0.9, "rest": 0.9, "safety": 0.95}
+# the needs — each 0..1, comfortable when high (wire keys: h, r, s)
+NEEDS = {"h": 0.9, "r": 0.9, "s": 0.95}
 # per-tick decay when ignored
-DECAY = {"hunger": 0.045, "rest": 0.02, "safety": 0.008}
+DECAY = {"h": 0.045, "r": 0.02, "s": 0.008}
 # act when a need falls below its threshold
-THRESH = {"hunger": 0.35, "rest": 0.3, "safety": 0.4}
-ACTIONS = {"hunger": "forage the field", "rest": "sleep in the tent", "safety": "flee to the gate"}
+THRESH = {"h": 0.35, "r": 0.3, "s": 0.4}
+ACTIONS = {"h": "forage the field", "r": "sleep in the tent", "s": "flee to the gate"}
+NAMES = {"h": "hunger", "r": "rest", "s": "safety"}
 
 
 class Npc:
@@ -50,6 +55,7 @@ class Npc:
         # act on the lowest need below threshold — the priority-based drive
         low = min(self.needs, key=lambda k: self.needs[k])
         acted = False
+        attested = dict(self.needs)  # the PRE-action state is what we attest
         if self.needs[low] <= THRESH[low]:
             self.needs[low] = min(1.0, self.needs[low] + 0.55)  # the action satisfies it
             acted = True
@@ -62,9 +68,9 @@ class Npc:
             self.asleep = False
         delta = {
             "t": self.tick,
-            "needs": {k: round(v, 3) for k, v in self.needs.items()},
-            "acted": ACTIONS[low] if acted else None,
-            "asleep": self.asleep,
+            "n": {k: round(v, 3) for k, v in attested.items()},
+            "a": ACTIONS[low] if acted else None,
+            "z": 1 if self.asleep else 0,
         }
         self.history.append(delta)
         return delta
@@ -75,23 +81,32 @@ async def run(name: str, seed: int, ticks: int):
     npc = Npc(name, seed)
     subj = f"actor.{name}.state"
     inbox = f"actor.{name}.inbox"
-    js = nc.jetstream()
 
     print(f"⟦ the world runs without you ⟧ actor {name} · subject {subj}")
+
+    # the inbox — a disturbance wakes the actor and spikes the need
+    async def handle_disturbance(msg):
+        try:
+            d = json.loads(msg.data)
+        except Exception:
+            d = {}
+        npc.asleep = False
+        npc.needs["s"] = min(npc.needs["s"], d.get("s", 0.2))
+        print(f"  ⚡ disturbance on the inbox: {msg.data.decode()[:60]}")
+
+    await nc.subscribe(inbox, cb=handle_disturbance)
     for _ in range(ticks):
         delta = npc.step()
-        body = json.dumps(delta).encode()
-        # the ledger: append to the JetStream stream + publish the live delta
-        try:
-            await js.publish(subj, body)
-        except Exception:
-            await nc.publish(subj, body)
-        if delta["acted"] or delta["t"] % 5 == 0 or delta["asleep"]:
-            state = "sleeping" if delta["asleep"] else "awake"
-            act = f" · {delta['acted']}" if delta["acted"] else ""
+        body = json.dumps(delta, separators=(",", ":")).encode()
+        # core publish: streams capture core publishes too — and a JS publish
+        # stalls ~2s waiting for an ack the server never sends when -js is off
+        await nc.publish(subj, body)
+        if delta["a"] or delta["t"] % 5 == 0 or delta["z"]:
+            state = "sleeping" if delta["z"] else "awake"
+            act = f" · {delta['a']}" if delta["a"] else ""
             print(f"  t{delta['t']:>3} {state:8}{act:24} "
-                  f"hunger {delta['needs']['hunger']:.2f} · rest {delta['needs']['rest']:.2f} · "
-                  f"safety {delta['needs']['safety']:.2f}")
+                  f"h {delta['n']['h']:.2f} · r {delta['n']['r']:.2f} · "
+                  f"s {delta['n']['s']:.2f}")
         await asyncio.sleep(0.4)
 
     print(f"\n⟦ history ⟧ {len(npc.history)} deltas appended — replayable from seed {seed}")

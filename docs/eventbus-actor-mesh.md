@@ -150,6 +150,38 @@ The ternary hot path skips the envelope — a raw trit stream with a gray-
 coded length prefix, addressed only by NATS subject. Fast lanes don't
 carry schema; the seed does.
 
+## the mesh as population memory
+
+Flyxion's *Inscription Before Collusion* (Sept 2026, recorded in
+`8b-is/raw_research/`) names exactly what the mesh is: a population
+acquires memory when the environment preserves distinctions and a
+nonzero measure of successor executions can discover, interpret, and
+operationalize them — `Rec(m; A, W) = Persist · Discover · Interpret ·
+Use`. The mesh is the engine's lawful instantiation of that recurrence
+relation: GAIA preserves the distinctions (the eight layers), the
+subjects are the retrieval channel (the directory), the keeper interprets
+(admissibility) and uses (the fold). And the keeper's refusals implement
+the paper's evidentiary ladder as code: it admits artifacts,
+communication, and coordination — and refuses to claim collective
+representation for any actor. Swarms appear; the engine builds the
+substrate and keeps the ledger honest.
+
+## the two folds — jurisdiction, not layers
+
+*Commitment Before Appearance* (recorded in `8b-is/raw_research/`) names
+the discipline the keeper already enforces: one log, two folds. The
+**material fold M** (`out/world-keep-state.json`) is the certified cache
+the renderer reads — the dashboard renders `gaia.state`, never the ledger.
+The **semantic fold S** (the frontier, the ticks, the refusals) adjudicates
+what the world is entitled to claim. Every commit carries its fold marker:
+`folds: ["M","S"]` for an admission, `folds: ["S"]` for a refusal — a
+refusal is materially silent and semantically decisive, and any
+jurisdictional drift (a cache answering provenance, a renderer committing)
+would be visible in the log itself. Looking is not an event: `nats_subscribe`
+commits nothing; only an attested publish constrains the continuation.
+`--replay` is the certification — the cached M is trusted only when it
+matches the re-folded ledger.
+
 ---
 
 *the constellation · 0 + 1 · fine touch from within · vaked.dev*

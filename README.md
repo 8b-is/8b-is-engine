@@ -37,6 +37,9 @@
   - [the world-as-DNS](#the-world-as-dns)
 - [quick-start — local dev](#quick-start--local-dev)
 - [host system requirements](#host-system-requirements)
+- [the client stack — CSS + HTML + WASM](docs/client-ui.md)
+- [GAIA — the world-memory](docs/gaia-world-memory.md)
+- [the browser client — mesh.js + the GAIA dashboard](client/)
 - [integration guide — UE · Unity · VSCode](docs/integration-guide.md)
 - [the constellation](#the-constellation)
 - [contributing](#contributing)
@@ -234,6 +237,9 @@ nats-server -p 4222                # the bus (or ./scaffold.sh mesh)
 # the MCP sidecar — publish/subscribe/request on actor subjects:
 echo 'Content-Length: ...' | vaked-nats   # or drive via the umbrella
 uv run --with nats-py python examples/mesh-npc.py --name ལྷ --seed 42   # a living NPC
+uv run --with nats-py python examples/gaia.py --brief "sanctuary·overworld"  # the world-memory ACT
+uv run --with nats-py python examples/world-keep.py   # the zone keeper: M folds, H commits, refusals durable
+uv run --with nats-py python examples/world-keep.py --replay   # verify fold(seed, H) = M
 ```
 
 An actor is a name; a name is a subject; a subject is a route. The mailbox,
@@ -358,6 +364,10 @@ is eternal, the liability is bounded, the loop has an exit.
 ---
 
 ## roadmap
+
+v0.3 — **the world runs without you** — is the current edge: GAIA, the zone
+keeper, the vision/diffuser lanes, and the Steam-shaped client stack. See
+[roadmap.md](docs/roadmap.md).
 
 | Phase | Work |
 |---|---|

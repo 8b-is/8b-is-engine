@@ -1,0 +1,21 @@
+[package]
+name = "world-core"
+version = "0.1.0"
+edition = "2021"
+description = "the shared world core: tern + GAIA + the fold — one source of truth, three surfaces (native, WASM, mesh)"
+license = "MIT"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
