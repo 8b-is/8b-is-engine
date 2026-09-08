@@ -1,62 +1,58 @@
 # Roadmap
 
-The engine's future plans, in phases. The full design v2 lives in
-[`8b-is/public-documents`](https://github.com/peterlodri-sec/8b-is/tree/main/public-documents).
+The engine's future plans, in phases. Shipped work is checked; the design
+docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
+[eventbus-actor-mesh](eventbus-actor-mesh.md)).
 
-## v1.x — the core engine
+## v0.2 — shipped (the tooling + theory foundation)
 
-- [x] the floors (sanctuary, plenum, infinite, summit, soil, gameforge, teleport)
+- [x] the floors (sanctuary, plenum, infinite, summit, soil, gameforge,
+  teleport, backyard-ultra) — playable on pocoo.vaked.dev
 - [x] the ternary wire + quantTernEngine (seed → trits → PRNG → artifact)
 - [x] the retro lane (bitTricks, doombible, the demoscene inspiration index)
-- [ ] the Rust core: tick loop, frame arenas, entity structs
-- [ ] the Go multiplexer: sync.Pool, mmap ring buffers, NATS mesh
+- [x] the game guide book + the interactive first-walk tutorial
+- [x] the theory + the OSS world-model map + the visual direction
+- [x] the export lane: `scene` modality → Blender EEVEE renders (native)
+  + the Unity `VakedSceneImporter` exporter
+- [x] the actor-mesh EventBus: NATS sidecar (`vaked-nats`), protobuf
+  envelope, the mesh-NPC demo
+- [x] the creative swarm: 5 opencode agents on DeepSeek V4 vision,
+  KV-cache-optimized
+- [x] the DX: jj, scaffold/sandbox/swarm/bootstrap, sccache + fast
+  profiles, the E2E guide, the integrations (UE · Unity · Blender ·
+  Steam), the release pipeline
+- [x] the research: the MMO bibles applied, Flyxion's layers, the
+  Rust+Go gist
+
+## v1.x — the core engine (the Rust/Go runtime)
+
+- [ ] the Rust core: tick loop, frame arenas, entity structs (wgpu +
+  Rapier3D + SDF)
+- [ ] the Go multiplexer: sync.Pool, mmap ring buffers, the NATS mesh in
+  production form (the actor skeleton compiled, not scripted)
 - [ ] the fauna stack in Rust (the floors are the JS twins)
-- [ ] vaked-lsp integration (editor gateway)
+- [ ] the needs/goals scheduler as a first-class reducer (the Dwarf-Fortress
+  clock, the mesh-NPC grown up)
 
-## v2.0 — the presence layer
+## v2.x — the world-model sim-MMO (design v2)
 
-- [ ] the I/O HAL device classes for glasses (audio-first) + headset (room spatial)
-- [ ] the sensory profile abstraction (one WorldState, many WorldSurfaces)
-- [ ] the world-as-radio lane (432Hz binaural zone ambience, the WoW radio matrix)
+- [ ] the presence layer: glasses (audio-first) + headset (room spatial)
+- [ ] the protector node: the sovereign pass gate + restart-from-seed
+  supervision (JetStream replay)
+- [ ] the trick library in the Rust hot path (gray-code deltas, nextPow2
+  arenas)
+- [ ] the world-as-DNS: zone → Durable Object, the resolver, P2P rendezvous
+- [ ] the painted-forest vertical slice (one Neva-style zone, ZEN wired,
+  the hum at 108)
+- [ ] the deterministic lockstep where it pays
 
-## v2.1 — the protector node
-
-- [ ] the BitNet b1.58 1-bit gate (from MLX-QUANT / the sovereign library)
-- [ ] the 108-fold tent projection
-- [ ] the sovereign pass gate (deterministic Q&A, capability not login)
-- [ ] the 42D hypermesh membership
-
-## v2.2 — the trick library
-
-- [ ] compile the bit tricks into the hot path (const fns, no branches)
-- [ ] gray-code snapshot deltas in the network multiplexer
-- [ ] nextPow2 arena sizing
-- [ ] the 4KB/frame add-on discipline
-
-## v2.3 — the world-as-DNS
-
-- [ ] zone → Durable Object mapping
-- [ ] the resolver (DNS is the router)
-- [ ] the P2P rendezvous (DO as referee, clients as peers)
-- [ ] deterministic lockstep where it pays
-
-## v2.4 — the glasses lane live
-
-- [ ] the walk: zones as geofenced tents
-- [ ] the sovereign pass by voice
-- [ ] capture as the eye (signed witness events)
-
-## v2.5 — the headset lane live
-
-- [ ] the room is the zone (volumetric fauna, true scale)
-- [ ] spatial chat bubbles (the v0.4 spatial chat engine, in the room)
-- [ ] the tent as the space (the 108-fold projection as an immersive boundary)
-
-## the horizon
+## the frontier
 
 - the serverless game: no dedicated servers, the Cloudflare network as the
-  world, the fleet (nix-base) as the private brain
-- the studio: PSU NIVERSEQ ships, POLYHEDRAL SANCTUARY as the vertical slice
-- the Indie Fund application (the business lane, game-studio-vaked)
+  world, the fleet as the private brain
+- persistence, engineered: the four layers (rendering / M / Q / H) live —
+  refusals durable, replay discrepancies appended
+- the studio: PSU NIVERSEQ ships on **Steam** (macOS AS + Linux), the
+  Indie Fund lane, the dev diary ongoing
 
 — the constellation · 0 + 1 · fine touch from within · vaked.dev

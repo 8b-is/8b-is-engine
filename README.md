@@ -140,6 +140,9 @@ machine, every time:
 | [soil-floor](https://pocoo.vaked.dev/demos/centerfugeq/soil-floor.html) | permaculture — the garden |
 | [gameforge-keeper](https://pocoo.vaked.dev/demos/centerfugeq/gameforge-keeper.html) | the 108-gate hum system — ring blessings |
 | [teleport-floor](https://pocoo.vaked.dev/demos/centerfugeq/teleport-floor.html) | quantum gate teleportation — fidelity 1.000 |
+| [backyard-ultra-floor](https://pocoo.vaked.dev/demos/centerfugeq/backyard-ultra-floor.html) | loop survival — last one standing |
+| [psuniverseq-tutorial](https://pocoo.vaked.dev/demos/centerfugeq/psuniverseq-tutorial.html) | the interactive first-walk tutorial |
+| [psuniverseq](https://pocoo.vaked.dev/demos/centerfugeq/psuniverseq.html) | the chaos overworld — Mahākāla, the ZEN mechanic |
 
 ---
 

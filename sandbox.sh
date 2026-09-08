@@ -77,8 +77,8 @@ linux_bwrap_lsp() {
     --unshare-all --share-net \
     --new-session --die-with-parent \
     --ro-bind /usr /usr \
-    --ro-bind /lib /lib \
-    --ro-bind /lib64 /lib64 2>/dev/null || true \
+    --ro-bind-try /lib /lib \
+    --ro-bind-try /lib64 /lib64 \
     --symlink usr/bin /bin \
     --proc /proc --dev /dev --tmpfs /tmp \
     --bind "$PROJECT_DIR" "$PROJECT_DIR" \
