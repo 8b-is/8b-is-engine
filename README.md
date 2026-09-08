@@ -195,41 +195,77 @@ the route, and the tent.**
 
 ## quick-start — local dev
 
-Spin up the full DX environment and start iterating:
+### the full E2E bootstrap (zero → running world)
 
 ```bash
-git lfs install                    # large assets (sprites, audio, builds)
-./scaffold.sh install              # jj + uv + cargo + go + just + node + rg/bat/fd + more
-./scaffold.sh doctor               # probe every lane
-./scaffold.sh new my-game          # a jj-backed project, seeded and ready
+git clone git@github.com:8b-is/8b-is-engine.git && cd 8b-is-engine
+./scaffold.sh               # == bootstrap: deps → jj → git-lfs → NATS → verify
+./scaffold.sh verify        # probe every lane (tools + engine + mesh + assets)
+./scaffold.sh mesh          # start nats-server + run a live NPC actor (the world runs without you)
+./scaffold.sh export "the sanctuary at dawn"   # seed → manifest → Blender EEVEE render
 ```
 
-The day-to-day loop (jj + the sandboxes):
+`scaffold.sh` is idempotent and self-contained (macOS + Linux, Silverblue
+rpm-ostree aware). It installs: `jj` (VCS) · `uv` · `cargo` · `go` · `just`
+· `node` · `gh` · `wrangler` · `git-lfs` · `nats-server` · `rg`/`bat`/`fd`/
+`eza`/`zoxide`/`delta` · `blender` · `hyperfine`/`tokei`, then wires jj +
+LFS, builds the `vaked-nats` actor-mesh sidecar, and verifies every lane.
+
+### the day-1 loop
 
 ```bash
-jj st                             # the working copy is a commit — see it all
-jj describe -m "feat: ..."        # name the change
-jj git push                       # ship it
+jj st                              # the working copy is a commit
+jj describe -m "feat: ..."         # name the change (PR = signature)
+jj git push                        # ship to origin + upstream
 
-./sandbox.sh lsp rust-analyzer    # wrap the LSP (bwrap on Linux, Apple Container on macOS)
+./sandbox.sh lsp rust-analyzer     # wrap the LSP (bwrap / Apple Container)
 ./sandbox.sh run docker.io/library/rust:latest -- cargo build   # isolated build
-./sandbox.sh doctor               # which sandbox backend is warm
 ```
 
-The MLX coder lanes (local, abliterated, memory-aware):
+### the actor-mesh (NATS)
 
 ```bash
-cd ../mlx-sidecar                  # or: uv run --project mlx-sidecar python sidecar.py
-uv run python sidecar.py memory    # total / free / best-fit lane
-uv run python sidecar.py start     # auto-picks the fastest coder that fits your RAM
-uv run python sidecar.py models    # qwen3-coder-next-oblit · qwen25-coder-7b-oblit · …
+nats-server -p 4222                # the bus (or ./scaffold.sh mesh)
+# the MCP sidecar — publish/subscribe/request on actor subjects:
+echo 'Content-Length: ...' | vaked-nats   # or drive via the umbrella
+uv run --with nats-py python examples/mesh-npc.py --name ལྷ --seed 42   # a living NPC
 ```
 
-Already installed where needed: `git-lfs`, `jj`, `uv`, `cargo`, `go`,
-`just`, `node`, `gh`, `wrangler`, `rg`, `bat`, `fd`, `eza`, `zoxide`,
-`delta`. The asset packs (Kenney CC0 tilesets/sprites/audio) live under
-`assets/vendor/` and are LFS-tracked — see [CREDITS.md](CREDITS.md) for
-sources and licenses.
+An actor is a name; a name is a subject; a subject is a route. The mailbox,
+the supervisor, and the DNS are one. See
+[docs/eventbus-actor-mesh.md](docs/eventbus-actor-mesh.md).
+
+### the creative swarm (DeepSeek V4 vision)
+
+```bash
+./swarm.sh "the painted-forest dawn zone, ZEN mechanic"   # 5 roles fan out
+./swarm.sh --roles visual-artist,ui "the pink tent HUD"   # vision roles only
+```
+
+Five opencode subagents — `game-art` · `game-design` · `frontend` · `ui` ·
+`visual-artist` (config in [opencode.json](opencode.json)). The vision
+roles run on `deepseek/deepseek-v4-flash-vision-exp`; all five share one
+byte-identical prompt prefix so DeepSeek's automatic context caching
+serves the shared doctrine+palette block as a cache hit. Artifacts land in
+`out/swarm/<role>/`.
+
+### the MLX coder lanes (local, abliterated, memory-aware)
+
+```bash
+uv run --project ../mlx-sidecar python sidecar.py memory   # total / free / best fit
+uv run --project ../mlx-sidecar python sidecar.py start    # auto-picks a coder that fits your RAM
+```
+
+The fastest top-SWE-score coder your machine can hold, served locally on
+an OpenAI-compatible port. Catalog: Qwen3-Coder-Next abliterated MLX ·
+Qwen2.5-Coder-7B OBLITERATUS · the 42B abliterated lane.
+
+### assets & LFS
+
+Large binaries (sprites, audio, renders) are git-LFS pointers tracked by
+[.gitattributes](.gitattributes); the Kenney CC0 packs live under
+`assets/vendor/kenney/` — sources and licenses in [CREDITS.md](CREDITS.md).
+`git lfs pull` fetches them on a fresh clone.
 
 ---
 
