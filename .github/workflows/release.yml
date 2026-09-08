@@ -1,0 +1,114 @@
+name: release
+
+# Versioned, changelogged release artifacts. Push a tag (`v0.3.0`) and the
+# matrix builds + publishes downloadable objects:
+#   vaked-engine-<ver>-macos-arm64.dmg   (vaked-lsp·vaked-mcp·vaked-nats + docs + floors)
+#   vaked-engine-<ver>-linux-x86_64.tar.gz
+#   vaked-lsp-<ver>-<os>-<arch>.tar.gz   (the raw language-gateway bins)
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-macos:
+    name: build · macOS arm64 → .dmg
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: engine
+      - uses: actions/checkout@v4
+        with:
+          repository: 8b-is/vaked-lsp
+          path: vaked-lsp
+      - uses: dtolnay/rust-toolchain@stable
+      - name: build the gateway + sidecars (release)
+        working-directory: vaked-lsp
+        run: cargo build --release --bin vaked-lsp --bin vaked-mcp --bin vaked-nats
+      - name: assemble the engine bundle
+        working-directory: engine
+        run: |
+          VERSION="${{ github.ref_name }}"
+          mkdir -p dist/VAKED-ENGINE/bin dist/VAKED-ENGINE/docs dist/VAKED-ENGINE/floors dist/VAKED-ENGINE/assets
+          cp ../vaked-lsp/target/release/vaked-{lsp,mcp,nats} dist/VAKED-ENGINE/bin/
+          cp ../vaked-lsp/unity-cloud/cli.py dist/VAKED-ENGINE/bin/ 2>/dev/null || true
+          cp README.md scaffold.sh swarm.sh sandbox.sh opencode.json dist/VAKED-ENGINE/
+          cp docs/*.md dist/VAKED-ENGINE/docs/ 2>/dev/null || true
+          cp proto/* dist/VAKED-ENGINE/ 2>/dev/null || true
+          cp -r assets/hero.svg assets/mandala.svg assets/sanctuary.svg assets/deity.svg assets/screenshots dist/VAKED-ENGINE/assets/ 2>/dev/null || true
+          printf 'VAKED ENGINE %s\nbins: vaked-lsp · vaked-mcp · vaked-nats\nsee README.md + docs/integration-guide.md\n' "$VERSION" > dist/VAKED-ENGINE/VERSION
+          hdiutil create -volname "VAKED ENGINE ${{ github.ref_name }}" \
+            -srcfolder dist/VAKED-ENGINE -ov \
+            "dist/vaked-engine-${{ github.ref_name }}-macos-arm64.dmg"
+          tar -czf "dist/vaked-lsp-${{ github.ref_name }}-macos-arm64.tar.gz" \
+            -C ../vaked-lsp/target/release vaked-lsp vaked-mcp vaked-nats
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64
+          path: engine/dist/*.dmg
+          if-no-files-found: error
+
+  build-linux:
+    name: build · Linux x86_64 → tar.gz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: engine
+      - uses: actions/checkout@v4
+        with:
+          repository: 8b-is/vaked-lsp
+          path: vaked-lsp
+      - uses: dtolnay/rust-toolchain@stable
+      - name: build the gateway + sidecars (release)
+        working-directory: vaked-lsp
+        run: cargo build --release --bin vaked-lsp --bin vaked-mcp --bin vaked-nats
+      - name: package
+        run: |
+          mkdir -p engine/dist
+          tar -czf "engine/dist/vaked-lsp-${{ github.ref_name }}-linux-x86_64.tar.gz" \
+            -C vaked-lsp/target/release vaked-lsp vaked-mcp vaked-nats
+          tar -czf "engine/dist/vaked-engine-${{ github.ref_name }}-linux-x86_64.tar.gz" \
+            -C vaked-lsp/target/release vaked-lsp vaked-mcp vaked-nats
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64
+          path: engine/dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: publish · GitHub Release + changelog
+    needs: [build-macos, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: generate the changelog (conventional, since the last tag)
+        id: changelog
+        run: |
+          PREV="$(git tag --sort=-v:refname | sed -n 2p)"
+          RANGE="${PREV:+$PREV..}HEAD"
+          log() { git log --no-merges --format='%s' "$RANGE" | grep -E "$1" | sed -E "s/$2//" | head -40; }
+          body="## v${{ github.ref_name }}"
+          body+="\n\n### Features\n$(log '^feat' 's/^feat[^)]*\): //' | sed 's/^/- /')\n"
+          body+="### Fixes\n$(log '^fix' 's/^fix[^)]*\): //' | sed 's/^/- /')\n"
+          body+="### Docs\n$(log '^docs' 's/^docs[^)]*\): //' | sed 's/^/- /')\n"
+          printf '%b' "$body" > changelog.md
+          echo "body-file=changelog.md" >> "$GITHUB_OUTPUT"
+      - name: publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body_path: ${{ steps.changelog.outputs.body-file }}
+          generate_release_notes: false

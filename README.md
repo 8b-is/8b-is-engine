@@ -379,6 +379,15 @@ The MMO engine bibles, deep-researched and applied to this engine:
   Albion), the classic articles
 - [applied-to-8b-is.md](docs/applied-to-8b-is.md) — every lesson mapped to a
   concrete engine decision, with the source ledger
+- [theory.md](docs/theory.md) — a world as a geometry of admissible
+  continuation, grounded in Flyxion's four conditions + the mental-physics
+  engine ([inscription-before-rendering](https://github.com/peterlodri-sec/8b-is/blob/main/raw_research/inscription-before-rendering.md),
+  [layers-of-a-persistent-world](https://github.com/peterlodri-sec/8b-is/blob/main/raw_research/layers-of-a-persistent-world.md))
+- [world-models.md](docs/world-models.md) — the OSS learned-world-model map
+  (Neural MMO, Generative Agents, DIAMOND, DreamerV3) wired beside the
+  deterministic simulator
+- [rust-dx.md](docs/rust-dx.md) — the fast local loop
+- **Bleeding-edge Rust + Go**: [the language-features gist](https://gist.github.com/peterlodri-sec/8fbbd9e316f4393c93df2225520afaae)
 
 ---
 
