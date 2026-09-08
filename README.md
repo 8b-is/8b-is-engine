@@ -37,6 +37,7 @@
   - [the world-as-DNS](#the-world-as-dns)
 - [quick-start — local dev](#quick-start--local-dev)
 - [host system requirements](#host-system-requirements)
+- [integration guide — UE · Unity · VSCode](docs/integration-guide.md)
 - [the constellation](#the-constellation)
 - [contributing](#contributing)
 - [license](#license)
