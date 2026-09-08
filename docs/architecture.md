@@ -31,7 +31,10 @@ seed line below it; the whole stack is replayable from a single seed.
   (∇f normals), warp tensors for non-Euclidean zones, geodesic vector
   gravity.
 - **Dual-tier EventBus** — Rust lock-free SPSC/MPMC intra-engine;
-  Go/NATS inter-process; 8-bit quantized payloads.
+  Go/NATS inter-process; 8-bit quantized payloads. Grown into the
+  [actor-mesh](eventbus-actor-mesh.md): tokio + Go channels over NATS,
+  protobuf on the control plane, the ternary wire on the hot path, the
+  protector node as supervisor.
 - **I/O HAL** — everything since the 60s: TTY/RS-232 (110–115200 baud),
   BLE, HID/evdev, mobile touch, Steam Input.
 - **UI** — WebGPU glassmorphic + VT100/ANSI terminal fallback.

@@ -1,0 +1,52 @@
+// eventbus.proto — the 8b-is actor-mesh control-plane envelope.
+//
+// The slow/legible lane: protobuf for cross-language messages (Rust ↔ Go
+// ↔ Luau ↔ sidecars). The hot path is the ternary wire — a raw {-1,0,+1}
+// trit stream with a gray-coded length prefix, addressed by NATS subject,
+// carrying no schema (the seed carries it).
+//
+//   protoc --proto_path=. --rust_out=src mesh.proto   (or use tonic/prost)
+syntax = "proto3";
+
+package vaked.mesh;
+
+// A single message on the mesh. `recipient` is a NATS subject — the
+// actor's name IS its address; the mailbox, the router, and the DNS
+// resolver are one.
+message ActorMessage {
+  string sender    = 1;   // subject / actor name of the sender
+  string recipient = 2;   // subject / mailbox
+  uint64 seq       = 3;   // monotonic, per sender — the ordering key
+  bytes  payload   = 4;   // protobuf-wrapped effect, or raw trits if ternary
+  bool   ternary   = 5;   // true => payload is the ternary wire (quantized)
+  string schema    = 6;   // the event type, for codegen / validation
+}
+
+// The outer frame: carried by NATS, persisted by JetStream.
+message EventBusFrame {
+  uint64       frame_seq = 1;
+  ActorMessage message   = 2;   // the inner message
+  bytes        auth      = 3;   // capability token — the sovereign pass gate
+}
+
+// A zone's registration — the subject registry (the /fleet roster).
+message ActorRegistration {
+  string name     = 1;   // actor name == subject
+  string host     = 2;   // leaf node the actor lives on
+  string reducer  = 3;   // the reduce function / hot-reloadable unit
+  string seed     = 4;   // the seed line the actor replays from
+  string zone     = 5;   // the zone (DNS name) this actor belongs to
+}
+
+// The mesh's event vocabulary, for the fast-lane codegen.
+enum EventKind {
+  EVENT_UNSPECIFIED   = 0;
+  ACTOR_REGISTERED    = 1;
+  ACTOR_CRASHED       = 2;   // crash-and-burn: death is a ledger event
+  ACTOR_RESPAWNED     = 3;   // protector respawned it from seed
+  ZONE_TICK           = 4;
+  STATE_DELTA         = 5;   // a ternary-wire delta
+  HUMM_BLESSING       = 6;   // the ring blessing, 108 gates
+  SOVEREIGN_PASS      = 7;   // capability grant / deny
+  LEDGER_EVENT        = 8;   // bitemporal append, replayable
+}

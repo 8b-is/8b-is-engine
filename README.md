@@ -35,6 +35,7 @@
   - [the protector node](#the-protector-node)
   - [the trick library](#the-trick-library)
   - [the world-as-DNS](#the-world-as-dns)
+- [quick-start — local dev](#quick-start--local-dev)
 - [the constellation](#the-constellation)
 - [contributing](#contributing)
 - [license](#license)
@@ -189,6 +190,46 @@ the route, and the tent.**
 <p align="center">
   <img src="assets/mandala.svg" alt="the ternary wire mandala" width="420">
 </p>
+
+---
+
+## quick-start — local dev
+
+Spin up the full DX environment and start iterating:
+
+```bash
+git lfs install                    # large assets (sprites, audio, builds)
+./scaffold.sh install              # jj + uv + cargo + go + just + node + rg/bat/fd + more
+./scaffold.sh doctor               # probe every lane
+./scaffold.sh new my-game          # a jj-backed project, seeded and ready
+```
+
+The day-to-day loop (jj + the sandboxes):
+
+```bash
+jj st                             # the working copy is a commit — see it all
+jj describe -m "feat: ..."        # name the change
+jj git push                       # ship it
+
+./sandbox.sh lsp rust-analyzer    # wrap the LSP (bwrap on Linux, Apple Container on macOS)
+./sandbox.sh run docker.io/library/rust:latest -- cargo build   # isolated build
+./sandbox.sh doctor               # which sandbox backend is warm
+```
+
+The MLX coder lanes (local, abliterated, memory-aware):
+
+```bash
+cd ../mlx-sidecar                  # or: uv run --project mlx-sidecar python sidecar.py
+uv run python sidecar.py memory    # total / free / best-fit lane
+uv run python sidecar.py start     # auto-picks the fastest coder that fits your RAM
+uv run python sidecar.py models    # qwen3-coder-next-oblit · qwen25-coder-7b-oblit · …
+```
+
+Already installed where needed: `git-lfs`, `jj`, `uv`, `cargo`, `go`,
+`just`, `node`, `gh`, `wrangler`, `rg`, `bat`, `fd`, `eza`, `zoxide`,
+`delta`. The asset packs (Kenney CC0 tilesets/sprites/audio) live under
+`assets/vendor/` and are LFS-tracked — see [CREDITS.md](CREDITS.md) for
+sources and licenses.
 
 ---
 
