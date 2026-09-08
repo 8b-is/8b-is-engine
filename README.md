@@ -36,6 +36,7 @@
   - [the trick library](#the-trick-library)
   - [the world-as-DNS](#the-world-as-dns)
 - [quick-start — local dev](#quick-start--local-dev)
+- [host system requirements](#host-system-requirements)
 - [the constellation](#the-constellation)
 - [contributing](#contributing)
 - [license](#license)
@@ -266,6 +267,45 @@ Large binaries (sprites, audio, renders) are git-LFS pointers tracked by
 [.gitattributes](.gitattributes); the Kenney CC0 packs live under
 `assets/vendor/kenney/` — sources and licenses in [CREDITS.md](CREDITS.md).
 `git lfs pull` fetches them on a fresh clone.
+
+---
+
+## host system requirements
+
+### dev host (macOS)
+
+| Need | Minimum | Recommended |
+|---|---|---|
+| OS | macOS 15 (Apple Containers need 26) | macOS 26 |
+| Chip | Apple Silicon M1 | M3/M4 (Metal + MLX) |
+| RAM | 16 GB | 32 GB+ (the MLX coder lanes: 7B ~6 GB · 30B-A3B ~20 GB · 42B ~24 GB free) |
+| Disk | 10 GB free | 40 GB (models + Blender + LFS assets) |
+| Toolchain | Xcode CLT, Homebrew | rustup, uv, jj (all via `./scaffold.sh`) |
+| Extras | — | Blender (the export lane), nats-server, Apple Containers (macOS 26) |
+
+### dev host (Linux)
+
+- Any modern distro (Silverblue rpm-ostree aware); `./scaffold.sh` uses
+  `apt`/`dnf`/`pacman` + `cargo`.
+- Sandboxing: bubblewrap (LSP wrapping) + rootless podman (build images).
+- No MLX lane (Apple-only) — use the swarm + the cloud DeepSeek lane there.
+- GPU for the client renderer: Vulkan (wgpu).
+
+### the integration targets (build hosts)
+
+| Target | Where it builds | Notes |
+|---|---|---|
+| **Blender export** | macOS/Linux, Blender 3.6+ (EEVEE) | `./scaffold.sh export "brief"` |
+| **Unity** | any host + the Unity Editor | vaked-mcp `unity_batch`/`unity_peek`; Unity Cloud SDK lane |
+| **Unreal Engine 5** | Windows (Uika is Windows-x64) or UE on macOS | Uika Rust bindings; vaked-lsp for UE C++ |
+| **Steam** | macOS + Linux (+ Windows via Uika/Unity) | Steamworks SDK, Steam Input, Steam Deck Vulkan |
+
+### the game itself (players)
+
+- **Browser floors**: any modern browser, no install — the current playable
+  surface (pocoo.vaked.dev).
+- **Steam target**: macOS (Metal) + Linux (Vulkan) via wgpu; Steam Deck
+  native Vulkan; mobile + Windows via the Unity/Uika surfaces.
 
 ---
 
