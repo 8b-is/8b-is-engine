@@ -1,0 +1,86 @@
+EOS-CLA v1.0 — Eternal Open Substrate & Contributor Mutual Trust Agreement
+
+This Eternal Open Substrate & Contributor License Agreement ("Agreement")
+establishes a mutual trust framework between the Contributor (Human or
+Autonomous Agent) and the Project Maintainers (8b.es and Péter József Lódri).
+The goal of this Agreement is to guarantee that all submitted code, shaders,
+algorithms, and assets remain free and open source for all eternity, while
+providing absolute legal and operational liability protection for all
+participating parties.
+
+1. Definitions
+
+- "Maintainers" (or "Us" / "We"): 8b.es, Péter József Lódri, and designated
+  project custodians.
+- "You" (or "Contributor"): The natural person, legal entity, or autonomous
+  agent execution swarm (AIB) submitting code, shaders, documentation, or
+  assets.
+- "Contribution": Any code, WebAssembly module, GLSL/WGSL shader, spatial
+  graph dataset, or documentation intentionally submitted for inclusion in
+  the Project.
+- "AIB / Autonomous Agent Contribution": Any code, synthetic asset, or
+  optimization generated or piped directly by artificial intelligence
+  systems, multi-agent swarms, or Model Context Protocol (MCP) gateways
+  operating on behalf of the Contributor.
+
+2. Eternal Open Source Grant & Ownership
+
+- 2.1 Copyright License Grant: You retain full ownership of your
+  Contribution. You hereby grant to the Maintainers and recipients of the
+  Work a perpetual, worldwide, non-exclusive, zero-cost, royalty-free,
+  irrevocable copyright license to reproduce, prepare derivative works of,
+  publicly display, sublicense, and distribute your Contribution.
+- 2.2 Outbound Open Commitment: We promise to maintain the Work and all
+  integrated Contributions under free and open-source licenses for all
+  eternity.
+- 2.3 Patent License Grant: You grant to the Maintainers and all users a
+  perpetual, worldwide, irrevocable patent license to make, use, sell, or
+  import the Work incorporating your Contribution.
+
+3. AI Agent & Swarm Symbiosis (AIB Integration)
+
+- 3.1 Synthetic Provenance: You explicitly affirm that any Contribution
+  generated with or by Autonomous Agent Swarms (AIB), Large Language Models,
+  or synthetic compiler pipelines is legally cleared for open-source
+  distribution.
+- 3.2 Capability-Graph Binding (G = (V, E, C)): Contributions submitted to
+  the 8b.es network may be automatically mapped to capability-graph
+  permission tokens C and assigned WebAssembly runtime boundaries without
+  altering the underlying open-source license grant.
+
+4. Absolute Disclaimer of Liability ("The Crash-and-Burn Clause")
+
+- 4.1 AS-IS BASIS: ALL CONTRIBUTIONS AND SOFTWARE ARE PROVIDED ON AN "AS IS"
+  AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+- 4.2 TOTAL LIABILITY WAIVER: TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE
+  LAW, IN NO EVENT SHALL THE MAINTAINERS, CONTRIBUTORS, AI AGENTS, OR
+  ASSOCIATED ENTITIES BE LIABLE FOR ANY CLAIM, DAMAGES, SYSTEM CRASHES,
+  HARDWARE FAILURE, DATA LOSS, MEMORY CORRUPTION, FINANCIAL LOSS, OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+  FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
+- 4.3 NO SUPPORT OBLIGATION: Neither You nor the Maintainers are obligated
+  to provide ongoing technical support, maintenance, or bug fixes for any
+  Contribution. If it crashes, breaks, or melts a GPU, the sole recourse is
+  to inspect the source code and issue a patch.
+
+5. Representations & Mutual Trust
+
+- You represent that you are legally authorized to grant the above licenses.
+- You confirm that your Contribution does not knowingly violate any
+  third-party intellectual property or trade secret laws.
+
+Execution Block
+
+AGREED AND SEALED:
+
+Contributor / Entity Name: _____________________________________
+GitHub / Network Handle:  _____________________________________
+Public Key / Agent Wallet: _____________________________________
+Date & Timestamp:          _____________________________________
+
+[ ] By issuing a Pull Request, submitting a Git patch, or broadcasting a
+    WASM payload to the 8b.es network, you automatically accept and bind to
+    the terms of this Agreement.
