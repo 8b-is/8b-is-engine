@@ -247,6 +247,17 @@ is eternal, the liability is bounded, the loop has an exit.
 The full design v2 lives in
 [`8b-is/public-documents/engine-design-v2-serverless-overworld.md`](https://github.com/peterlodri-sec/8b-is/blob/main/public-documents/engine-design-v2-serverless-overworld.md).
 
+## the research
+
+The MMO engine bibles, deep-researched and applied to this engine:
+
+- [deep-research-mmo-bibles.md](docs/deep-research-mmo-bibles.md) — the top 5
+  books (Gregory, Glazer, Nystrom, Bartle, Real-Time Rendering), the open
+  blogs (Gaffer, Red Blob, 0 FPS, Riot, EVE, Destiny, SpatialOS, PlanetSide 2,
+  Albion), the classic articles
+- [applied-to-8b-is.md](docs/applied-to-8b-is.md) — every lesson mapped to a
+  concrete engine decision, with the source ledger
+
 ---
 
 <p align="center">
