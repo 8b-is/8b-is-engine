@@ -171,6 +171,58 @@ cmd_export() {
   ADMISSIBILITY_OUTPUT="$CENTF/out/e2e-export.png" WIDTH=1280 HEIGHT=720 timeout 120 blender --background --python out/e2e.scene.py >/dev/null 2>&1 && echo "  rendered → out/e2e-export.png" || warn "blender render failed"
 }
 
+cmd_content() {
+  local art=0 brief=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --art) art=1; shift;;
+      *) brief="$brief $1"; shift;;
+    esac
+  done
+  brief="${brief# }"
+  brief="${brief:-the sanctuary at dawn, the 108 gates}"
+  [[ -f "$CENTF/quantTernEngine/gen.ts" ]] || { warn "centerfugeq not at $CENTF"; return; }
+
+  info "layer 1 — content creation: brief → seed → manifest → render"
+  echo "  brief:    $brief"
+
+  # stage 2: the seed (GAIA — the deterministic door)
+  if [[ -f "$CENTF/quantTernEngine/gaia.ts" ]]; then
+    node "$CENTF/quantTernEngine/gaia.ts" "$brief" 0 2>/dev/null | grep -E "time|weather|gravity|memory" | sed 's/^/  gaia:     /' || true
+  fi
+
+  # stage 6: the manifest
+  cd "$CENTF"
+  local m
+  m="$(node quantTernEngine/gen.ts scene "$brief" 2>/dev/null | grep manifest | awk '{print $2}')"
+  [[ -n "$m" ]] || { warn "gen.ts scene failed"; return; }
+  echo "  manifest: $m"
+
+  # stages 7–8: the render (the export seam, when Blender is present)
+  if have blender; then
+    node blender3d/scene_builder.ts "$m" out/e2e.scene.py
+    ADMISSIBILITY_OUTPUT="$CENTF/out/e2e-export.png" WIDTH=1280 HEIGHT=720 timeout 180 blender --background --python out/e2e.scene.py >/dev/null 2>&1 && echo "  render:   out/e2e-export.png" || warn "blender render failed"
+  else
+    warn "blender not installed — the render stage stays dark"
+  fi
+
+  # stages 4–5: concept art + the eye (the local model lanes, optional)
+  if [[ "$art" == 1 ]]; then
+    local sidecar="$HERE/../vaked-lsp/mlx-sidecar"
+    if [[ -f "$sidecar/sidecar.py" ]] && command -v uv >/dev/null 2>&1; then
+      mkdir -p "$HERE/assets/concepts"
+      uv run --project "$sidecar" python "$sidecar/sidecar.py" image "$brief" --steps 4 --out "$HERE/assets/concepts" 2>&1 | tail -2
+      local png
+      png="$(ls -t "$HERE/assets/concepts"/flux-*.png 2>/dev/null | head -1)"
+      if [[ -n "$png" ]]; then
+        uv run --project "$sidecar" python "$sidecar/sidecar.py" vision "$png" "Is this concept art admissible for the 8b-is world? One sentence, then one improvement." --max-tokens 160 2>&1 | tail -4
+      fi
+    else
+      warn "mlx-sidecar missing — the art lane stays dark"
+    fi
+  fi
+}
+
 cmd_bootstrap() {
   info "the full E2E bootstrap"
   cmd_install
@@ -178,7 +230,7 @@ cmd_bootstrap() {
   info "bootstrap complete. day-1:"
   echo "    jj st                       # the working copy"
   echo "    ./scaffold.sh mesh          # NATS + a live NPC actor"
-  echo "    ./scaffold.sh export \"...\"  # seed → Blender render"
+  echo "    ./scaffold.sh content \"...\" # layer 1: brief → seed → manifest → render"
   echo "    ./swarm.sh \"a brief\"        # the 5-creative-agent fanout"
 }
 
@@ -195,8 +247,9 @@ main() {
     new)       cmd_new "${1:-}";;
     mesh)      cmd_mesh;;
     export)    cmd_export "${1:-}";;
+    content)   cmd_content "$@";;
     bootstrap) cmd_bootstrap;;
-    *)         die "usage: scaffold.sh [bootstrap|install|verify|new <name>|mesh|export \"brief\"]";;
+    *)         die "usage: scaffold.sh [bootstrap|install|verify|new <name>|mesh|export|content \"brief\"]";;
   esac
 }
 

@@ -58,13 +58,26 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
 
 ## v1.x — the core engine (the Rust/Go runtime)
 
+- [x] **layer 1: content creation** (`./scaffold.sh content "<brief>"` +
+  the swarm + the diffuser + the eye) — brief → GAIA seed → manifest →
+  render, with every stage an attested inscription
+  ([first-layer-content-creation.md](first-layer-content-creation.md))
+- [ ] **the hub-and-instance world** — cities as persistent social hubs
+  (50–100 CCU, 10–15 TPS), dungeons as ephemeral instances (1–4 players,
+  30–60 TPS); the same manifest serves both, the difference declared at
+  spawn time
 - [ ] the Rust core: tick loop, frame arenas, entity structs (wgpu +
   Rapier3D + SDF)
+- [ ] the Tokio server loop: the zero-lock main loop (mpsc command hub +
+  `select!` tick), hub mode vs instance mode, length-prefixed frames —
+  the mesh node in production form
 - [ ] the Go multiplexer: sync.Pool, mmap ring buffers, the NATS mesh in
   production form (the actor skeleton compiled, not scripted)
 - [ ] the fauna stack in Rust (the floors are the JS twins)
 - [ ] the needs/goals scheduler as a first-class reducer (the Dwarf-Fortress
   clock, the mesh-NPC grown up)
+- [ ] input sequencing: client inputs tagged with monotonic sequence
+  numbers, prediction + reconciliation on drift
 
 ## v2.x — the world-model sim-MMO (design v2)
 

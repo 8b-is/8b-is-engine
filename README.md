@@ -39,6 +39,7 @@
 - [host system requirements](#host-system-requirements)
 - [the client stack — CSS + HTML + WASM](docs/client-ui.md)
 - [GAIA — the world-memory](docs/gaia-world-memory.md)
+- [layer 1 — content creation, ideation → mid-pipeline](docs/first-layer-content-creation.md)
 - [the browser client — mesh.js + the GAIA dashboard](client/)
 - [integration guide — UE · Unity · VSCode](docs/integration-guide.md)
 - [the constellation](#the-constellation)
