@@ -69,8 +69,12 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   configurable empty-tick threshold (`--retire-after`, default 60; hubs
   persist) — verified live: an instance boots, runs, and retires with the
   resurrection message (exit 0)
-- [ ] the Rust core: tick loop, frame arenas, entity structs (wgpu +
-  Rapier3D + SDF)
+- [x] **the Rust core's entity registry** (`world-core::entity`) — the
+  sparse-set Entities with archetype-aligned component columns
+  (position/velocity/needs) behind swap-remove kill: constant time, dense
+  iteration, cache-friendly lockstep columns for the tick loop — the frame
+  arena the fauna and the mesh's actors will live in (tested: swap-remove,
+  round-trip, columns)
 - [x] **the Tokio server loop** (`crates/mesh-node`) — the zero-lock main
   loop (mpsc command hub + `select!` tick), hub vs instance modes (10/30
   TPS), length-framed wire, folding GAIA + the keeper every tick with

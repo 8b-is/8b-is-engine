@@ -6,6 +6,7 @@
 //! client, and shared with the mesh actors. Bit-identical to
 //! quantTernEngine/gaia.ts (Node) and examples/gaia.py (Python).
 
+pub mod entity;
 pub mod fold;
 pub mod gaia;
 pub mod sim;
@@ -14,6 +15,7 @@ pub mod transport;
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
 
+pub use entity::{Entities, Entity};
 pub use fold::{Delta, Keeper, Verdict};
 pub use gaia::{gaia_state, gaia_wire, GaiaState, LAYERS, WEATHER};
 pub use sim::{Fauna, SimWorld};
