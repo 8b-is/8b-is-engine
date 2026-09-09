@@ -1,0 +1,18 @@
+[package]
+name = "mesh-node"
+description = "the zone node: a zero-lock Tokio event loop (hub + instance modes) folding GAIA + the keeper over the mesh wire"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bytes = "1"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "macros", "time", "sync", "io-util"] }
+world-core = { path = "../world-core" }
+
+[[bin]]
+name = "mesh-node"
+path = "src/main.rs"

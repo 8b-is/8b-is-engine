@@ -42,30 +42,46 @@ pub struct Keeper {
     pub last_tick: HashMap<String, u64>,
     pub admitted: u64,
     pub refused: u64,
+    /// the ledger sequence bound to every adjudication (the semantic fold's
+    /// clock) — the world's own counter, monotone
+    pub seq: u64,
 }
 
 impl Keeper {
-    /// Adjudicate one delta. Admission = provable continuation.
+    /// Adjudicate one delta. Admission = provable continuation. Every
+    /// adjudication — admitted or refused — binds the next ledger sequence.
     pub fn adjudicate(&mut self, actor: &str, d: &Delta) -> Verdict {
+        self.seq += 1;
         if !self.zone.contains_key(actor) {
             self.zone.insert(actor.to_string(), [d.h, d.r, d.s]);
             self.last_tick.insert(actor.to_string(), d.t);
             self.admitted += 1;
             return Verdict::Admitted; // birth — first attested state
         }
+        let verdict = Self::eval(actor, d, &self.last_tick);
+        match verdict {
+            Verdict::Admitted => {
+                self.zone.insert(actor.to_string(), [d.h, d.r, d.s]);
+                self.last_tick.insert(actor.to_string(), d.t);
+                self.admitted += 1;
+            }
+            Verdict::Refused(_) => self.refused += 1,
+        }
+        verdict
+    }
+
+    /// the pure admissibility check — no mutation, only the verdict.
+    fn eval(actor: &str, d: &Delta, last_tick: &HashMap<String, u64>) -> Verdict {
         // the tick is monotonic per actor: a re-delivered delta is a
         // replay, refused durable (idempotent fold)
-        if d.t <= *self.last_tick.get(actor).unwrap_or(&0) {
-            self.refused += 1;
+        if d.t <= *last_tick.get(actor).unwrap_or(&0) {
             return Verdict::Refused("tick not monotonic — cannot continue its past");
         }
         if !(0.0..=1.0).contains(&d.h) || !(0.0..=1.0).contains(&d.r) || !(0.0..=1.0).contains(&d.s) {
-            self.refused += 1;
             return Verdict::Refused("needs out of range");
         }
         if let Some(action) = &d.action {
             let Some((_, need)) = ACTIONS.iter().find(|(a, _)| a == action) else {
-                self.refused += 1;
                 return Verdict::Refused("unknown action — outside the vocabulary");
             };
             // the action must be entitled by the attestation itself:
@@ -77,13 +93,9 @@ impl Keeper {
             };
             let threshold = THRESH.iter().find(|(n, _)| n == need).map(|(_, v)| *v).unwrap();
             if attested > threshold {
-                self.refused += 1;
                 return Verdict::Refused("action without need");
             }
         }
-        self.zone.insert(actor.to_string(), [d.h, d.r, d.s]);
-        self.last_tick.insert(actor.to_string(), d.t);
-        self.admitted += 1;
         Verdict::Admitted
     }
 }

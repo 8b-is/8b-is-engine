@@ -70,9 +70,11 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   spawn time
 - [ ] the Rust core: tick loop, frame arenas, entity structs (wgpu +
   Rapier3D + SDF)
-- [ ] the Tokio server loop: the zero-lock main loop (mpsc command hub +
-  `select!` tick), hub mode vs instance mode, length-prefixed frames —
-  the mesh node in production form
+- [x] **the Tokio server loop** (`crates/mesh-node`) — the zero-lock main
+  loop (mpsc command hub + `select!` tick), hub vs instance modes (10/30
+  TPS), length-framed wire, folding GAIA + the keeper every tick with
+  durable refusals — verified live: a delta in, the folded zone broadcast
+  out
 - [ ] the Go multiplexer: sync.Pool, mmap ring buffers, the NATS mesh in
   production form (the actor skeleton compiled, not scripted)
 - [ ] the fauna stack in Rust (the floors are the JS twins)

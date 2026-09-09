@@ -92,6 +92,7 @@ pub fn validate_staged(dir: &Path, manifest: &StageManifest) -> Result<(), Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     fn tmpdir(tag: &str) -> PathBuf {
         let d = std::env::temp_dir().join(format!("pipeline-test-{tag}-{}", std::process::id()));
