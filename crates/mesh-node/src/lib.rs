@@ -21,6 +21,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, Mutex};
 use world_core::fold::{Delta, Keeper};
+use world_core::SimWorld;
 
 /// The zone's tick profile.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -46,11 +47,6 @@ impl ZoneMode {
     }
 }
 
-/// One client's socket endpoints — the writer is owned by a spawned task.
-struct Client {
-    tx: mpsc::Sender<Bytes>,
-}
-
 /// Commands the client loops send to the main tick loop.
 #[derive(Debug)]
 pub enum ServerCommand {
@@ -70,6 +66,8 @@ pub struct MeshNode {
     clients: Arc<Mutex<HashMap<SocketAddr, mpsc::Sender<Bytes>>>>,
     /// GAIA's clock — the world's own tick counter
     world_tick: Arc<Mutex<u64>>,
+    /// the zone's own inhabitants — the world runs without you
+    sim: Arc<Mutex<SimWorld>>,
 }
 
 impl MeshNode {
@@ -87,6 +85,7 @@ impl MeshNode {
         let keeper = Arc::clone(&self.keeper);
         let clients = Arc::clone(&self.clients);
         let world_tick = Arc::clone(&self.world_tick);
+        let sim = Arc::clone(&self.sim);
         let brief = self.brief.clone();
         let tps = self.mode.ticks_per_second();
         tokio::spawn(async move {
@@ -94,9 +93,15 @@ impl MeshNode {
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
-                        let k = keeper.lock().await;
-                        *world_tick.lock().await += 1;
-                        let state = framed(zone_json(&brief, k.seq, &k.zone, *world_tick.lock().await));
+                        let wt = *world_tick.lock().await + 1;
+                        *world_tick.lock().await = wt;
+                        let mut k = keeper.lock().await;
+                        // the cast lives first — fauna fold under their own
+                        // names before any player's delta
+                        for (name, d) in sim.lock().await.step(wt) {
+                            k.adjudicate(&name, &d);
+                        }
+                        let state = framed(zone_json(&brief, k.seq, &k.zone, wt));
                         let cs = clients.lock().await;
                         for tx in cs.values() {
                             let _ = tx.send(Bytes::from(state.clone())).await;
@@ -140,7 +145,7 @@ impl MeshNode {
 
 /// handle_client — length-prefixed frames in, a writer task out.
 async fn handle_client(
-    mut socket: TcpStream,
+    socket: TcpStream,
     addr: SocketAddr,
     cmd_tx: mpsc::Sender<ServerCommand>,
 ) -> std::io::Result<()> {
@@ -234,7 +239,8 @@ fn zone_json(brief: &str, seq: u64, zone: &HashMap<String, [f64; 3]>, tick: u64)
     .to_string()
 }
 
-/// new_node — a zone from a brief: GAIA's constant field, the keeper empty.
+/// new_node — a zone from a brief: GAIA's constant field, the keeper empty,
+/// the cast spawned from the same seed.
 pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
     MeshNode {
         brief: brief.to_string(),
@@ -243,6 +249,7 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
         keeper: Arc::new(Mutex::new(Keeper::default())),
         clients: Arc::new(Mutex::new(HashMap::new())),
         world_tick: Arc::new(Mutex::new(0)),
+        sim: Arc::new(Mutex::new(SimWorld::from_seed(brief, 4))),
     }
 }
 

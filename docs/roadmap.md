@@ -78,8 +78,13 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
 - [ ] the Go multiplexer: sync.Pool, mmap ring buffers, the NATS mesh in
   production form (the actor skeleton compiled, not scripted)
 - [ ] the fauna stack in Rust (the floors are the JS twins)
-- [ ] the needs/goals scheduler as a first-class reducer (the Dwarf-Fortress
-  clock, the mesh-NPC grown up)
+- [x] **the needs/goals scheduler as a first-class reducer**
+  (`world-core::sim`) — the mesh-NPC grown up and compiled: fauna with
+  needs {h,r,s}, decay + seeded breath, threshold actions (forage / sleep
+  / flee), pre-action attestation (every action entitled, zero refusals
+  in the test), deterministic from the brief — and `mesh-node` folds the
+  cast every tick (the world runs without you: four inhabitants alive
+  with no player connected, verified live)
 - [ ] input sequencing: client inputs tagged with monotonic sequence
   numbers, prediction + reconciliation on drift
 
