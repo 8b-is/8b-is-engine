@@ -92,7 +92,11 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   the node re-folds the log into the keeper, so the world survives
   restarts — fold(seed, H) = M across process boundaries (tested:
   the_world_survives_restart)
-- [ ] the fauna stack in Rust (the floors are the JS twins)
+- [x] **the fauna stack in Rust** — the cast lives twice: needs/goals in
+  `world-core::sim` (folded by the keeper) and positions/needs in the
+  register arena (`world-core::entity`), materialized at boot and synced
+  in lockstep every tick — the floors' JS twins, compiled (tested: the
+  arena reflects the fold tick for tick)
 - [x] **the needs/goals scheduler as a first-class reducer**
   (`world-core::sim`) — the mesh-NPC grown up and compiled: fauna with
   needs {h,r,s}, decay + seeded breath, threshold actions (forage / sleep

@@ -78,6 +78,9 @@ pub struct MeshNode {
     /// the durable log: every adjudication is appended to the mmap ledger,
     /// so the world survives restarts — fold(seed, H) = M, re-folded on boot
     ledger: Arc<Mutex<world_core::Ledger>>,
+    /// the frame arena: the cast materialized as entities, synced each tick
+    /// (positions + needs columns — the future render's world)
+    arena: Arc<Mutex<world_core::Entities>>,
 }
 
 /// The commit record for one player's input — consumed vs committed, made
@@ -115,6 +118,7 @@ impl MeshNode {
         let applied = Arc::clone(&self.applied);
         let sim = Arc::clone(&self.sim);
         let ledger = Arc::clone(&self.ledger);
+        let arena = Arc::clone(&self.arena);
         let brief = self.brief.clone();
         let tps = self.mode.ticks_per_second();
         let retire_after = self.retire_after;
@@ -148,10 +152,15 @@ impl MeshNode {
                     // the cast lives first — fauna fold under their own
                     // names before any player's delta, and every fold is
                     // appended to the durable ledger (the world's log)
-                    for (name, d) in sim.lock().await.step(wt) {
-                        k.adjudicate(&name, &d);
-                        ledger_append(&ledger, &name, &d).await;
+                    let cast = sim.lock().await.step(wt);
+                    for (name, d) in &cast {
+                        k.adjudicate(name, d);
+                        ledger_append(&ledger, name, d).await;
                     }
+                    // the frame arena reflects the fold, in lockstep
+                    let mut s = sim.lock().await;
+                    let mut a = arena.lock().await;
+                    s.sync_entities(&mut a);
                     let applied_snapshot = applied.lock().await.clone();
                     let state = framed(zone_json(&brief, k.seq, &k.zone, wt, &applied_snapshot));
                     let cs = clients.lock().await;
@@ -358,7 +367,10 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
             ZoneMode::Instance => 60,
         },
         ledger: Arc::new(Mutex::new(ledger)),
+        arena: Arc::new(Mutex::new(world_core::Entities::default())),
     };
+    // the cast takes its place in the arena: one entity per fauna
+    *node.arena.try_lock().unwrap() = node.sim.try_lock().unwrap().materialize();
     // restart-safe: re-fold the durable log into the keeper — the world
     // that was, becomes the world that is
     if let Ok(bytes) = node.ledger.try_lock().unwrap().read_all() {
