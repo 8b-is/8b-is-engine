@@ -42,7 +42,7 @@ The 8b-is engine is the theory, compiled. Each subsystem is a term:
 | **append-only history** | the JetStream ledger — constraint without erasure, replayable |
 | **partial / private views** | the presence layer — each actor holds a private view of a shared world |
 | **Ising sync / phase transition** | centerfugeq's Ising lane — phase transitions as the world's material state |
-| **POP · REFUSE · BIND · COLLAPSE** | the actor-mesh's message verbs: emit, deny, attach, crash-and-burn |
+| **POP · REFUSE · BIND · COLLAPSE** | the actor-mesh's message verbs: emit, deny, attach, crash-and-burn — formalized by Flyxion's *Spherepop* (recorded in `8b-is/raw_research/`): histories primary, refusals with reasons, the applied/committed split as VIEW vs COLLAPSE |
 | **geometry of continuation** | the eventbus subjects — a name is a route; a route is a state's continuation |
 
 The one line, engine-side: **an actor is a name; a name is a subject; a
