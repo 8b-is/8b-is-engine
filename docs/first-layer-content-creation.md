@@ -46,6 +46,23 @@ layer (the lanes that need no paid model):
 ./swarm.sh "the sanctuary vertical slice"                    # the paid-model fanout (DeepSeek)
 ```
 
+## the typed implementation
+
+`crates/pipeline` is this layer compiled: `gdd_parser` turns GDD text into
+the typed `ZoneManifest` (archetypes, items, the ternary board, the GAIA
+field) — deterministic by default, an env-wired LLM adapter optional;
+`stager` moves every artifact into `assets/staged/` with SHA256
+attestation and a stage manifest (`pipeline verify` re-checksums);
+`retopo` validates mesh intake; the `pipeline run` CLI orchestrates the
+stages sequentially on Tokio. The scaffold's `content` command and the
+crate agree on the same brief → same seed — verified.
+
+```bash
+cargo run -p pipeline -- run "the bazaar of the 108 gates"   # parse → stage
+cargo run -p pipeline -- run docs/gdd/zone.md --art          # + concept art + the eye
+cargo run -p pipeline -- verify                              # corruption check
+```
+
 ## the doctrine this layer enforces
 
 1. **One brief, one seed, one universe.** The brief IS the seed; GAIA is

@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs'
 
 const [brief = 'sanctuary·overworld', tickArg = '86400'] = process.argv.slice(2)
-const bytes = readFileSync(new URL('./target/wasm32-unknown-unknown/release/world_core.wasm', import.meta.url))
+const bytes = readFileSync(new URL('../../target/wasm32-unknown-unknown/release/world_core.wasm', import.meta.url))
 const { instance } = await WebAssembly.instantiate(bytes, {})
 const { gaia_wire_c, gaia_free, memory } = instance.exports
 

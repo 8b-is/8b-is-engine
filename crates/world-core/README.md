@@ -19,19 +19,20 @@ the same brief + tick give the same universe in all four languages.
 ## build
 
 ```bash
-cargo test            # native — 8 tests, incl. the cross-language fixtures
-cargo build --release # the native lib for the server / Steam client
+cargo test -p world-core            # native — 8 tests, incl. the cross-language fixtures
+cargo build -p world-core --release # the native lib for the server / Steam client
 ```
 
 For the WASM surface (the browser/WebView client), use the official
 rust toolchain installed at `~/.rust-official` (Homebrew rust's sysroot
 metadata differs from the dist std, so the wasm std must come from the
-same dist as the toolchain):
+same dist as the toolchain). The workspace root owns `target/`, so run
+from anywhere under `8b-is-engine/`:
 
 ```bash
 RUSTC=$HOME/.rust-official/bin/rustc \
-  $HOME/.rust-official/bin/cargo build --release --target wasm32-unknown-unknown
-node smoke.js   # instantiate + call gaia_wire_c from JS (see smoke.js)
+  $HOME/.rust-official/bin/cargo build --release -p world-core --target wasm32-unknown-unknown
+node crates/world-core/smoke.js   # instantiate + call gaia_wire_c from JS
 ```
 
 ## the JS call

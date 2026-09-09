@@ -59,8 +59,10 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
 ## v1.x — the core engine (the Rust/Go runtime)
 
 - [x] **layer 1: content creation** (`./scaffold.sh content "<brief>"` +
-  the swarm + the diffuser + the eye) — brief → GAIA seed → manifest →
-  render, with every stage an attested inscription
+  the swarm + the diffuser + the eye, and now the typed `crates/pipeline`
+  crate: gdd_parser → stager with SHA256 attestation, the async
+  orchestrator, mesh intake) — brief → GAIA seed → manifest → render,
+  with every stage an attested inscription
   ([first-layer-content-creation.md](first-layer-content-creation.md))
 - [ ] **the hub-and-instance world** — cities as persistent social hubs
   (50–100 CCU, 10–15 TPS), dungeons as ephemeral instances (1–4 players,

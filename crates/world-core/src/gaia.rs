@@ -8,7 +8,7 @@
 // Bit-identical to quantTernEngine/gaia.ts (Node) and examples/gaia.py
 // (Python) — this crate is the shared core all three surfaces link.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 pub const LAYERS: [&str; 8] = [
@@ -19,7 +19,7 @@ pub const WEATHER: [&str; 8] = [
 ];
 
 /// The eight layers, folded from one brief at one tick.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GaiaState {
     /// time — the zone's tick / epoch
     #[serde(rename = "t")]

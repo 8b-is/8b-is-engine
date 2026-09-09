@@ -1,0 +1,19 @@
+[package]
+name = "pipeline"
+description = "Layer 1: ingestion and staging — GDD text to typed, checksummed, staged assets"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ron = "0.8"
+sha2 = "0.10"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "process", "macros", "time"] }
+world-core = { path = "../world-core" }
+
+[[bin]]
+name = "pipeline"
+path = "src/main.rs"
