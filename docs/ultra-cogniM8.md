@@ -60,6 +60,10 @@ so the world can be played. The floors are temples; the mesh is the
 pantheon's nervous system; the ledger is its scripture (append-only,
 refusals preserved as the canon of what the world would not allow).
 
+The sanctuary's sigil — the tent and its pillars —
+lives in [`assets/sanctuary-ascii.txt`](../assets/sanctuary-ascii.txt):
+Mahākāla's layer, drawn in the wire's own alphabet of | and ' and .
+
 ## Phoenix: mq-8b-is (the return lane)
 
 **Phoenix** is the engine's resurrection lane, named after the oldest
