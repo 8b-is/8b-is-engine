@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⟦ THE WORLD DASHBOARD ⟧ · 8b-is · mesh-node + relay + the two memories</title>
+<style>
+@layer base,overlay;
+:root{color-scheme:dark;--gold:oklch(.85 .16 85);--cyan:oklch(.8 .13 200);--pink:oklch(.68 .2 350);--green:oklch(.72 .18 150);--dim:oklch(.6 .02 265)}
+@layer base{
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1000px 500px at 70% -10%,oklch(.16 .04 265),#08090f 70%);color:oklch(.9 .02 265);font-family:ui-monospace,monospace;min-height:100vh}
+header{padding:16px 22px;border-bottom:1px solid color-mix(in oklch,var(--cyan) 25%,transparent);display:flex;justify-content:space-between;align-items:center}
+h1{font-size:14px;letter-spacing:5px;color:var(--gold);margin:0;font-weight:600}
+#status{font-size:11px;color:var(--dim)}
+#status::before{content:"○ ";color:var(--pink)}
+#status[data-up="1"]::before{content:"● ";color:var(--green)}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;padding:20px;container-type:inline-size}
+.card{background:oklch(.16 .03 265 / .9);border:1px solid color-mix(in oklch,var(--gold) 20%,transparent);border-radius:14px;padding:14px;backdrop-filter:blur(8px)}
+.card h2{font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin:0 0 10px}
+.card .dim{font-size:10px;color:var(--dim)}
+.row{display:flex;justify-content:space-between;gap:8px;font-size:11px;margin:4px 0}
+.row b{color:var(--gold);font-weight:600}
+#gaia{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#gaia .g{font-size:11px}
+#gaia .g b{display:block;color:var(--cyan);font-size:9px;letter-spacing:2px}
+#publish{grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#publish input{flex:1;min-width:220px;background:oklch(.12 .02 265);border:1px solid color-mix(in oklch,var(--pink) 40%,transparent);border-radius:9px;color:oklch(.9 .02 265);font:11px ui-monospace,monospace;padding:9px 12px;outline:none}
+#publish button{background:color-mix(in oklch,var(--cyan) 15%,transparent);border:1px solid color-mix(in oklch,var(--cyan) 50%,transparent);border-radius:9px;color:var(--cyan);font:700 11px ui-monospace,monospace;padding:9px 16px;cursor:pointer}
+#memories{grid-column:1/-1}
+#memories .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+}
+@layer overlay{
+body:has(#memories .two .col:empty){}
+.card:has(.refused){border-color:var(--pink)}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>⟦ THE WORLD DASHBOARD ⟧</h1>
+  <span id="status">connecting to the relay…</span>
+</header>
+<main>
+  <div class="card" id="gaia">
+    <h2>gaia · the field</h2>
+    <div class="g"><b>weather</b><span id="g-w">—</span></div>
+    <div class="g"><b>gravity</b><span id="g-g">—</span></div>
+    <div class="g"><b>entropy</b><span id="g-e">—</span></div>
+    <div class="g"><b>memory</b><span id="g-m">—</span></div>
+    <div class="row"><span class="dim">tick</span><b id="g-t">—</b></div>
+    <div class="row"><span class="dim">ledger seq</span><b id="g-s">—</b></div>
+  </div>
+  <div class="card">
+    <h2>zone state · M = fold(H)</h2>
+    <div id="zone" class="dim">waiting for the first broadcast…</div>
+  </div>
+  <div class="card">
+    <h2>applied · consumed vs committed</h2>
+    <div id="applied" class="dim">the node's applied map — the world's ledger position per input, with its outcome</div>
+  </div>
+  <div class="card" id="memories">
+    <h2>ultra-cogniM8 · the two memories</h2>
+    <div class="two">
+      <div class="col" id="collective"><b class="dim">collective (the ledger, refusals and all)</b></div>
+      <div class="col" id="individual"><b class="dim">individual (this browser's own path)</b></div>
+    </div>
+  </div>
+  <div id="publish">
+    <input id="pub" placeholder='a delta to the world — e.g. {"t":1,"s":7,"n":{"h":0.6,"r":0.9,"s":0.9}}'>
+    <button id="go">⚡ ATTEST TO THE WORLD</button>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id)
+const wsUrl = new URLSearchParams(location.search).get('relay') || 'ws://127.0.0.1:7872'
+const ws = new WebSocket(wsUrl)
+let mySeq = 0
+ws.onopen = () => {
+  $('status').dataset.up = '1'
+  $('status').textContent = `wired · ${wsUrl}`
+  // a birth: the browser attests itself into the world
+  send({ t: 1, s: ++mySeq, n: { h: 0.9, r: 0.9, s: 0.95 } })
+}
+ws.onmessage = (e) => {
+  let f
+  try { f = JSON.parse(e.data) } catch { return }
+  $('g-w').textContent = f.gaia?.weather ?? '—'
+  $('g-g').textContent = f.gaia?.gravity ?? '—'
+  $('g-e').textContent = f.gaia?.entropy ?? '—'
+  $('g-m').textContent = f.gaia?.memory ?? '—'
+  $('g-t').textContent = f.tick
+  $('g-s').textContent = f.seq
+  renderZone(f.zone_state)
+  renderApplied(f.applied)
+  renderMemories(f)
+}
+ws.onclose = () => { $('status').textContent = 'the relay sleeps — start mesh-node + mesh-relay' }
+
+function send(obj) {
+  ws.send(JSON.stringify(obj))
+}
+function renderZone(zone) {
+  const el = $('zone')
+  const actors = Object.entries(zone || {})
+  if (!actors.length) { el.innerHTML = '<span class="dim">no actors yet</span>'; return }
+  el.innerHTML = actors.map(([a, n]) =>
+    `<div class="row"><span>${a}</span><b>${['h', 'r', 's'].map(k => `${k} ${n[k]?.toFixed?.(2) ?? n[k]}`).join(' · ')}</b></div>`
+  ).join('')
+}
+function renderApplied(applied) {
+  const el = $('applied')
+  const entries = Object.entries(applied || {})
+  if (!entries.length) { el.innerHTML = '<span class="dim">nothing attested yet</span>'; return }
+  el.innerHTML = entries.map(([a, e]) =>
+    `<div class="row ${e.out === 'refused' ? 'refused' : ''}"><span>${a} · in:${e.in}</span><b>#${e.seq} ${e.out}</b></div>`
+  ).join('')
+}
+function renderMemories(f) {
+  const col = $('collective')
+  const ind = $('individual')
+  const actors = Object.keys(f.zone_state || {})
+  const me = actors.find((a) => a.startsWith('127.0')) || null
+  col.innerHTML = `<b class="dim">collective (the ledger, refusals and all)</b><div style="margin-top:6px">${actors.length} actors in the world · seq ${f.seq} · my fold lives here</div>`
+  ind.innerHTML = `<b class="dim">individual (this browser's own path)</b><div class="row" style="margin-top:6px"><span>${me ?? 'not yet attested'}</span><b>${me && f.zone_state[me] ? `h ${f.zone_state[me].h.toFixed(2)}` : '—'}</b></div>`
+}
+$('go').addEventListener('click', () => {
+  try {
+    const d = JSON.parse($('pub').value || '{}')
+    d.s = ++mySeq
+    d.t = d.t || 1
+    send(d)
+  } catch { $('pub').value = 'not valid JSON' }
+})
+</script>
+</body>
+</html>
