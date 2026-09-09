@@ -13,6 +13,7 @@ pub mod gaia;
 pub mod memory;
 pub mod sim;
 pub mod tern;
+pub mod tick;
 pub mod transport;
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
@@ -23,5 +24,6 @@ pub use kompress::{compress as kcompress, decompress as kdecompress, frame as kf
 pub use gaia::{gaia_state, gaia_wire, GaiaState, LAYERS, WEATHER};
 pub use memory::{parse as parse_memory, CollectiveMemory, IndividualMemory};
 pub use sim::{Fauna, SimWorld};
+pub use tick::Clock;
 pub use tern::{balanced_trits, lcg, mulberry32, seed_from_text};
 pub use transport::{Ledger, Ring};
