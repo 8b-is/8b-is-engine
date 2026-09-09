@@ -83,8 +83,11 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   + restart-safe + SHA256-attested), with the ring draining into the
   ledger where the two meet — tested end to end. The Go lane is
   consolidated onto these Rust primitives.
-- [ ] the Go multiplexer: sync.Pool + the ring/ledger transport in
-  production form (the actor skeleton compiled, not scripted)
+- [x] **the durable world** — mesh-node's every adjudication (cast + players)
+  appends to the mmap ledger (`world-core::transport::Ledger`); on boot
+  the node re-folds the log into the keeper, so the world survives
+  restarts — fold(seed, H) = M across process boundaries (tested:
+  the_world_survives_restart)
 - [ ] the fauna stack in Rust (the floors are the JS twins)
 - [x] **the needs/goals scheduler as a first-class reducer**
   (`world-core::sim`) — the mesh-NPC grown up and compiled: fauna with

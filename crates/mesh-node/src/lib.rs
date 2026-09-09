@@ -75,6 +75,9 @@ pub struct MeshNode {
     /// lifecycle: an instance zone retires after this many empty ticks
     /// (hub zones are persistent — the seed resurrects instances anytime)
     retire_after: u64,
+    /// the durable log: every adjudication is appended to the mmap ledger,
+    /// so the world survives restarts — fold(seed, H) = M, re-folded on boot
+    ledger: Arc<Mutex<world_core::Ledger>>,
 }
 
 /// The commit record for one player's input — consumed vs committed, made
@@ -111,6 +114,7 @@ impl MeshNode {
         let world_tick = Arc::clone(&self.world_tick);
         let applied = Arc::clone(&self.applied);
         let sim = Arc::clone(&self.sim);
+        let ledger = Arc::clone(&self.ledger);
         let brief = self.brief.clone();
         let tps = self.mode.ticks_per_second();
         let retire_after = self.retire_after;
@@ -136,15 +140,17 @@ impl MeshNode {
                     // spin-up was fold-from-seed, so the seed resurrects it
                     let empty = clients.lock().await.is_empty();
                     if empty { idle += 1 } else { idle = 0 }
-                    if is_instance && idle >= retire_after {
+                    if is_instance && retire_after < u64::MAX && idle >= retire_after {
                         println!("⟦ instance retired ⟧ empty for {idle} ticks — the seed can resurrect {brief} anytime");
                         return Ok(());
                     }
                     let mut k = keeper.lock().await;
                     // the cast lives first — fauna fold under their own
-                    // names before any player's delta
+                    // names before any player's delta, and every fold is
+                    // appended to the durable ledger (the world's log)
                     for (name, d) in sim.lock().await.step(wt) {
                         k.adjudicate(&name, &d);
+                        ledger_append(&ledger, &name, &d).await;
                     }
                     let applied_snapshot = applied.lock().await.clone();
                     let state = framed(zone_json(&brief, k.seq, &k.zone, wt, &applied_snapshot));
@@ -190,6 +196,7 @@ impl MeshNode {
                                         tick: *world_tick.lock().await,
                                     },
                                 );
+                                ledger_append(&ledger, addr.to_string().as_str(), &delta).await;
                             }
                         }
                     }
@@ -310,8 +317,34 @@ fn zone_json(
 
 /// new_node — a zone from a brief: GAIA's constant field, the keeper empty,
 /// the cast spawned from the same seed.
+/// delta_wire — the compact mesh wire from a Delta (the ledger's record).
+fn delta_wire(d: &Delta) -> serde_json::Value {
+    serde_json::json!({
+        "t": d.t,
+        "n": { "h": d.h, "r": d.r, "s": d.s },
+        "a": d.action,
+        "z": if d.asleep { 1 } else { 0 },
+    })
+}
+
+/// ledger_append — one adjudication, made durable: actor + wire record.
+async fn ledger_append(ledger: &Arc<Mutex<world_core::Ledger>>, actor: &str, d: &Delta) {
+    let rec = serde_json::json!({ "a": actor, "w": delta_wire(d) });
+    let mut l = ledger.lock().await;
+    let mut buf = serde_json::to_vec(&rec).unwrap_or_default();
+    buf.push(b'\n'); // the ledger is line-delimited — the fold splits on it
+    let _ = l.append(&buf);
+}
+
 pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
-    MeshNode {
+    let ledger_path = std::env::var("VAKED_MESH_LEDGER")
+        .unwrap_or_else(|_| format!("out/mesh-node-{port}.log"));
+    if let Some(parent) = std::path::Path::new(&ledger_path).parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let ledger = world_core::Ledger::open(std::path::Path::new(&ledger_path))
+        .unwrap_or_else(|e| panic!("ledger open failed: {e}"));
+    let node = MeshNode {
         brief: brief.to_string(),
         mode,
         port,
@@ -324,7 +357,25 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
             ZoneMode::Hub => u64::MAX,
             ZoneMode::Instance => 60,
         },
+        ledger: Arc::new(Mutex::new(ledger)),
+    };
+    // restart-safe: re-fold the durable log into the keeper — the world
+    // that was, becomes the world that is
+    if let Ok(bytes) = node.ledger.try_lock().unwrap().read_all() {
+        for line in bytes.split(|b| *b == b'\n') {
+            if line.is_empty() {
+                continue;
+            }
+            if let Ok(rec) = serde_json::from_slice::<serde_json::Value>(line) {
+                if let (Some(a), Some(w)) = (rec.get("a").and_then(|v| v.as_str()), rec.get("w")) {
+                    if let Ok(d) = wire_delta(&serde_json::to_vec(w).unwrap_or_default()) {
+                        node.keeper.try_lock().unwrap().adjudicate(a, &d);
+                    }
+                }
+            }
+        }
     }
+    node
 }
 
 impl MeshNode {
@@ -454,6 +505,34 @@ mod tests {
     async fn find_port() -> u16 {
         use std::net::TcpListener;
         TcpListener::bind(("127.0.0.1", 0)).unwrap().local_addr().unwrap().port()
+    }
+
+    #[tokio::test]
+    async fn the_world_survives_restart() {
+        // the durable ledger: a player's fold is appended; a fresh node on
+        // the same log re-folds it — fold(seed, H) = M across restarts
+        let dir = std::env::temp_dir().join(format!("mesh-node-restart-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let ledger_path = dir.join("world.log");
+        std::env::set_var("VAKED_MESH_LEDGER", &ledger_path);
+
+        let port = find_port().await;
+        let node1 = new_node("sanctuary", ZoneMode::Hub, port);
+        let handle1 = tokio::spawn(async move { node1.run().await });
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        let p = br#"{"t":1,"s":1,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
+        stream.write_all(&(p.len() as u32).to_be_bytes()).await.unwrap();
+        stream.write_all(p).await.unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+        handle1.abort();
+
+        // restart on the same ledger — the world that was, becomes
+        let node2 = new_node("sanctuary", ZoneMode::Hub, port + 1);
+        let k2 = node2.keeper.lock().await;
+        assert!(k2.seq > 0, "the ledger re-folded into the keeper");
+        assert!(k2.zone.len() >= 1, "the player's fold survived the restart");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[tokio::test]
