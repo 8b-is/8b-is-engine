@@ -213,6 +213,7 @@ git clone git@github.com:8b-is/8b-is-engine.git && cd 8b-is-engine
 ./scaffold.sh verify        # probe every lane (tools + engine + mesh + assets)
 ./scaffold.sh mesh          # start nats-server + run a live NPC actor (the world runs without you)
 ./scaffold.sh export "the sanctuary at dawn"   # seed → manifest → Blender EEVEE render
+./scripts/e2e.sh            # the E2E oneshot: tests + verify + floors + the live lane
 ```
 
 `scaffold.sh` is idempotent and self-contained (macOS + Linux, Silverblue

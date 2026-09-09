@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# e2e.sh — the ultra-deepwork E2E oneshot: one command proves the stack.
+#
+#   workspace tests → scaffold verify → the 25-floor smoke harness →
+#   the live lane (node + relay + a real browser WebSocket delta) →
+#   ultra-cogniM8's two memories on the live ledger.
+#
+# Exit 0 only when every stage passes.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GRN=$'\033[32m'; RST=$'\033[0m'
+ok(){ echo "  ${GRN}✓${RST} $1"; }
+die(){ echo "✗ $1" >&2; exit 1; }
+
+cd "$ROOT"
+echo "⟦ E2E oneshot :: 8b-is-engine ⟧"
+
+echo "— workspace tests (40+: gaia, fold, sim, entity, transport, memory, kompress, tick, pipeline, mesh-node, mesh-relay)"
+cargo test --workspace
+
+echo "— scaffold verify (the E2E lane probe)"
+./scaffold.sh verify
+
+echo "— the floors smoke harness (centerfugeq + pocoo copies)"
+(cd ../centerfugeq && node scripts/check-floors.mjs quantGame/*.html game/*.html demos/*.html ../pocoo.vaked.dev/demos/centerfugeq/*.html) || die "floors failed"
+
+echo "— the live lane: node + relay + a real browser WebSocket delta"
+LEDGER="$(mktemp -d)/world.log"
+VAKED_MESH_LEDGER="$LEDGER" "$ROOT/target/debug/mesh-node" hub "sanctuary" --port 7871 >/tmp/e2e-node.log 2>&1 &
+NODE_PID=$!
+"$ROOT/target/debug/mesh-relay" --relay-port 7872 --node-port 7871 >/tmp/e2e-relay.log 2>&1 &
+RELAY_PID=$!
+trap 'kill $NODE_PID $RELAY_PID 2>/dev/null || true' EXIT
+sleep 2
+
+python3 - "$LEDGER" <<'PY'
+import base64, json, os, socket, struct, sys
+
+HOST, PORT = "127.0.0.1", 7872
+
+def ws_connect(host, port):
+    s = socket.create_connection((host, port), timeout=3)
+    s.settimeout(4)
+    key = base64.b64encode(os.urandom(16)).decode()
+    req = (f"GET / HTTP/1.1\r\nHost: {host}:{port}\r\n"
+           f"Upgrade: websocket\r\nConnection: Upgrade\r\n"
+           f"Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n")
+    s.sendall(req.encode())
+    resp = b""
+    while b"\r\n\r\n" not in resp:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        resp += chunk
+    assert b"101" in resp.split(b"\r\n", 1)[0], f"handshake: {resp[:80]!r}"
+    return s
+
+def ws_send(s, text):
+    b = text.encode()
+    mask = os.urandom(4)
+    n = len(b)
+    hdr = bytes([0x81])
+    if n < 126:
+        hdr += bytes([0x80 | n])
+    elif n < 65536:
+        hdr += bytes([0x80 | 126]) + struct.pack(">H", n)
+    else:
+        hdr += bytes([0x80 | 127]) + struct.pack(">Q", n)
+    s.sendall(hdr + mask + bytes(c ^ mask[i % 4] for i, c in enumerate(b)))
+
+def ws_recv(s):
+    h = s.recv(2)
+    op, ln = h[0] & 0x0f, h[1] & 0x7f
+    if ln == 126:
+        ln = struct.unpack(">H", s.recv(2))[0]
+    elif ln == 127:
+        ln = struct.unpack(">Q", s.recv(8))[0]
+    payload = b""
+    while len(payload) < ln:
+        chunk = s.recv(ln - len(payload))
+        if not chunk:
+            break
+        payload += chunk
+    return None if op == 8 else payload.decode(errors="replace")
+
+ws = ws_connect(HOST, PORT)
+ws_send(ws, '{"t":1,"s":1,"n":{"h":0.5,"r":0.9,"s":0.9}}')
+# the relay carries the node's broadcast back as a WS text frame
+found = False
+for _ in range(60):
+    text = ws_recv(ws)
+    if text is None:
+        break
+    f = json.loads(text)
+    if any(k.startswith("127.0") for k in f.get("zone_state", {})):
+        actor = [k for k in f["zone_state"] if k.startswith("127.0")][0]
+        print(f"  browser delta folded: {actor} h={f['zone_state'][actor]['h']}")
+        found = True
+        break
+assert found, "the browser's fold never crossed the relay"
+ws.close()
+
+# ultra-cogniM8: the two memories on the live ledger
+actors, adv, ref = {}, 0, 0
+for line in open(sys.argv[1]):
+    if not line.strip():
+        continue
+    r = json.loads(line)
+    actors[r["a"]] = actors.get(r["a"], 0) + 1
+    if r.get("o") == "refused":
+        ref += 1
+    else:
+        adv += 1
+individual = {a for a in actors if a.startswith("127.0")}
+print(f"  collective: {len(actors)} actors · {adv} admissions · {ref} refusals")
+print(f"  individual (the browser): {sorted(individual)} — its own path in the world's ledger")
+PY
+
+echo "— ultra-cogniM8 live: the two memories diverge on refusals (tested in world-core::memory)"
+cargo test -p world-core memory 2>&1 | tail -1
+
+echo
+echo "⟦ E2E oneshot complete :: the world runs without you ⟧"
