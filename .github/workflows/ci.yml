@@ -1,0 +1,38 @@
+# ci.yml — the oneshot verify: scaffold + workspace tests + the floors.
+# Runs on every push and on demand (workflow_dispatch): proves the E2E lane
+# — ./scaffold.sh verify, cargo test --workspace, and the 25-floor smoke
+# harness — on Linux, the engine's second home.
+
+name: ci-oneshot
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: install the toolchain (uv, node, cargo, nats, git-lfs)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs
+          rustup toolchain install stable --profile minimal
+          sudo apt-get install -y git-lfs
+          (cd /tmp && nats-server_version=$(curl -fsSL https://api.github.com/repos/nats-io/nats-server/releases/latest | node -pe 'JSON.parse(require("fs").readFileSync(0)).tag_name') && curl -fsSL -o nats.tgz "https://github.com/nats-io/nats-server/releases/download/${nats_server_version}/nats-server-${nats_server_version}-linux-amd64.tar.gz" && tar xzf nats.tgz && sudo cp nats-server-*/nats-server /usr/local/bin/)
+
+      - name: scaffold verify (the E2E lane probe)
+        run: ./scaffold.sh verify
+
+      - name: cargo test --workspace (36+ tests: gaia, fold, sim, entity,
+        transport, memory, kompress, pipeline, mesh-node)
+        run: cargo test --workspace
+
+      - name: the floors smoke harness (centerfugeq + pocoo copies)
+        working-directory: ../centerfugeq
+        run: node scripts/check-floors.mjs quantGame/*.html game/*.html demos/*.html ../pocoo.vaked.dev/demos/centerfugeq/*.html

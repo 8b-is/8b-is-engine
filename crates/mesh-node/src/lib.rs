@@ -154,8 +154,12 @@ impl MeshNode {
                     // appended to the durable ledger (the world's log)
                     let cast = sim.lock().await.step(wt);
                     for (name, d) in &cast {
-                        k.adjudicate(name, d);
-                        ledger_append(&ledger, name, d).await;
+                        let v = k.adjudicate(name, d);
+                        let out = match v {
+                            world_core::fold::Verdict::Admitted => "admitted",
+                            world_core::fold::Verdict::Refused(_) => "refused",
+                        };
+                        ledger_append(&ledger, name, d, out).await;
                     }
                     // the frame arena reflects the fold, in lockstep
                     let mut s = sim.lock().await;
@@ -205,7 +209,7 @@ impl MeshNode {
                                         tick: *world_tick.lock().await,
                                     },
                                 );
-                                ledger_append(&ledger, addr.to_string().as_str(), &delta).await;
+                                ledger_append(&ledger, addr.to_string().as_str(), &delta, out).await;
                             }
                         }
                     }
@@ -337,8 +341,8 @@ fn delta_wire(d: &Delta) -> serde_json::Value {
 }
 
 /// ledger_append — one adjudication, made durable: actor + wire record.
-async fn ledger_append(ledger: &Arc<Mutex<world_core::Ledger>>, actor: &str, d: &Delta) {
-    let rec = serde_json::json!({ "a": actor, "w": delta_wire(d) });
+async fn ledger_append(ledger: &Arc<Mutex<world_core::Ledger>>, actor: &str, d: &Delta, out: &str) {
+    let rec = serde_json::json!({ "a": actor, "o": out, "w": delta_wire(d) });
     let mut l = ledger.lock().await;
     let mut buf = serde_json::to_vec(&rec).unwrap_or_default();
     buf.push(b'\n'); // the ledger is line-delimited — the fold splits on it
@@ -373,6 +377,7 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
     *node.arena.try_lock().unwrap() = node.sim.try_lock().unwrap().materialize();
     // restart-safe: re-fold the durable log into the keeper — the world
     // that was, becomes the world that is
+    let mut max_tick = 0u64;
     if let Ok(bytes) = node.ledger.try_lock().unwrap().read_all() {
         for line in bytes.split(|b| *b == b'\n') {
             if line.is_empty() {
@@ -382,11 +387,16 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
                 if let (Some(a), Some(w)) = (rec.get("a").and_then(|v| v.as_str()), rec.get("w")) {
                     if let Ok(d) = wire_delta(&serde_json::to_vec(w).unwrap_or_default()) {
                         node.keeper.try_lock().unwrap().adjudicate(a, &d);
+                        max_tick = max_tick.max(d.t);
                     }
                 }
             }
         }
     }
+    // Phoenix: the strategy returns, the process does not rewind. The
+    // world's clock continues where the ledger left off, so the cast's new
+    // ticks are continuations — never replays refused by the keeper.
+    *node.world_tick.try_lock().unwrap() = max_tick;
     node
 }
 

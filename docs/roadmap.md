@@ -88,10 +88,25 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   ledger where the two meet — tested end to end. The Go lane is
   consolidated onto these Rust primitives.
 - [x] **the durable world** — mesh-node's every adjudication (cast + players)
-  appends to the mmap ledger (`world-core::transport::Ledger`); on boot
-  the node re-folds the log into the keeper, so the world survives
-  restarts — fold(seed, H) = M across process boundaries (tested:
+  appends to the mmap ledger; on boot the node re-folds the log into the
+  keeper — fold(seed, H) = M across process boundaries (tested:
   the_world_survives_restart)
+- [x] **ultra-cogniM8** — the engine's cognitive substrate: the two
+  memories compiled (an actor's `IndividualMemory` = its path; the
+  `CollectiveMemory` = the ledger, refusals and all — a refused player has
+  path 1 in itself and refusal 2 in the world), the 8 layers bound to the
+  running systems, and the cosmology (GAIA ≡ planets ≡ deities:
+  Mahākāla/Tara/Yamantaka/Chenrezig are the layers given faces)
+  ([ultra-cogniM8.md](ultra-cogniM8.md))
+- [x] **Phoenix: mq-8b-is** — the return lane: the world's clock continues
+  where the ledger left off, so the cast's new ticks are continuations,
+  never replays — the process dies, the strategy returns
+- [x] **kompress-ultra** — the mesh's compression lane (`world-core::kompress`,
+  zstd): frames only when it pays, the ledger's repetitive wire crushes to
+  under 30% (the named peetPedro/komress crate isn't findable on
+  crates.io/GitHub — searched — so zstd wires the lane, interface ready)
+- [x] **ci-oneshot** — `.github/workflows/ci.yml`: scaffold verify + cargo
+  test + the 25-floor harness on Linux, on every push and on demand
 - [x] **the fauna stack in Rust** — the cast lives twice: needs/goals in
   `world-core::sim` (folded by the keeper) and positions/needs in the
   register arena (`world-core::entity`), materialized at boot and synced

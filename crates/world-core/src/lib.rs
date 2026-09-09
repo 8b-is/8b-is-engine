@@ -8,7 +8,9 @@
 
 pub mod entity;
 pub mod fold;
+pub mod kompress;
 pub mod gaia;
+pub mod memory;
 pub mod sim;
 pub mod tern;
 pub mod transport;
@@ -17,7 +19,9 @@ pub mod wasm;
 
 pub use entity::{Entities, Entity};
 pub use fold::{Delta, Keeper, Verdict};
+pub use kompress::{compress as kcompress, decompress as kdecompress, frame as kframe, ratio as kratio};
 pub use gaia::{gaia_state, gaia_wire, GaiaState, LAYERS, WEATHER};
+pub use memory::{parse as parse_memory, CollectiveMemory, IndividualMemory};
 pub use sim::{Fauna, SimWorld};
 pub use tern::{balanced_trits, lcg, mulberry32, seed_from_text};
 pub use transport::{Ledger, Ring};
