@@ -84,6 +84,12 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   clock: sim steps decoupled from the wall clock, fractional time banked,
   the 8-step max guard against the spiral of death (a stalled render costs
   steps, never the world)
+- [x] **the renderer's first byte** (`world-core::render`) — the cast
+  drawn from the frame arena to SVG: seeded positions mapped to the
+  viewport, size by hunger, constellation palette, every fauna tagged —
+  disposable appearance, never history (tested: all fauna tagged,
+  deterministic)
+- [ ] the full renderer: WebGPU (wgpu) + Rapier3D + SDF surfaces
 - [x] **the Tokio server loop** (`crates/mesh-node`) — the zero-lock main
   loop (mpsc command hub + `select!` tick), hub vs instance modes (10/30
   TPS), length-framed wire, folding GAIA + the keeper every tick with
