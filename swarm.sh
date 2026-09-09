@@ -10,14 +10,15 @@
 #   ./swarm.sh --model deepseek/deepseek-v4-pro "the sanctuary vertical slice"
 #
 # KV-cache note: all five agent prompts in opencode.json share one
-# byte-identical prefix (the doctrine + palette + docs block), so DeepSeek's
-# automatic context caching serves the shared prefix as a cache hit once the
-# first agent has run — check usage.prompt_cache_hit_tokens in the API reply.
+# byte-identical prefix (the doctrine + palette + docs block), so the
+# provider's automatic context caching serves the shared prefix as a cache
+# hit once the first agent has run — check usage.prompt_cache_hit_tokens
+# in the API reply.
 set -euo pipefail
 
 GRN=$'\033[32m'; YEL=$'\033[33m'; MAG=$'\033[35m'; CYN=$'\033[36m'; RST=$'\033[0m'
 ROLES=(game-art game-design frontend ui visual-artist)
-MODEL="${SWARM_MODEL:-deepseek/deepseek-v4-flash}"
+MODEL="${SWARM_MODEL:-opencode-go/kimi-k2.6}"
 BRIEF=""
 OUT="out/swarm"
 
