@@ -3,3 +3,4 @@ out/
 target/
 __pycache__/
 *.pyc
+assets/staged/
