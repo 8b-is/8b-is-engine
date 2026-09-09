@@ -64,10 +64,11 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   orchestrator, mesh intake) — brief → GAIA seed → manifest → render,
   with every stage an attested inscription
   ([first-layer-content-creation.md](first-layer-content-creation.md))
-- [ ] **the hub-and-instance world** — cities as persistent social hubs
-  (50–100 CCU, 10–15 TPS), dungeons as ephemeral instances (1–4 players,
-  30–60 TPS); the same manifest serves both, the difference declared at
-  spawn time
+- [x] **the hub-and-instance lifecycle** — spin-up is fold-from-seed (GAIA +
+  the cast from the brief), and an instance zone retires itself after a
+  configurable empty-tick threshold (`--retire-after`, default 60; hubs
+  persist) — verified live: an instance boots, runs, and retires with the
+  resurrection message (exit 0)
 - [ ] the Rust core: tick loop, frame arenas, entity structs (wgpu +
   Rapier3D + SDF)
 - [x] **the Tokio server loop** (`crates/mesh-node`) — the zero-lock main

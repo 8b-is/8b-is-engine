@@ -71,6 +71,9 @@ pub struct MeshNode {
     /// input sequencing: the last input seq each player applied (drift = the
     /// gap between a client's prediction and the authoritative zone state)
     applied: Arc<Mutex<HashMap<SocketAddr, u64>>>,
+    /// lifecycle: an instance zone retires after this many empty ticks
+    /// (hub zones are persistent — the seed resurrects instances anytime)
+    retire_after: u64,
 }
 
 impl MeshNode {
@@ -84,56 +87,74 @@ impl MeshNode {
             self.port
         );
         let (cmd_tx, mut cmd_rx) = mpsc::channel::<ServerCommand>(10_000);
-        // the main loop: tick the world at the zone's rate, fold deltas
         let keeper = Arc::clone(&self.keeper);
         let clients = Arc::clone(&self.clients);
         let world_tick = Arc::clone(&self.world_tick);
-                        let applied = Arc::clone(&self.applied);
+        let applied = Arc::clone(&self.applied);
         let sim = Arc::clone(&self.sim);
         let brief = self.brief.clone();
         let tps = self.mode.ticks_per_second();
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(1000 / tps));
-            loop {
-                tokio::select! {
-                    _ = interval.tick() => {
-                        let wt = *world_tick.lock().await + 1;
-                        *world_tick.lock().await = wt;
-                        let mut k = keeper.lock().await;
-                        // the cast lives first — fauna fold under their own
-                        // names before any player's delta
-                        for (name, d) in sim.lock().await.step(wt) {
-                            k.adjudicate(&name, &d);
+        let retire_after = self.retire_after;
+        let is_instance = self.mode == ZoneMode::Instance;
+        // one loop, everything: accepts, the world's tick, the commands
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(1000 / tps));
+        let mut idle = 0u64;
+        loop {
+            tokio::select! {
+                res = listener.accept() => {
+                    let (socket, addr) = res?;
+                    let cmd_tx = cmd_tx.clone();
+                    tokio::spawn(async move {
+                        if let Err(e) = handle_client(socket, addr, cmd_tx).await {
+                            eprintln!("  connection error {addr}: {e}");
                         }
-                        let applied_snapshot = applied.lock().await.clone();
-                        let state = framed(zone_json(&brief, k.seq, &k.zone, wt, &applied_snapshot));
-                        let cs = clients.lock().await;
-                        for tx in cs.values() {
-                            let _ = tx.send(Bytes::from(state.clone())).await;
-                        }
+                    });
+                }
+                _ = interval.tick() => {
+                    let wt = *world_tick.lock().await + 1;
+                    *world_tick.lock().await = wt;
+                    // lifecycle: an instance zone retires when it stays empty;
+                    // spin-up was fold-from-seed, so the seed resurrects it
+                    let empty = clients.lock().await.is_empty();
+                    if empty { idle += 1 } else { idle = 0 }
+                    if is_instance && idle >= retire_after {
+                        println!("⟦ instance retired ⟧ empty for {idle} ticks — the seed can resurrect {brief} anytime");
+                        return Ok(());
                     }
-                    Some(cmd) = cmd_rx.recv() => {
-                        match cmd {
-                            ServerCommand::ClientConnected { addr, tx } => {
-                                println!("  player on: {addr}");
-                                clients.lock().await.insert(addr, tx);
-                            }
-                            ServerCommand::ClientDisconnected { addr } => {
-                                clients.lock().await.remove(&addr);
-                            }
-                            ServerCommand::Delta { addr, payload } => {
-                                if let Ok(delta) = wire_delta(&payload) {
-                                    let mut k = keeper.lock().await;
-                                    // adjudication IS the fold: an admission
-                                    // moves the material field, a refusal is
-                                    // materially silent and semantically bound
-                                    k.adjudicate(addr.to_string().as_str(), &delta);
-                                    // input sequencing: the client's seq is
-                                    // applied-authoritative once folded
-                                    if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&payload) {
-                                        if let Some(s) = v.get("s").and_then(|x| x.as_u64()) {
-                                            applied.lock().await.insert(addr, s);
-                                        }
+                    let mut k = keeper.lock().await;
+                    // the cast lives first — fauna fold under their own
+                    // names before any player's delta
+                    for (name, d) in sim.lock().await.step(wt) {
+                        k.adjudicate(&name, &d);
+                    }
+                    let applied_snapshot = applied.lock().await.clone();
+                    let state = framed(zone_json(&brief, k.seq, &k.zone, wt, &applied_snapshot));
+                    let cs = clients.lock().await;
+                    for tx in cs.values() {
+                        let _ = tx.send(Bytes::from(state.clone())).await;
+                    }
+                }
+                Some(cmd) = cmd_rx.recv() => {
+                    match cmd {
+                        ServerCommand::ClientConnected { addr, tx } => {
+                            println!("  player on: {addr}");
+                            clients.lock().await.insert(addr, tx);
+                        }
+                        ServerCommand::ClientDisconnected { addr } => {
+                            clients.lock().await.remove(&addr);
+                        }
+                        ServerCommand::Delta { addr, payload } => {
+                            if let Ok(delta) = wire_delta(&payload) {
+                                let mut k = keeper.lock().await;
+                                // adjudication IS the fold: an admission
+                                // moves the material field, a refusal is
+                                // materially silent and semantically bound
+                                k.adjudicate(addr.to_string().as_str(), &delta);
+                                // input sequencing: the client's seq is
+                                // applied-authoritative once folded
+                                if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&payload) {
+                                    if let Some(s) = v.get("s").and_then(|x| x.as_u64()) {
+                                        applied.lock().await.insert(addr, s);
                                     }
                                 }
                             }
@@ -141,16 +162,6 @@ impl MeshNode {
                     }
                 }
             }
-        });
-        // the accept loop
-        loop {
-            let (socket, addr) = listener.accept().await?;
-            let cmd_tx = cmd_tx.clone();
-            tokio::spawn(async move {
-                if let Err(e) = handle_client(socket, addr, cmd_tx).await {
-                    eprintln!("  connection error {addr}: {e}");
-                }
-            });
         }
     }
 }
@@ -276,6 +287,18 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
         world_tick: Arc::new(Mutex::new(0)),
         sim: Arc::new(Mutex::new(SimWorld::from_seed(brief, 4))),
         applied: Arc::new(Mutex::new(HashMap::new())),
+        retire_after: match mode {
+            ZoneMode::Hub => u64::MAX,
+            ZoneMode::Instance => 60,
+        },
+    }
+}
+
+impl MeshNode {
+    /// with_retire — override the empty-tick retirement threshold.
+    pub fn with_retire(mut self, ticks: u64) -> Self {
+        self.retire_after = ticks;
+        self
     }
 }
 
@@ -352,6 +375,17 @@ mod tests {
     async fn find_port() -> u16 {
         use std::net::TcpListener;
         TcpListener::bind(("127.0.0.1", 0)).unwrap().local_addr().unwrap().port()
+    }
+
+    #[tokio::test]
+    async fn an_empty_instance_retires() {
+        // an instance with no players retires itself — the seed resurrects
+        let port = find_port().await;
+        let node = new_node("the hollow instance", ZoneMode::Instance, port).with_retire(3);
+        let mut handle = tokio::spawn(async move { node.run().await });
+        let res = tokio::time::timeout(std::time::Duration::from_secs(3), &mut handle).await;
+        assert!(res.is_ok(), "an empty instance must retire itself");
+        assert!(res.unwrap().unwrap().is_ok());
     }
 
     #[tokio::test]
