@@ -85,8 +85,11 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   in the test), deterministic from the brief — and `mesh-node` folds the
   cast every tick (the world runs without you: four inhabitants alive
   with no player connected, verified live)
-- [ ] input sequencing: client inputs tagged with monotonic sequence
-  numbers, prediction + reconciliation on drift
+- [x] **input sequencing + reconciliation** — the wire's `s` (a client's
+  monotone input seq) folds into the node's applied map; every broadcast
+  carries it, so a client whose prediction drifted past its applied seq
+  knows exactly where the authoritative world stands (tested live: seqs
+  41 → 42 reach the reconciliation map in the broadcast)
 
 ## v2.x — the world-model sim-MMO (design v2)
 

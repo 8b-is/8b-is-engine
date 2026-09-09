@@ -68,6 +68,9 @@ pub struct MeshNode {
     world_tick: Arc<Mutex<u64>>,
     /// the zone's own inhabitants — the world runs without you
     sim: Arc<Mutex<SimWorld>>,
+    /// input sequencing: the last input seq each player applied (drift = the
+    /// gap between a client's prediction and the authoritative zone state)
+    applied: Arc<Mutex<HashMap<SocketAddr, u64>>>,
 }
 
 impl MeshNode {
@@ -85,6 +88,7 @@ impl MeshNode {
         let keeper = Arc::clone(&self.keeper);
         let clients = Arc::clone(&self.clients);
         let world_tick = Arc::clone(&self.world_tick);
+                        let applied = Arc::clone(&self.applied);
         let sim = Arc::clone(&self.sim);
         let brief = self.brief.clone();
         let tps = self.mode.ticks_per_second();
@@ -101,7 +105,8 @@ impl MeshNode {
                         for (name, d) in sim.lock().await.step(wt) {
                             k.adjudicate(&name, &d);
                         }
-                        let state = framed(zone_json(&brief, k.seq, &k.zone, wt));
+                        let applied_snapshot = applied.lock().await.clone();
+                        let state = framed(zone_json(&brief, k.seq, &k.zone, wt, &applied_snapshot));
                         let cs = clients.lock().await;
                         for tx in cs.values() {
                             let _ = tx.send(Bytes::from(state.clone())).await;
@@ -123,6 +128,13 @@ impl MeshNode {
                                     // moves the material field, a refusal is
                                     // materially silent and semantically bound
                                     k.adjudicate(addr.to_string().as_str(), &delta);
+                                    // input sequencing: the client's seq is
+                                    // applied-authoritative once folded
+                                    if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&payload) {
+                                        if let Some(s) = v.get("s").and_then(|x| x.as_u64()) {
+                                            applied.lock().await.insert(addr, s);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -212,9 +224,17 @@ fn framed(json: String) -> Vec<u8> {
     f
 }
 
-/// zone_json — the field every client reads: the seed, GAIA's clock, and
-/// the unfolded operative state (the material fold, rendered).
-fn zone_json(brief: &str, seq: u64, zone: &HashMap<String, [f64; 3]>, tick: u64) -> String {
+/// zone_json — the field every client reads: the seed, GAIA's clock, the
+/// unfolded operative state, and the reconciliation map (each player's last
+/// applied input seq — a client whose prediction drifted past this knows
+/// exactly where the authoritative world stands).
+fn zone_json(
+    brief: &str,
+    seq: u64,
+    zone: &HashMap<String, [f64; 3]>,
+    tick: u64,
+    applied: &HashMap<SocketAddr, u64>,
+) -> String {
     let gaia = world_core::gaia::gaia_state(brief, tick);
     let mut z = serde_json::Map::new();
     for (actor, needs) in zone {
@@ -223,6 +243,10 @@ fn zone_json(brief: &str, seq: u64, zone: &HashMap<String, [f64; 3]>, tick: u64)
             n.insert((*k).to_string(), serde_json::Value::from(*v));
         }
         z.insert(actor.clone(), serde_json::Value::Object(n));
+    }
+    let mut ap = serde_json::Map::new();
+    for (addr, s) in applied {
+        ap.insert(addr.to_string(), serde_json::Value::from(*s));
     }
     serde_json::json!({
         "zone": brief,
@@ -235,6 +259,7 @@ fn zone_json(brief: &str, seq: u64, zone: &HashMap<String, [f64; 3]>, tick: u64)
             "memory": gaia.memory,
         },
         "zone_state": z,
+        "applied": ap,
     })
     .to_string()
 }
@@ -250,6 +275,7 @@ pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
         clients: Arc::new(Mutex::new(HashMap::new())),
         world_tick: Arc::new(Mutex::new(0)),
         sim: Arc::new(Mutex::new(SimWorld::from_seed(brief, 4))),
+        applied: Arc::new(Mutex::new(HashMap::new())),
     }
 }
 
@@ -271,7 +297,7 @@ mod tests {
     fn state_carries_gaia_and_the_fold() {
         let mut k = Keeper::default();
         k.adjudicate("player-1", &wire_delta(b"{\"t\":1,\"n\":{\"h\":0.9,\"r\":0.9,\"s\":0.9}}").unwrap());
-        let json = zone_json("sanctuary", k.seq, &k.zone, 30);
+        let json = zone_json("sanctuary", k.seq, &k.zone, 30, &HashMap::new());
         let v: serde_json::Value = serde_json::from_str(&json).unwrap();
         let expected = world_core::gaia::gaia_state("sanctuary", 30);
         assert_eq!(v["gaia"]["weather"].as_str().unwrap(), expected.weather);
@@ -326,5 +352,62 @@ mod tests {
     async fn find_port() -> u16 {
         use std::net::TcpListener;
         TcpListener::bind(("127.0.0.1", 0)).unwrap().local_addr().unwrap().port()
+    }
+
+    #[tokio::test]
+    async fn input_sequencing_reconciles() {
+        // a client's input seqs fold into the reconciliation map — the
+        // broadcast carries the last applied seq per player
+        let port = find_port().await;
+        let node = new_node("sanctuary", ZoneMode::Instance, port);
+        let handle = tokio::spawn(async move { node.run().await });
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        let p1 = br#"{"t":41,"s":41,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
+        stream.write_all(&(p1.len() as u32).to_be_bytes()).await.unwrap();
+        stream.write_all(p1).await.unwrap();
+
+        // read broadcasts until the applied map reports seq 41
+        let mut buf = Vec::new();
+        let mut len_buf = [0u8; 4];
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            loop {
+                stream.read_exact(&mut len_buf).await.unwrap();
+                let len = u32::from_be_bytes(len_buf) as usize;
+                buf.clear();
+                buf.resize(len, 0);
+                stream.read_exact(&mut buf).await.unwrap();
+                let text = String::from_utf8_lossy(&buf).to_string();
+                let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+                if v["applied"].as_object().map(|m| m.values().any(|x| x == 41)).unwrap_or(false) {
+                    return v;
+                }
+            }
+        })
+        .await
+        .expect("reconciliation timeout");
+
+        let p2 = br#"{"t":42,"s":42,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
+        stream.write_all(&(p2.len() as u32).to_be_bytes()).await.unwrap();
+        stream.write_all(p2).await.unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            loop {
+                stream.read_exact(&mut len_buf).await.unwrap();
+                let len = u32::from_be_bytes(len_buf) as usize;
+                buf.clear();
+                buf.resize(len, 0);
+                stream.read_exact(&mut buf).await.unwrap();
+                let text = String::from_utf8_lossy(&buf).to_string();
+                let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+                if v["applied"].as_object().map(|m| m.values().any(|x| x == 42)).unwrap_or(false) {
+                    return;
+                }
+            }
+        })
+        .await
+        .expect("second reconciliation timeout");
+
+        handle.abort();
     }
 }
