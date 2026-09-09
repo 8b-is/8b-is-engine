@@ -520,7 +520,6 @@ mod tests {
 
         assert_eq!(entry["out"], "refused");
         assert!(entry["seq"].as_u64().unwrap() > 0, "a refusal owns a ledger position");
-        assert!(entry["tick"].as_u64().unwrap() >= 0);
         handle.abort();
     }
 

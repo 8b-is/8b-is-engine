@@ -1,0 +1,20 @@
+[package]
+name = "mesh-relay"
+description = "the browser's door to the authoritative node: WebSocket clients bridge to the mesh-node's TCP frames"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "macros", "io-util", "sync", "time"] }
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+
+[[bin]]
+name = "mesh-relay"
+path = "src/main.rs"
+
+[dev-dependencies]
+mesh-node = { path = "../mesh-node" }
+futures-util = "0.3"

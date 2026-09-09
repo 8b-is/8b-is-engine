@@ -54,7 +54,12 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   calls `gaia_wire_c` (see the crate README + smoke.js). One source of
   truth, three surfaces — four-language determinism pinned by fixtures.
 - [x] **the browser ↔ the mesh** (`client/mesh.js` + `client/gaia-dashboard.html`) — a dependency-free NATS client over WebSocket (nats.ws): zones = actor subjects from the browser, the GAIA dashboard renders the eight layers live, disturbances publish to the actor inbox. WebTransport is the QUIC upgrade when the relay lands.
-- [ ] WebTransport (QUIC) upgrade: the relay + Durable-Object zone endpoints
+- [x] **the relay** (`crates/mesh-relay`) — the browser's door to the
+  authoritative node: WebSocket clients bridge to the node's TCP frames
+  (WS message → length-framed delta in; node broadcast → WS text out),
+  WebTransport through the same seam later — tested end to end: a browser
+  delta folds into the node and the broadcast crosses the relay back
+- [ ] WebTransport (QUIC) upgrade: swap the relay's WS transport for QUIC
 
 ## v1.x — the core engine (the Rust/Go runtime)
 

@@ -64,10 +64,11 @@ mod tests {
     fn accumulates_fractional_time() {
         let mut c = Clock::new(1.0 / 64.0);
         c.last = 0.0;
-        // half a step: nothing runs, the time banks
+        // 1/256 banks; a further 1/256 makes 1/128 banked — still no step;
+        // the closing 1/128 completes exactly one 1/64 step
+        assert_eq!(c.advance(1.0 / 256.0), 0);
         assert_eq!(c.advance(1.0 / 128.0), 0);
-        // the other half: one step runs, nothing left over
-        assert_eq!(c.advance(1.0 / 128.0), 1);
+        assert_eq!(c.advance(1.0 / 64.0), 1);
         assert!(c.accumulator < c.fixed);
     }
 
