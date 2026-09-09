@@ -76,8 +76,10 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   TPS), length-framed wire, folding GAIA + the keeper every tick with
   durable refusals — verified live: a delta in, the folded zone broadcast
   out
-- [ ] the Go multiplexer: sync.Pool, mmap ring buffers, the NATS mesh in
-  production form (the actor skeleton compiled, not scripted)
+- [ ] the Go multiplexer: sync.Pool + lock-free **ring buffers** for the
+  ternary hot path (frame arenas, zero-syscall transport), **mmap** for
+  the append-only ledger (durable, restart-safe, replayable) — mmap-backed
+  rings where the two meet; the NATS mesh in production form
 - [ ] the fauna stack in Rust (the floors are the JS twins)
 - [x] **the needs/goals scheduler as a first-class reducer**
   (`world-core::sim`) — the mesh-NPC grown up and compiled: fauna with

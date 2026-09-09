@@ -15,6 +15,7 @@
 //!   `mpsc` channel; `tokio::select!` ticks the world without blocking I/O.
 
 use std::collections::HashMap;
+use serde::Serialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -70,10 +71,28 @@ pub struct MeshNode {
     sim: Arc<Mutex<SimWorld>>,
     /// input sequencing: the last input seq each player applied (drift = the
     /// gap between a client's prediction and the authoritative zone state)
-    applied: Arc<Mutex<HashMap<SocketAddr, u64>>>,
+    applied: Arc<Mutex<HashMap<SocketAddr, AppliedEntry>>>,
     /// lifecycle: an instance zone retires after this many empty ticks
     /// (hub zones are persistent — the seed resurrects instances anytime)
     retire_after: u64,
+}
+
+/// The commit record for one player's input — consumed vs committed, made
+/// distinct: `in` is the client's proposed sequence, `seq` is the world's
+/// ledger position where the transition (admission or refusal) was bound,
+/// and `out` says which fold the event landed in. A refusal is durable: it
+/// still owns a ledger position, the material fold just did not move.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppliedEntry {
+    /// the client's proposed input sequence
+    pub r#in: u64,
+    /// the world's committed ledger position (the keeper's seq)
+    pub seq: u64,
+    /// which fold the event entered: "admitted" (M+S) or "refused" (S only)
+    pub out: &'static str,
+    /// the world tick the event was folded on
+    pub tick: u64,
 }
 
 impl MeshNode {
@@ -149,14 +168,28 @@ impl MeshNode {
                                 // adjudication IS the fold: an admission
                                 // moves the material field, a refusal is
                                 // materially silent and semantically bound
-                                k.adjudicate(addr.to_string().as_str(), &delta);
-                                // input sequencing: the client's seq is
-                                // applied-authoritative once folded
-                                if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&payload) {
-                                    if let Some(s) = v.get("s").and_then(|x| x.as_u64()) {
-                                        applied.lock().await.insert(addr, s);
-                                    }
-                                }
+                                let verdict = k.adjudicate(addr.to_string().as_str(), &delta);
+                                // consumed vs committed: the entry records the
+                                // WORLD's ledger position, not the client's
+                                // number — a refusal owns a position too
+                                let input_seq = serde_json::from_slice::<serde_json::Value>(&payload)
+                                    .ok()
+                                    .and_then(|v| v.get("s").and_then(|x| x.as_u64()))
+                                    .unwrap_or(0);
+                                let committed = k.seq;
+                                let out = match verdict {
+                                    world_core::fold::Verdict::Admitted => "admitted",
+                                    world_core::fold::Verdict::Refused(_) => "refused",
+                                };
+                                applied.lock().await.insert(
+                                    addr,
+                                    AppliedEntry {
+                                        r#in: input_seq,
+                                        seq: committed,
+                                        out,
+                                        tick: *world_tick.lock().await,
+                                    },
+                                );
                             }
                         }
                     }
@@ -244,7 +277,7 @@ fn zone_json(
     seq: u64,
     zone: &HashMap<String, [f64; 3]>,
     tick: u64,
-    applied: &HashMap<SocketAddr, u64>,
+    applied: &HashMap<SocketAddr, AppliedEntry>,
 ) -> String {
     let gaia = world_core::gaia::gaia_state(brief, tick);
     let mut z = serde_json::Map::new();
@@ -256,8 +289,8 @@ fn zone_json(
         z.insert(actor.clone(), serde_json::Value::Object(n));
     }
     let mut ap = serde_json::Map::new();
-    for (addr, s) in applied {
-        ap.insert(addr.to_string(), serde_json::Value::from(*s));
+    for (addr, e) in applied {
+        ap.insert(addr.to_string(), serde_json::to_value(e).unwrap_or_default());
     }
     serde_json::json!({
         "zone": brief,
@@ -372,6 +405,52 @@ mod tests {
         handle.abort();
     }
 
+    #[tokio::test]
+    async fn a_refusal_is_a_committed_record() {
+        // consumed vs committed, made distinct: a poison input (forage while
+        // attesting comfort) is REFUSED, yet it still owns a ledger position
+        // in the applied map — the refusal is durable, the material fold
+        // just did not move
+        let port = find_port().await;
+        let node = new_node("sanctuary", ZoneMode::Instance, port);
+        let handle = tokio::spawn(async move { node.run().await });
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        // a benign birth first (the first delta is the actor's attestation
+        // of existence), then the poison — which must be refused durable
+        let birth = br#"{"t":1,"s":6,"n":{"h":0.9,"r":0.9,"s":0.9}}"#;
+        stream.write_all(&(birth.len() as u32).to_be_bytes()).await.unwrap();
+        stream.write_all(birth).await.unwrap();
+        let poison = br#"{"t":2,"s":7,"n":{"h":0.9,"r":0.9,"s":0.9},"a":"forage the field"}"#;
+        stream.write_all(&(poison.len() as u32).to_be_bytes()).await.unwrap();
+        stream.write_all(poison).await.unwrap();
+
+        let mut buf = Vec::new();
+        let mut len_buf = [0u8; 4];
+        let entry = tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            loop {
+                stream.read_exact(&mut len_buf).await.unwrap();
+                let len = u32::from_be_bytes(len_buf) as usize;
+                buf.clear();
+                buf.resize(len, 0);
+                stream.read_exact(&mut buf).await.unwrap();
+                let text = String::from_utf8_lossy(&buf).to_string();
+                let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+                if let Some(e) = v["applied"].as_object().and_then(|m| m.values().find(|e| e["in"] == 7)) {
+                    return e.clone();
+                }
+            }
+        })
+        .await
+        .expect("refusal record timeout");
+
+        assert_eq!(entry["out"], "refused");
+        assert!(entry["seq"].as_u64().unwrap() > 0, "a refusal owns a ledger position");
+        assert!(entry["tick"].as_u64().unwrap() >= 0);
+        handle.abort();
+    }
+
     async fn find_port() -> u16 {
         use std::net::TcpListener;
         TcpListener::bind(("127.0.0.1", 0)).unwrap().local_addr().unwrap().port()
@@ -414,7 +493,7 @@ mod tests {
                 stream.read_exact(&mut buf).await.unwrap();
                 let text = String::from_utf8_lossy(&buf).to_string();
                 let v: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if v["applied"].as_object().map(|m| m.values().any(|x| x == 41)).unwrap_or(false) {
+                if v["applied"].as_object().map(|m| m.values().any(|e| e["in"] == 41 && e["out"] == "admitted")).unwrap_or(false) {
                     return v;
                 }
             }
@@ -434,7 +513,7 @@ mod tests {
                 stream.read_exact(&mut buf).await.unwrap();
                 let text = String::from_utf8_lossy(&buf).to_string();
                 let v: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if v["applied"].as_object().map(|m| m.values().any(|x| x == 42)).unwrap_or(false) {
+                if v["applied"].as_object().map(|m| m.values().any(|e| e["in"] == 42 && e["out"] == "admitted")).unwrap_or(false) {
                     return;
                 }
             }
