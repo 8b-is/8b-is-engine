@@ -1,10 +1,10 @@
 # SEMVER — the 8b-is engine versioning policy
 
 The engine follows [Semantic Versioning 2.0.0](https://semver.org/), from
-`0.1.0` upward. While the engine is pre-1.0 (the full design has not
-landed), the rule of thumb is: **0.x MINOR may break** — a feature stream
-may change internals — but every RELEASED tag stays reachable and every
-release carries a changelog entry.
+`0.1.0` upward. At **1.9.0** the backbone is post-1.0: MINOR bumps add features without
+breaking the published contracts (the wire, the `.tern` format, GAIA's
+layers); a MAJOR bump is the only place contracts break. Every RELEASED
+tag stays reachable and carries a changelog entry.
 
 ## what bumps what
 
@@ -29,7 +29,7 @@ release carries a changelog entry.
 
 ## semver facts we keep
 
-- Released tags: `v0.1.0` · `v0.2.0` · `v0.3.0` · `v0.6.2` · `v0.7.0`.
+- Released tags: `v0.1.0` · `v0.2.0` · `v0.3.0` · `v0.6.2` · `v0.7.0` · `v1.9.0`.
 - The three-surface golden pins the CORE determinism; a version that
   changes the golden is a documented MINOR at minimum.
 - The dream bytes are a contract too: byte-equal across every surface.

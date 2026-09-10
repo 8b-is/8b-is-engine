@@ -108,6 +108,7 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   L2 ASCII85 printable), each step the inverse of the next
 - [x] **the action lanes** — Fast (thunky-lite, the boot recommendation) /
   Root, L1-L3 o1-style compute budgets, the known `r1` mode
+- [x] **the sidecar mirror** — local-optional (never a dependency), polars/arrow-parquet catalogue, sha256 dedupe, the 10 GB LRU leash, optional rustfs/minio S3 backend, the ORT lane, and the catalog[dream] penetration slice (ngram · vocab · doctrine)
 - [x] **the memory stack** — engram links, the virtual address space
   (persist `Addr`), content-hash de-dupe with the single `&mut self`
   writer, the session `LazyCache`, `Mq` + `chan` + the `Locker`, and

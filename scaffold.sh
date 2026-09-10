@@ -85,10 +85,14 @@ cmd_genesis() {
     local remote
     remote="$(curl -fsSL --max-time 8 "$SEAL_URL" 2>/dev/null || true)"
     if [[ -n "$remote" ]]; then
-      local rver ok=1
-      rver="$(printf '%s' "$remote" | awk -F'"' -v k='"version"' '$2==k {print $4}')"
-      rver="$(printf '%s' "$remote" | grep -o '"version": "[^"]*"' | cut -d\" -f4)"
+      local rver lver ok=1
+      rver="$(printf '%s' "$remote" | awk -F'"' -v k='version' '$2==k {print $4}')"
+      lver="$(./scripts/genesis-seal.sh 2>/dev/null | awk -F'"' -v k='version' '$2==k {print $4}')"
       echo "  remote seal 8b-is-engine ${rver} (live gist)"
+      if [[ -n "$lver" && "$lver" != "$rver" ]]; then
+        warn "version skew: the seal says ${rver}, the tree is ${lver} — refresh the gist (scripts/genesis-seal.sh + gh gist edit)"
+        ok=0
+      fi
       for art in sanctuary-1.58.tern ternary.wasm; do
         rhash="$(printf '%s' "$remote" | awk -F'"' -v k="$art" '$2==k {print $4}')"
         lpath="assets/ternary/$art"

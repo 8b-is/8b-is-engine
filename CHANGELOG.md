@@ -8,16 +8,31 @@ to versions below.
 
 ## [Unreleased]
 
-- publish lane wired: `qdecorators` → `world-core` → `ternary-lane` → `corelib` on
-  crates.io at 1.9.0 (the lane crate renamed `ternary-lane` — `ternary` is
-  an old crates.io name).
+## [1.9.0] — the crates.io backbone — 2026-09-10
 
+### Added
+
+- **the crates.io lane** — `qdecorators` → `world-core` → `ternary-lane`
+  → `corelib` at 1.9.0 (the lane crate renamed `ternary-lane`;
+  `ternary` is an old crates.io name), driven by the `publish` workflow
+  with the `CARGO_REGISTRY_TOKEN` secret and the `.crate` tarballs kept
+  as release artifacts.
 - the memory stack finalized: `Engram.links` (the memory's own graph),
-  `corelib::persist` (`Addr` virtual address space, content-hash de-dupe
+  `corelib::persist` (`Addr` virtual addresses, content-hash de-dupe
   blocks, the single `&mut self` writer, segment splits), `LazyCache`
   (decode-on-first-ask, session `forget`), `corelib::mq` (`Mq` FIFO,
   `chan()`, `Locker` the single-writer door), and `TripleBox` — the
   L1/L3/L2 diamond with lazy memoized skins.
+- the engram demo (log lines → chained engrams → triplebox skins, exact diamond decode) and the dream-penetration eval (polars, the mirror's catalog[dream])
+- the genesis seal carries the live version; `scaffold genesis` warns
+  when the remote seal's version disagrees with the local tree.
+
+### Changed
+
+- workspace + kit crates at **1.9.0** (post-1.0 policy: MINOR =
+  features, MAJOR = breaking contracts).
+- the Zig kernels compile `-fPIC` — the x86_64 Linux linker accepts the
+  static lib (the CI `R_X86_64` relocations cleared).
 
 ## [0.7.0] — the kit edge — 2026-09-10
 

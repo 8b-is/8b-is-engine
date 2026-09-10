@@ -15,3 +15,7 @@ publish = true
 world-core = { path = "../world-core", version = "1.9.0" }
 ternary-lane = { path = "../ternary", version = "1.9.0" }
 qdecorators = { path = "../qdecorators", version = "1.9.0" }
+
+[[example]]
+name = "engram_demo"
+path = "examples/engram_demo.rs"

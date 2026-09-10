@@ -20,6 +20,7 @@ pub use mq::{chan, Locker, Mq};
 pub use persist::{Addr, EngramVault, LazyCache};
 pub use qdecorators::{assert_deterministic, raw_fmt, *};
 pub use ternary_lane::{dream_seed, golden_hash_hex, pack_mulberry, *};
+pub use triplebox::TripleBox;
 pub use world_core::*;
 
 /// The core's own stamp: the workspace release the facade folds.
