@@ -38,6 +38,7 @@ fn main() {
             "zig/kernels.zig",
             "-O",
             "ReleaseSafe",
+            "-fPIC",
             "-target",
             &zig_target,
         ])
