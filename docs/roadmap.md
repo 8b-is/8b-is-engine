@@ -89,6 +89,10 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   viewport, size by hunger, constellation palette, every fauna tagged —
   disposable appearance, never history (tested: all fauna tagged,
   deterministic)
+- [x] **the world, drawn** (`world-core/examples/arena.rs`) — a cast built
+  from a brief, walked 240 ticks, rendered into `out/arena.svg` — the
+  renderer wired into the E2E oneshot so the world's picture ships with
+  every green run
 - [ ] the full renderer: WebGPU (wgpu) + Rapier3D + SDF surfaces
 - [x] **the Tokio server loop** (`crates/mesh-node`) — the zero-lock main
   loop (mpsc command hub + `select!` tick), hub vs instance modes (10/30
