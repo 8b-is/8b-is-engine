@@ -14,6 +14,8 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite::Message;
 
+pub mod quic;
+
 /// The relay: a WS listener in front of one node's TCP address.
 pub struct Relay {
     pub relay_port: u16,
@@ -180,5 +182,98 @@ mod tests {
     async fn find_port() -> u16 {
         let l = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
         l.local_addr().unwrap().port()
+    }
+
+    // ---- the QUIC door: the same compact wire, a different transport ----
+
+    #[tokio::test]
+    async fn the_quic_door_bridges_the_browser_to_the_node() {
+        use mesh_node::{new_node, ZoneMode};
+        use wtransport::ClientConfig;
+
+        let node_port = find_port().await;
+        let node = new_node("sanctuary", ZoneMode::Hub, node_port);
+        let node_task = tokio::spawn(async move { node.run().await });
+
+        let door_port = find_port().await;
+        let door = crate::quic::QuicDoor::new(
+            door_port,
+            format!("127.0.0.1:{node_port}"),
+            Default::default(),
+        );
+        let door_task = tokio::spawn(async move { door.run().await });
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+
+        // the browser: a wtransport client, trusting nothing (the test
+        // escape hatch — the door's self-signed dev identity)
+        let client_config = ClientConfig::builder()
+            .with_bind_default()
+            .with_no_cert_validation()
+            .build();
+        let endpoint = wtransport::Endpoint::client(client_config).expect("quic client endpoint");
+        let connection = tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            endpoint.connect(format!("https://127.0.0.1:{door_port}")),
+        )
+        .await
+        .expect("quic connect to the door timed out")
+        .expect("quic connect to the door");
+
+        // the same compact wire the WS browser sends
+        let delta = r#"{"t":1,"s":7,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
+        connection
+            .send_datagram(delta.as_bytes())
+            .expect("delta datagram");
+
+        // the node folds it and broadcasts back through the QUIC door
+        let got = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                let dg = connection.receive_datagram().await.expect("recv datagram");
+                let text = String::from_utf8_lossy(&dg).into_owned();
+                if text.contains("zone_state") {
+                    return text;
+                }
+            }
+        })
+        .await
+        .expect("the broadcast crossed the QUIC door");
+
+        assert!(
+            got.contains("127.0.0.1"),
+            "the browser's fold is in the broadcast: {got}"
+        );
+
+        // both doors share one node cleanly: a WS browser still works
+        // beside the QUIC one (the stats are shared, the seams are not)
+        let ws_port = find_port().await;
+        let relay = Relay::new(ws_port, format!("127.0.0.1:{node_port}"));
+        let relay_task = tokio::spawn(async move { relay.run().await });
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        let ws_tcp = TcpStream::connect(("127.0.0.1", ws_port)).await.unwrap();
+        let (ws, _) = tokio_tungstenite::client_async(format!("ws://127.0.0.1:{ws_port}"), ws_tcp)
+            .await
+            .expect("ws connect");
+        let (mut sink, mut stream) = ws.split();
+        sink.send(Message::Text(
+            r#"{"t":1,"s":8,"n":{"h":0.5,"r":0.9,"s":0.9}}"#.into(),
+        ))
+        .await
+        .unwrap();
+        let ws_got = tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            loop {
+                let msg = stream.next().await.expect("relay stream").expect("ws msg");
+                let text = msg.into_text().unwrap();
+                if text.contains("zone_state") {
+                    return text;
+                }
+            }
+        })
+        .await
+        .expect("the WS broadcast also crosses");
+        assert!(ws_got.contains("127.0.0.1"));
+
+        node_task.abort();
+        door_task.abort();
+        relay_task.abort();
     }
 }

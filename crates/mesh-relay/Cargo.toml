@@ -10,6 +10,7 @@ authors.workspace = true
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "macros", "io-util", "sync", "time"] }
 tokio-tungstenite = "0.24"
 futures-util = "0.3"
+wtransport = { version = "0.7", features = ["dangerous-configuration"] }
 
 [[bin]]
 name = "mesh-relay"

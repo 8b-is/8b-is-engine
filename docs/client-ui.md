@@ -14,7 +14,7 @@ pins the plug.
 | Core | **WebAssembly** (Rust → `wasm32-unknown-unknown`, SIMD) | quantTernEngine / GAIA / the ternary PRNG compiled once, shared by client AND server — same seed math everywhere |
 | World loop | Web Worker + `SharedArrayBuffer` + `Atomics` | The tick runs off the main thread; render never blocks on the sim; lockstep-ready (Atomics.wait/notify) |
 | Rendering | **WebGPU** (wgpu) with a 2D-canvas fallback | Modern GPU API; wgpu is the same crate the Rust core uses natively — one renderer, three targets |
-| Networking | **WebTransport (QUIC)** with `nats.ws` WebSocket fallback | Lowest-latency transport for the mesh; NATS subjects = zones; one subject = one actor's inbox |
+| Networking | **WebTransport (QUIC)** with `nats.ws` WebSocket fallback | Lowest-latency transport for the mesh; NATS subjects = zones; one subject = one actor's inbox. The relay's QUIC door (`mesh-relay --quic-port N`, wtransport) is live and tested — the same compact wire, datagrams both ways |
 | Modules | Native ES modules + import maps, zero build step | Node 24 strips types; the floors ship as plain `.html` + `.ts` today — this stays the dev loop |
 | Steam shell | **Tauri** (WebView + Rust) | The exact same HTML/WASM client ships as a native macOS + Linux binary: Steam depots, overlay, achievements, no rewrite |
 

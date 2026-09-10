@@ -59,7 +59,12 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   (WS message → length-framed delta in; node broadcast → WS text out),
   WebTransport through the same seam later — tested end to end: a browser
   delta folds into the node and the broadcast crosses the relay back
-- [ ] WebTransport (QUIC) upgrade: swap the relay's WS transport for QUIC
+- [x] **WebTransport (QUIC) through the relay seam** — the QUIC door
+  (`crates/mesh-relay::quic`, wtransport): the same compact wire over
+  HTTP/3+WebTransport, datagrams ↔ the node's length-framed TCP, the
+  self-signed dev identity (localhost SANs), a browser-style client test
+  that folds a delta and receives the broadcast through the door — the WS
+  door and the QUIC door share one node and one stats counter
 
 ## v0.6 — the 1.58-bit lane (the current edge)
 
