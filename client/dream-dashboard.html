@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⟦ THE DREAM DASHBOARD ⟧ · 8b-is · the 1.58-bit lane, in the browser</title>
+<style>
+@layer base,overlay;
+:root{color-scheme:dark;--gold:oklch(.85 .16 85);--cyan:oklch(.8 .13 200);--pink:oklch(.68 .2 350);--green:oklch(.72 .18 150);--dim:oklch(.6 .02 265)}
+@layer base{
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1000px 500px at 70% -10%,oklch(.16 .04 265),#08090f 70%);color:oklch(.9 .02 265);font-family:ui-monospace,monospace;min-height:100vh}
+header{padding:16px 22px;border-bottom:1px solid color-mix(in oklch,var(--cyan) 25%,transparent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+h1{font-size:14px;letter-spacing:5px;color:var(--gold);margin:0;font-weight:600}
+#status{font-size:11px;color:var(--dim)}
+#status::before{content:"○ ";color:var(--pink)}
+#status[data-up="1"]::before{content:"● ";color:var(--green)}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:20px}
+.card{background:oklch(.16 .03 265 / .9);border:1px solid color-mix(in oklch,var(--gold) 20%,transparent);border-radius:14px;padding:14px;backdrop-filter:blur(8px)}
+.card h2{font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin:0 0 10px}
+.card .dim{font-size:10px;color:var(--dim)}
+.row{display:flex;justify-content:space-between;gap:8px;font-size:11px;margin:4px 0}
+.row b{color:var(--gold);font-weight:600}
+#controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#controls label{grid-column:1/-1;font-size:10px;letter-spacing:2px;color:var(--dim);display:flex;flex-direction:column;gap:6px}
+#controls label span{color:var(--cyan)}
+#controls input{background:oklch(.12 .02 265);border:1px solid color-mix(in oklch,var(--pink) 40%,transparent);border-radius:9px;color:oklch(.9 .02 265);font:11px ui-monospace,monospace;padding:9px 12px;outline:none}
+#dreambox{grid-column:1/-1;display:flex;gap:8px;align-items:center}
+#dreambox button{background:color-mix(in oklch,var(--cyan) 15%,transparent);border:1px solid color-mix(in oklch,var(--cyan) 50%,transparent);border-radius:9px;color:var(--cyan);font:700 11px ui-monospace,monospace;padding:9px 16px;cursor:pointer}
+#out{grid-column:1/-1;white-space:pre-wrap;font-size:12px;line-height:1.65;color:oklch(.92 .02 265);min-height:120px}
+#out .seed{color:var(--gold)}
+footer{padding:10px 22px 18px;font-size:10px;color:var(--dim);letter-spacing:1px;display:flex;gap:14px;flex-wrap:wrap}
+footer b{color:var(--green);font-weight:600}
+}
+@layer overlay{
+#status[data-fail="1"]::before{color:var(--pink);content:"✕ "}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>⟦ THE DREAM DASHBOARD ⟧</h1>
+  <span id="status">loading the 1.58-bit lane…</span>
+</header>
+<main>
+  <div class="card" id="controls">
+    <h2>the 1.58-bit lane · controls</h2>
+    <label><span>seed text — the dream begins where the alphabet begins</span>
+      <input id="seed" value="the world runs without" spellcheck="false"></label>
+    <label><span>tokens</span><input id="n" value="240" type="number" min="1" max="2048"></label>
+    <label><span>temperature — &lt;1e-3 reads the greedy line</span>
+      <input id="temp" value="0.8" step="0.05" type="number"></label>
+    <div id="dreambox">
+      <button id="go">dream</button>
+      <button id="again">again — same seed, same bytes</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>the contract</h2>
+    <div class="row"><span class="dim">surface</span><b>wasm32 · simd128</b></div>
+    <div class="row"><span class="dim">golden</span><b id="golden" class="dim">…</b></div>
+    <div class="row"><span class="dim">vocab</span><b id="vocab">—</b></div>
+    <div class="row"><span class="dim">checkpoint</span><b id="checkpoint">sanctuary-1.58.tern</b></div>
+    <div class="row"><span class="dim">dream, byte-equal</span><b id="byteequal">native = wasm</b></div>
+    <div class="row"><span class="dim">prng</span><b>mulberry32 · one family</b></div>
+  </div>
+  <div class="card">
+    <h2>the dream</h2>
+    <div id="out" class="dim">the world runs without you — press dream, or wait: the seed is already warm…</div>
+  </div>
+</main>
+<footer>
+  <span>a seed is a seed everywhere</span>
+  <span>one contract, three machines: <b>NEON ✓</b> <b>AVX2 ✓</b> <b>simd128 ✓</b></span>
+  <span>the constellation · 0 + 1 · fine touch from within · vaked.dev</span>
+</footer>
+<script type="module">
+import { loadLane, EXPECTED_GOLDEN } from "./dream.js";
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+const outEl = $("out");
+
+async function boot() {
+  try {
+    const [wasmBytes, ternBytes, manifestText] = await Promise.all([
+      fetch("assets/ternary.wasm").then((r) => r.arrayBuffer()),
+      fetch("../../assets/ternary/sanctuary-1.58.tern").then((r) => r.arrayBuffer()),
+      fetch("../../assets/ternary/sanctuary-1.58.json").then((r) => r.text()),
+    ]);
+    const lane = await loadLane(wasmBytes, ternBytes, manifestText);
+    $("golden").textContent = lane.golden.slice(0, 12) + "…";
+    $("vocab").textContent = lane.manifest.chars.length;
+    statusEl.textContent = "the lane is warm";
+    statusEl.dataset.up = "1";
+
+    const runDream = async (pushHistory = true) => {
+      const seed = $("seed").value;
+      const n = Math.min(2048, Math.max(1, parseInt($("n").value, 10) || 240));
+      const temp = parseFloat($("temp").value);
+      $("go").disabled = true;
+      statusEl.textContent = "dreaming…";
+      try {
+        const text = await lane.dream(seed, n, temp);
+        outEl.innerHTML =
+          `<span class="seed">${escapeHtml(seed)}</span>` + escapeHtml(text.slice(seed.length));
+        statusEl.textContent = "dreamed · " + text.length + " chars";
+      } finally {
+        $("go").disabled = false;
+      }
+    };
+    $("go").addEventListener("click", () => runDream());
+    $("again").addEventListener("click", () => runDream());
+    await runDream();
+  } catch (e) {
+    statusEl.textContent = "the lane refused: " + e.message;
+    statusEl.dataset.fail = "1";
+    outEl.textContent = String(e.message);
+  }
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+boot();
+</script>
+</body>
+</html>

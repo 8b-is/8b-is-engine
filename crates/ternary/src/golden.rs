@@ -8,14 +8,13 @@
 
 use sha2::Digest;
 
-const TERN: &[u8] = include_bytes!("../../../assets/ternary/sanctuary-1.58.tern");
-
 #[cfg(test)]
 const EXPECTED: &str = "aff6dc2bc980c1a2275957b25ee075139670e3bbad4920a0aec4f9c6fc952060";
 
 /// The golden hex string for the committed checkpoint.
 pub fn golden_hash_hex() -> String {
-    let cp = crate::format::load_checkpoint(TERN).expect("the committed checkpoint must load");
+    let cp = crate::format::load_checkpoint(crate::TERN_ASSET)
+        .expect("the committed checkpoint must load");
     let m = crate::model::CharModel::from_checkpoint(&cp);
     let mut hidden = vec![0f32; m.dim];
     let mut hasher = sha2::Sha256::new();

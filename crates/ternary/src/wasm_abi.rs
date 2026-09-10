@@ -29,7 +29,53 @@ pub extern "C" fn ternary_golden_hex() -> *mut u8 {
     alloc_c_string(crate::golden_hash_hex())
 }
 
-/// ternary_free — release a string returned by ternary_golden_hex.
+/// ternary_dream_c(prompt, alphabet, n, temperature) — dream the `n`-token
+/// continuation for a prompt, with the engine's own seeded PRNG and the
+/// crate's f32 sampler, INSIDE the wasm. `alphabet` is the manifest's
+/// vocab string (the char↔index truth). The caller owns the prompt and
+/// appends the returned continuation (freed with ternary_free). Because
+/// this is the same function the native dream runs, the dreamed bytes
+/// are identical on every surface — the dream is a three-surface
+/// artifact, not just the golden.
+#[no_mangle]
+pub extern "C" fn ternary_dream_c(
+    prompt_ptr: *const u8,
+    prompt_len: usize,
+    alphabet_ptr: *const u8,
+    alphabet_len: usize,
+    n: usize,
+    temperature: f32,
+) -> *mut u8 {
+    if prompt_ptr.is_null() || alphabet_ptr.is_null() {
+        return std::ptr::null_mut();
+    }
+    let Ok(prompt) =
+        (unsafe { std::str::from_utf8(std::slice::from_raw_parts(prompt_ptr, prompt_len)) })
+    else {
+        return std::ptr::null_mut();
+    };
+    let Ok(alphabet) =
+        (unsafe { std::str::from_utf8(std::slice::from_raw_parts(alphabet_ptr, alphabet_len)) })
+    else {
+        return std::ptr::null_mut();
+    };
+    match crate::model::dream_continuation(prompt, alphabet, n, temperature) {
+        Some(s) => alloc_c_string(s),
+        None => std::ptr::null_mut(),
+    }
+}
+
+/// ternary_alloc(len) — a byte buffer on the wasm heap for INPUTS: the
+/// caller writes data + a NUL terminator, and ternary_free releases it
+/// (the same len+1 contract as alloc_c_string).
+#[no_mangle]
+pub extern "C" fn ternary_alloc(len: usize) -> *mut u8 {
+    let layout = std::alloc::Layout::array::<u8>(len + 1).expect("layout");
+    unsafe { std::alloc::alloc(layout) }
+}
+
+/// ternary_free — release a string or buffer returned by the ternary_* ABI.
+
 #[no_mangle]
 pub extern "C" fn ternary_free(ptr: *mut u8) {
     if ptr.is_null() {

@@ -74,6 +74,12 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   the E2E oneshot and `cmp`-verified
 - [x] the lane's docs: [ternary-model-lane.md](ternary-model-lane.md) +
   theory §6 (addition is the lingua franca)
+- [x] **the dream, in the browser** — `ternary_dream_c` (wasm ABI) dreams
+  inside the wasm with the crate's own sampler/PRNG, so the dreamed bytes
+  are byte-equal to the native dream; `client/dream-dashboard.html` in the
+  family style, `client/dream.js` dual-surface, `scripts/build-wasm.sh`,
+  the oneshot asserts `byte-equal to native` — the dream is a
+  three-surface artifact, not just the golden
 
 ## v1.x — the core engine (the Rust/Go runtime)
 

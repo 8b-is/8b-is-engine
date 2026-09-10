@@ -41,7 +41,7 @@
 - [GAIA — the world-memory](docs/gaia-world-memory.md)
 - [ultra-cogniM8 — the cognitive substrate, the two memories, the deities](docs/ultra-cogniM8.md)
 - [layer 1 — content creation, ideation → mid-pipeline](docs/first-layer-content-creation.md)
-- [the browser client — mesh.js + the GAIA dashboard + the world dashboard](client/)
+- [the browser client — mesh.js + the GAIA dashboard + the world dashboard + the dream dashboard](client/)
 - [integration guide — UE · Unity · VSCode](docs/integration-guide.md)
 - [the constellation](#the-constellation)
 - [contributing](#contributing)

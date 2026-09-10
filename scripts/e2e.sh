@@ -134,5 +134,11 @@ cargo run -q -p ternary --example dream -- \
 cmp out/sanctuary-dream.txt /tmp/dream-b.txt || die "the dream is not deterministic"
 rm -f /tmp/dream-b.txt
 
+echo "— the third surface: the dream, in the browser's clothes (byte-equal to native)"
+./scripts/build-wasm.sh >/dev/null
+cargo run -q -p ternary --example dream --   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json   "the world runs without" 64 0.8 /tmp/dream-native.txt >/dev/null
+node client/dream.js --check --cmp-native /tmp/dream-native.txt   || die "the browser dream drifted from the native dream"
+rm -f /tmp/dream-native.txt
+
 echo
 echo "⟦ E2E oneshot complete :: the world runs without you ⟧"

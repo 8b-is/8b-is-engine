@@ -96,4 +96,22 @@ bytes. Same inputs, same bytes, on every surface — the e2e oneshot
 reproduces it and requires `cmp` equality. The world runs without you, and
 so does its dream.
 
+## the dream, in the browser
+
+The third surface is visible: `ternary_dream_c` (the wasm ABI) dreams
+INSIDE the wasm — the crate's own sampler, PRNG, and forward run the same
+bytes the native example runs, so the dreamed text is exactly the native
+dreamed text (the oneshot asserts `byte-equal to native: true`).
+`client/dream-dashboard.html` is the family-styled page; `client/dream.js`
+is the dual-surface logic (page + `node client/dream.js --check`).
+
+```bash
+./scripts/build-wasm.sh                  # → client/assets/ternary.wasm (simd128)
+node client/dream.js --check             # golden + determinism in the page's own clothes
+python3 -m http.server 8000              # open /client/dream-dashboard.html
+```
+
+The golden is asserted in the page too — a surface that drifts refuses to
+dream. Three contracts, three machines, one string, and now one dream.
+
 *the constellation · 0 + 1 · fine touch from within · vaked.dev*

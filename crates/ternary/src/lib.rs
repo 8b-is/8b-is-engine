@@ -11,7 +11,8 @@
 //! single float scale is applied once, at the end.
 //!
 //! The engine's doctrine holds here too: a seed is a seed everywhere
-//! (the dream uses `world-core::tern::mulberry32`), the checkpoint is a
+//! (the dream uses the crate's `pack_mulberry`, the engine's own PRNG
+//! family), the checkpoint is a
 //! small public file (the `.tern` format, sections + sha256 trailer), and
 //! the model is small so the world is portable.
 //!
@@ -44,6 +45,11 @@ pub use gemm::{
     absmax, act_scale, gamma_of, gemm_f32_reference, gemm_i32, gemm_i32_scalar, packed_bytes_for,
     quant_acts, quantize_pack, ternary_linear, unpack_weights, GAMMA_EPS, QUANT_HEADROOM,
 };
+/// The committed base model, embedded once — shared by the golden, the
+/// lambda sampler, and the wasm ABI (one data segment in the wasm binary).
+#[doc(hidden)]
+pub const TERN_ASSET: &[u8] = include_bytes!("../../../assets/ternary/sanctuary-1.58.tern");
+
 pub use golden::golden_hash_hex;
 pub use model::{layernorm, CharModel};
 pub use pack::{pack_trits, packed_len, unpack_lenient, unpack_strict, PACK_PER_BYTE};
@@ -67,6 +73,15 @@ pub fn pack_mulberry(seed: u32) -> impl FnMut() -> f64 {
         t = t.wrapping_add((t ^ (t >> 7)).wrapping_mul(t | 61)) ^ t;
         ((t ^ (t >> 14)) as f64) / 4294967296.0
     }
+}
+
+/// dream_seed — the dream's PRNG seed: sha256(text)[4..8] big-endian,
+/// the low 32 bits of `world-core::tern::seed_from_text`, so a seed is a
+/// seed everywhere (the wasm ABI and the native sampler share it).
+pub fn dream_seed(text: &str) -> u32 {
+    use sha2::Digest;
+    let d = sha2::Sha256::digest(text.as_bytes());
+    u32::from_be_bytes([d[4], d[5], d[6], d[7]])
 }
 
 #[cfg(test)]

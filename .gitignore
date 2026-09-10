@@ -1,6 +1,7 @@
 dist/
 out/
 target/
+target-wasm/
 __pycache__/
 *.pyc
 assets/staged/

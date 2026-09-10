@@ -185,3 +185,45 @@ mod tests {
         assert!((var - 1.0).abs() < 1e-3, "unit variance");
     }
 }
+
+/// dream_continuation — the crate's sampler, and the ONLY dream: warm the
+/// hidden carry on the prompt's vocab chars, then dream `n` tokens with
+/// `pack_mulberry(dream_seed(prompt))` and the crate's f32 sampler. The
+/// native example, the wasm ABI, and any future surface all call this
+/// one function — so the dreamed bytes are identical everywhere, a
+/// three-surface artifact, not just the golden.
+pub fn dream_continuation(
+    prompt: &str,
+    alphabet: &str,
+    n: usize,
+    temperature: f32,
+) -> Option<String> {
+    let check = crate::format::load_checkpoint(crate::TERN_ASSET).ok()?;
+    let model = CharModel::from_checkpoint(&check);
+    let chars: Vec<char> = alphabet.chars().collect();
+    if chars.len() != model.vocab {
+        return None; // the alphabet must be the checkpoint's vocab
+    }
+    let to_id: std::collections::HashMap<char, usize> =
+        chars.iter().enumerate().map(|(i, c)| (*c, i)).collect();
+    let prompt_tokens: Vec<usize> = prompt
+        .chars()
+        .filter_map(|c| to_id.get(&c).copied())
+        .collect();
+    if prompt_tokens.is_empty() {
+        return None;
+    }
+    let mut hidden = vec![0f32; model.dim];
+    for &t in &prompt_tokens {
+        let _ = model.forward(t, &mut hidden);
+    }
+    let mut rng = crate::pack_mulberry(crate::dream_seed(prompt));
+    let mut cur = *prompt_tokens.last()?;
+    let mut out = String::with_capacity(n);
+    for _ in 0..n {
+        let logits = model.forward(cur, &mut hidden);
+        cur = crate::sample(&logits, temperature, &mut rng);
+        out.push(chars[cur]);
+    }
+    Some(out)
+}
