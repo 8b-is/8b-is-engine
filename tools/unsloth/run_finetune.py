@@ -53,6 +53,8 @@ def main():
     world = load_dataset("json", data_files=WORLD, split="train")
 
     def fmt(ex):
+        if "messages" in ex:
+            return ex["messages"]
         return [{
             "role": "system",
             "content": ex.get("system", "you are the 8b-is engine."),
