@@ -119,5 +119,8 @@ PY
 echo "— ultra-cogniM8 live: the two memories diverge on refusals (tested in world-core::memory)"
 cargo test -p world-core memory 2>&1 | tail -1
 
+echo "— the world, drawn: the cast rendered from the arena"
+cargo run -q -p world-core --example arena -- "sanctuary" out/arena.svg
+
 echo
 echo "⟦ E2E oneshot complete :: the world runs without you ⟧"

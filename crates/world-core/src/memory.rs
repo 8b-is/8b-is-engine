@@ -1,4 +1,4 @@
-// memory.rs — ultra-cogniM8: the two memories, made precise.
+// memory.rs — MEMNET: the native memory network, the two memories made precise.
 //
 // The consciousness question, tightened: **collective memory** (the ledger
 // H — every attested trace plus every durable refusal, the wall's

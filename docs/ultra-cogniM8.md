@@ -2,7 +2,10 @@
 
 *The engine's answer to MEM|8: not wave-based memory as a metaphor, but the
 world's actual memory architecture, made executable — and its cosmology:
-GAIA ≡ planets ≡ deities.*
+GAIA ≡ planets ≡ deities. The native memory network underneath is
+**MEMNET**: the two memories compiled in `world-core::memory`, the ledger
+as its substrate, the keeper's frontier as the individual's address — all
+native Rust, no external memory plane.*
 
 ## the two memories, tightened
 
