@@ -39,6 +39,8 @@ fn main() {
             "-O",
             "ReleaseSafe",
             "-fPIC",
+            "-fcompiler-rt", // __zig_probe_stack + friends: the linker
+            // needs Zig's runtime in the object, never unresolved
             "-target",
             &zig_target,
         ])
