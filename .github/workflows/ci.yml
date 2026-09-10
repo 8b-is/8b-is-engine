@@ -35,6 +35,12 @@ jobs:
       - name: cargo build --workspace --examples (incl. the dream)
         run: PATH="$HOME/.cargo/bin:$PATH" cargo build --workspace --examples
 
+      - name: the wasm surface — golden under simd128 (three-surface determinism)
+        run: |
+          rustup target add wasm32-unknown-unknown
+          RUSTFLAGS="-C target-feature=+simd128" cargo build -p ternary --target wasm32-unknown-unknown
+          node scripts/wasm-golden.mjs target/wasm32-unknown-unknown/debug/ternary.wasm
+
       - name: checkout the floors' repos (centerfugeq + pocoo)
         uses: actions/checkout@v4
         with:

@@ -12,6 +12,13 @@ how the checkpoint is born, and how the dream is read.
 > The forward pass accumulates in `i32` integer arithmetic, and the
 > single float scale is applied **once**, at the end.
 
+The proof is machine-run on all three surfaces: the golden hash
+(64 hex chars pinning the model's first 32 forward logits) is asserted
+bit-identical on aarch64/NEON, x86-64/AVX2 (CI), and wasm32/simd128
+(`scripts/wasm-golden.mjs`) — and when the wasm lane once was not, the
+golden failed loudly and the stride bug was found. One arithmetic
+contract, three machines, one string.
+
 Consequences, in order:
 
 - **AMD CPUs are first-class.** The AVX2 lane runs on any x86-64 core —

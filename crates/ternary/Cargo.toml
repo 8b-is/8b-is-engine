@@ -11,6 +11,8 @@ crate-type = ["lib", "cdylib"]
 
 [dependencies]
 sha2 = "0.10"
+
+[dev-dependencies]
 world-core = { path = "../world-core" }
 
 [[example]]

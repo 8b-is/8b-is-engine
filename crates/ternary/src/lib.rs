@@ -32,15 +32,19 @@
 pub mod checkpoint_tests;
 pub mod format;
 pub mod gemm;
+pub mod golden;
 pub mod model;
 pub mod pack;
 pub mod sample;
+#[cfg(target_arch = "wasm32")]
+pub mod wasm_abi;
 
 pub use format::{load_checkpoint, Checkpoint, SectionKind, TernLayer};
 pub use gemm::{
     absmax, act_scale, gamma_of, gemm_f32_reference, gemm_i32, gemm_i32_scalar, packed_bytes_for,
     quant_acts, quantize_pack, ternary_linear, unpack_weights, GAMMA_EPS, QUANT_HEADROOM,
 };
+pub use golden::golden_hash_hex;
 pub use model::{layernorm, CharModel};
 pub use pack::{pack_trits, packed_len, unpack_lenient, unpack_strict, PACK_PER_BYTE};
 pub use sample::{argmax, sample, softmax};
@@ -50,8 +54,42 @@ pub const TAGLINE: &str =
     "the 1.58-bit lane :: add and add and add until the order does not matter";
 
 /// The dream's PRNG, wrapped as an `FnMut` — the engine's own
-/// `mulberry32`, so a seed is a seed everywhere. Exposed for examples and
-/// tests; the world-core PRNG family is the one truth.
+/// `mulberry32`, so a seed is a seed everywhere. The lane keeps a local
+/// copy so the wasm surface stays dependency-free (world-core and its
+/// zstd lane never board the wasm ship); a test pins this copy
+/// bit-identical to `world-core::tern::mulberry32`, the one truth.
 pub fn pack_mulberry(seed: u32) -> impl FnMut() -> f64 {
-    world_core::tern::mulberry32(seed)
+    let mut a = seed;
+    move || {
+        a = a.wrapping_add(0x6D2B79F5);
+        let mut t = a;
+        t = (t ^ (t >> 15)).wrapping_mul(t | 1);
+        t = t.wrapping_add((t ^ (t >> 7)).wrapping_mul(t | 61)) ^ t;
+        ((t ^ (t >> 14)) as f64) / 4294967296.0
+    }
+}
+
+#[cfg(test)]
+mod prng_tests {
+    #[test]
+    fn pack_mulberry_is_the_engine_family() {
+        // world-core is a dev-dependency: assert bit-identity against the
+        // authoritative implementation on every surface this test runs.
+        let mut ours = super::pack_mulberry(41592);
+        let mut theirs = world_core::tern::mulberry32(41592);
+        for _ in 0..128 {
+            assert_eq!(ours(), theirs(), "the dream's PRNG drifted from the family");
+        }
+    }
+
+    #[test]
+    fn pack_mulberry_is_seeded_and_repeatable() {
+        let mut a = super::pack_mulberry(7);
+        let first: Vec<f64> = (0..16).map(|_| a()).collect();
+        let mut b = super::pack_mulberry(7);
+        let again: Vec<f64> = (0..16).map(|_| b()).collect();
+        assert_eq!(first, again);
+        let mut c = super::pack_mulberry(8);
+        assert_ne!(first[0], c(), "different seeds diverge immediately");
+    }
 }

@@ -174,25 +174,29 @@ unsafe fn gemm_i32_wasm(w: &[i16], a: &[i16], n_in: usize, n_out: usize) -> Vec<
     let mut out = vec![0i32; n_out];
     for o in 0..n_out {
         let row = &w[o * n_in..(o + 1) * n_in];
-        let mut acc = i32x4_splat(0);
+        let mut acc = 0i32;
         let mut k = 0usize;
-        while k + 16 <= n_in {
+        while k + 8 <= n_in {
             let wa = v128_load(row.as_ptr().add(k) as *const v128);
             let aa = v128_load(a.as_ptr().add(k) as *const v128);
             let prod = i16x8_mul(aa, wa); // 8 i16 products
-            acc = i32x4_add(acc, i16x8_extadd_pairwise_i32x4_s(prod));
-            k += 16;
-        }
-        let mut lanes = [0i32; 4];
-        v128_store(lanes.as_mut_ptr() as *mut v128, acc);
-        let mut total = 0i32;
-        for &l in &lanes {
-            total = total.wrapping_add(l);
+                                          // exact i32 pairing via the lane-extract primitive (stable
+                                          // across stdarch revisions); integer addition does not care
+                                          // about grouping, so the total is the scalar total
+            acc = acc.wrapping_add(i16x8_extract_lane::<0>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<1>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<2>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<3>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<4>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<5>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<6>(prod) as i32);
+            acc = acc.wrapping_add(i16x8_extract_lane::<7>(prod) as i32);
+            k += 8;
         }
         for kk in k..n_in {
-            total = total.wrapping_add(row[kk] as i32 * a[kk] as i32);
+            acc = acc.wrapping_add(row[kk] as i32 * a[kk] as i32);
         }
-        out[o] = total;
+        out[o] = acc;
     }
     out
 }
