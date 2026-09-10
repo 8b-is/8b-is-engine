@@ -34,20 +34,20 @@ footer{margin-top:30px;color:var(--dim);font-size:10px;letter-spacing:1px}
 <div class="kpis">
   <div class="kpi"><b>20</b><span>corridor checks, green</span></div>
   <div class="kpi"><b>6</b><span>stage transitions (one step)</span></div>
-  <div class="kpi"><b>4</b><span>obliterated picks</span></div>
-  <div class="kpi"><b>1M</b><span>context the far room dreams of</span></div>
+  <div class="kpi"><b>5</b><span>n-gram order — the engram tables fit as shipped</span></div>
+  <div class="kpi"><b>600+</b><span>teachers the Comet lane opens</span></div>
 </div>
 
 <section>
   <h2>the abstract wave — the wire's own breath</h2>
   <canvas id="wave" class="wave"></canvas>
-  <p class="dim">a seeded ternary stream, drawn as a wave: +1 above the line, -1 below, 0 on it — the same mulberry32 the world runs on. the hum rides at 108.</p>
+  <p class="dim">imagine the wire teaching itself one token at a time: every tick the seeded stream draws +1 (above the line), -1 (below) or 0 (on it) — the same deterministic breath the engine's dream runs on. it is the "hum" underneath everything: boring, constant, reproducible.</p>
 </section>
 
 <section>
   <h2>qSpace — the mem8 quad, drawn</h2>
   <canvas id="qspace" class="wave"></canvas>
-  <p class="dim">the quad A-B-C-D on the phase-λ lattice: phi gates the encoder mind, lambda the decoder voice, the observer delta shifts the frame — never the geometry. the gate AND/OR/NAND collapses the interpolation into the 8-bit sink.</p>
+  <p class="dim">the quad is a tiny 8-byte "memory cell" (phi A-C, lambda B-D on the lattice): phi picks WHICH expert listens (the encoder mind), lambda picks WHICH speaks (the decoder voice), and the observer delta shifts the whole frame without moving the geometry — like turning your head at a window. the gate then collapses the interpolation into an 8-bit lane id that routes the request.</p>
 </section>
 
 <section>
@@ -69,10 +69,10 @@ footer{margin-top:30px;color:var(--dim);font-size:10px;letter-spacing:1px}
   <h2>the stages, one sentence each</h2>
   <div class="grid">
     <div class="card"><h3>setup</h3><p>the box bootstrap: the U.2 lake mounted, llama.cpp native AVX-512 — <b>idempotent, --preview pure</b>.</p></div>
-    <div class="card"><h3>diet</h3><p>the world's food: the cogito reservoir + the top-5 sails + the curated categories <b>(instruct · reasoning · code · web)</b> — polars is the truth.</p></div>
-    <div class="card"><h3>train</h3><p>unsloth QLoRA 4-bit on the T4/box — the effort knob (L1/L2/L3 = b 50/75/100), the mem8-conditioned rows, the <b>accelerator gate</b> that never lies.</p></div>
-    <div class="card"><h3>quantize</h3><p>imatrix on the <b>full</b> corpus (the 700 GB eats it), Q4..Q8 & the b1.58 backpack — the calibration IS the world.</p></div>
-    <div class="card"><h3>eval</h3><p>the verdict: perplexity · refusal survival · dream penetration + the <b>Council</b> (geometric-mean teachers) + the Comet judge.</p></div>
+    <div class="card"><h3>diet</h3><p>the world's food: the cogito reservoir (10× cap) + the top-5 sails + the curated categories <b>(instruct · reasoning · code · web)</b> — polars is the truth.</p></div>
+    <div class="card"><h3>train</h3><p>unsloth QLoRA 4-bit on the T4/box — the effort knob (L1/L2/L3 = b 50/75/100), the mem8-conditioned rows, the <b>accelerator gate</b> that never lies. the T4 oven is heating NOW (colab_sprint.sh).</p></div>
+    <div class="card"><h3>quantize</h3><p>imatrix on the <b>full</b> corpus (the 700 GB eats it), Q4..Q8 & the b1.58 backpack + the UD-IQ4_XS trick for the far room — the calibration IS the world.</p></div>
+    <div class="card"><h3>eval</h3><p>the verdict: perplexity · refusal survival · dream penetration + the <b>Council</b> (stub · comet · fused teachers) + the Comet judge.</p></div>
     <div class="card"><h3>ship</h3><p>to PeetPedro/8bis-lane-models with the model card, the ledger row, the dogfood flush — <b>then it lives without you</b>.</p></div>
   </div>
 </section>
@@ -94,11 +94,20 @@ footer{margin-top:30px;color:var(--dim);font-size:10px;letter-spacing:1px}
     <span class="pill">CSA2 Full/Reindex/Reuse</span>
     <span class="pill">the Council (OPD)</span>
     <span class="pill">effort b 50/75/100</span>
-    <span class="pill">KV q4_0 (1/4 HBM)</span>
+    <span class="pill">KV fp4/fp8 — per-token, bounded</span>
     <span class="pill">the stage machine</span>
     <span class="pill">the daemon (leave it running)</span>
   </p>
   <p class="dim">Every concept lands in code, not in a slide — the corridor proves it (./e2e.sh, 20 green).</p>
+</section>
+
+<section>
+  <h2>the V4.1 knob lane — big sister, wired</h2>
+  <div class="grid">
+    <div class="card"><h3>N-grams</h3><p><b>N=5 is free</b> — the shipped 384M-row engram tables fit the 5-gram buckets (128M rows of headroom, proven); N=6 would need ~16M rows per layer and is <b>refused before any run</b>. The remaining work is the upscaled wkv projection + a short reservoir fine-tune.</p></div>
+    <div class="card"><h3>KV per token</h3><p>the budget is <b>compress_ratios × index_topk</b>: 2 tokens fold into one latent on the deep layers, each query may reach 512 compressed positions; storage rides fp8 (window) and fp4 (compressed) — the "1/4 HBM, 1/8 SSD" shape.</p></div>
+    <div class="card"><h3>fp8</h3><p>weights ride native <b>float8</b> on the Ada tensor cores; the fp4 experts cast to fp8 <b>losslessly</b> (zero information lost, no fp4 kernel). The >200 GB ngram shards stay on the U.2 lake, row-sharded per rank.</p></div>
+  </div>
 </section>
 
 <footer>a seed is a seed everywhere · the constellation · 0 + 1 · fine touch from within · vaked.dev · open me: open docs/pipeline-viz.html</footer>
