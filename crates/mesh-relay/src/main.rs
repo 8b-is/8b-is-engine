@@ -13,10 +13,16 @@ async fn main() {
     let mut relay_port = 9222u16;
     let mut node_port = 7777u16;
     if let Some(i) = args.iter().position(|a| a == "--relay-port") {
-        relay_port = args.get(i + 1).and_then(|v| v.parse().ok()).unwrap_or(relay_port);
+        relay_port = args
+            .get(i + 1)
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(relay_port);
     }
     if let Some(i) = args.iter().position(|a| a == "--node-port") {
-        node_port = args.get(i + 1).and_then(|v| v.parse().ok()).unwrap_or(node_port);
+        node_port = args
+            .get(i + 1)
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(node_port);
     }
     let relay = Relay::new(relay_port, format!("127.0.0.1:{node_port}"));
     if let Err(e) = relay.run().await {

@@ -109,7 +109,10 @@ mod tests {
 
         let entry = stage_file(&src, &dst_dir).unwrap();
         assert_eq!(entry.bytes, 19);
-        assert_eq!(entry.sha256, sha256_file(&dst_dir.join("terrain.ron")).unwrap());
+        assert_eq!(
+            entry.sha256,
+            sha256_file(&dst_dir.join("terrain.ron")).unwrap()
+        );
 
         let manifest = StageManifest {
             version: 1,

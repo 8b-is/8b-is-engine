@@ -243,7 +243,7 @@ dependencies = [
 
 [[package]]
 name = "mesh-node"
-version = "0.3.1"
+version = "0.6.2"
 dependencies = [
  "bytes",
  "serde",
@@ -254,7 +254,7 @@ dependencies = [
 
 [[package]]
 name = "mesh-relay"
-version = "0.3.1"
+version = "0.6.2"
 dependencies = [
  "futures-util",
  "mesh-node",
@@ -281,7 +281,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "pipeline"
-version = "0.3.1"
+version = "0.6.2"
 dependencies = [
  "ron",
  "serde",
@@ -492,6 +492,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternary"
+version = "0.6.2"
+dependencies = [
+ "sha2",
+ "world-core",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -615,7 +623,7 @@ dependencies = [
 
 [[package]]
 name = "world-core"
-version = "0.1.0"
+version = "0.6.2"
 dependencies = [
  "memmap2",
  "serde",

@@ -168,8 +168,16 @@ mod tests {
         let mut w1 = SimWorld::from_seed("sanctuary", 3);
         let mut w2 = SimWorld::from_seed("sanctuary", 3);
         for t in 1..200u64 {
-            let a: Vec<_> = w1.step(t).into_iter().map(|(n, d)| (n, d.h, d.r, d.s, d.action)).collect();
-            let b: Vec<_> = w2.step(t).into_iter().map(|(n, d)| (n, d.h, d.r, d.s, d.action)).collect();
+            let a: Vec<_> = w1
+                .step(t)
+                .into_iter()
+                .map(|(n, d)| (n, d.h, d.r, d.s, d.action))
+                .collect();
+            let b: Vec<_> = w2
+                .step(t)
+                .into_iter()
+                .map(|(n, d)| (n, d.h, d.r, d.s, d.action))
+                .collect();
             assert_eq!(a, b, "same brief, same cast, same world");
         }
     }
@@ -179,7 +187,10 @@ mod tests {
         let mut w = SimWorld::from_seed("the painted forest", 4);
         let mut es = w.materialize();
         assert_eq!(es.len(), 4, "one entity per fauna");
-        assert!(es.iter().any(|e| es.pos(e).unwrap() != [0.0, 0.0]), "seeded positions");
+        assert!(
+            es.iter().any(|e| es.pos(e).unwrap() != [0.0, 0.0]),
+            "seeded positions"
+        );
         for t in 1..100u64 {
             w.step(t);
             w.sync_entities(&mut es);
@@ -204,7 +215,10 @@ mod tests {
                 let v = k.adjudicate(&name, &d);
                 if d.action.is_some() {
                     saw_forage += 1;
-                    assert!(v == crate::fold::Verdict::Admitted, "entitled action admitted");
+                    assert!(
+                        v == crate::fold::Verdict::Admitted,
+                        "entitled action admitted"
+                    );
                 } else if matches!(v, crate::fold::Verdict::Refused(_)) {
                     refusals += 1;
                 }

@@ -64,9 +64,9 @@ async fn bridge(
     node_addr: &str,
     stats: &Arc<Mutex<RelayStats>>,
 ) -> std::io::Result<()> {
-    let ws = tokio_tungstenite::accept_async(ws_tcp)
-        .await
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("ws handshake: {e}")))?;
+    let ws = tokio_tungstenite::accept_async(ws_tcp).await.map_err(|e| {
+        std::io::Error::new(std::io::ErrorKind::Other, format!("ws handshake: {e}"))
+    })?;
     let (mut ws_sink, mut ws_stream) = ws.split();
     let node = TcpStream::connect(node_addr).await?;
     let (mut node_reader, mut node_writer) = node.into_split();
@@ -107,7 +107,11 @@ async fn bridge(
             if node_reader.read_exact(&mut buf).await.is_err() {
                 break;
             }
-            if ws_sink.send(Message::Text(String::from_utf8_lossy(&buf).into_owned())).await.is_err() {
+            if ws_sink
+                .send(Message::Text(String::from_utf8_lossy(&buf).into_owned()))
+                .await
+                .is_err()
+            {
                 break;
             }
             let mut s = stats.lock().await;
@@ -143,12 +147,10 @@ mod tests {
 
         // ... and a browser (a WS client) through the door
         let browser_tcp = TcpStream::connect(("127.0.0.1", relay_port)).await.unwrap();
-        let (ws, _resp) = tokio_tungstenite::client_async(
-            format!("ws://127.0.0.1:{relay_port}"),
-            browser_tcp,
-        )
-        .await
-        .expect("ws connect to the relay");
+        let (ws, _resp) =
+            tokio_tungstenite::client_async(format!("ws://127.0.0.1:{relay_port}"), browser_tcp)
+                .await
+                .expect("ws connect to the relay");
         let (mut sink, mut stream) = ws.split();
 
         let delta = r#"{"t":1,"s":1,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
@@ -167,7 +169,10 @@ mod tests {
         .await
         .expect("the broadcast crossed the relay");
 
-        assert!(got.contains("127.0.0.1"), "the browser's fold is in the broadcast");
+        assert!(
+            got.contains("127.0.0.1"),
+            "the browser's fold is in the broadcast"
+        );
         node_task.abort();
         relay_task.abort();
     }

@@ -16,11 +16,16 @@ async fn main() {
         Some("hub") => ZoneMode::Hub,
         Some("instance") => ZoneMode::Instance,
         _ => {
-            eprintln!("usage: mesh-node <hub|instance> \"<brief>\" [--port N] [--retire-after TICKS]");
+            eprintln!(
+                "usage: mesh-node <hub|instance> \"<brief>\" [--port N] [--retire-after TICKS]"
+            );
             std::process::exit(2);
         }
     };
-    let brief = args.get(1).cloned().unwrap_or_else(|| "the sanctuary at dawn".to_string());
+    let brief = args
+        .get(1)
+        .cloned()
+        .unwrap_or_else(|| "the sanctuary at dawn".to_string());
     let mut port = 7777u16;
     let mut retire: Option<u64> = None;
     if let Some(i) = args.iter().position(|a| a == "--port") {

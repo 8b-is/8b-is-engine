@@ -47,7 +47,11 @@ impl ArtLanes {
     }
 
     /// concept_art — FLUX.2-klein renders the brief; returns the PNG path.
-    pub async fn concept_art(&self, brief: &str, out_dir: &std::path::Path) -> Result<PathBuf, String> {
+    pub async fn concept_art(
+        &self,
+        brief: &str,
+        out_dir: &std::path::Path,
+    ) -> Result<PathBuf, String> {
         std::fs::create_dir_all(out_dir).map_err(|e| e.to_string())?;
         let text = self
             .run_sidecar(&[
@@ -69,7 +73,11 @@ impl ArtLanes {
     }
 
     /// qa_render — the vision lane judges a render: admissible?
-    pub async fn qa_render(&self, image: &std::path::Path, question: &str) -> Result<String, String> {
+    pub async fn qa_render(
+        &self,
+        image: &std::path::Path,
+        question: &str,
+    ) -> Result<String, String> {
         self.run_sidecar(&[
             "vision",
             &image.to_string_lossy(),

@@ -89,12 +89,13 @@ pub fn gaia_state(brief: &str, tick: u64) -> GaiaState {
     let gust = r2(speed as f64 + (whash(base, t as u32) % 100) as f64 / 100.0 * 4.0);
     let wind = [dir, speed as f64, gust];
 
-    let temp = r2(
-        15.0 + 8.0 * ((t as f64 / 864000.0) * std::f64::consts::TAU).sin()
-            + 4.0 * ((t as f64 / 86400.0) * std::f64::consts::TAU).sin()
-            + ((whash(base, (t % 3600) as u32) % 100) as f64 / 100.0 - 0.5) * 2.0,
-    );
-    let light = r2(((t as f64 / 86400.0) * std::f64::consts::TAU).sin().max(0.0));
+    let temp = r2(15.0
+        + 8.0 * ((t as f64 / 864000.0) * std::f64::consts::TAU).sin()
+        + 4.0 * ((t as f64 / 86400.0) * std::f64::consts::TAU).sin()
+        + ((whash(base, (t % 3600) as u32) % 100) as f64 / 100.0 - 0.5) * 2.0);
+    let light = r2(((t as f64 / 86400.0) * std::f64::consts::TAU)
+        .sin()
+        .max(0.0));
 
     // memory — the history pointer: a hash chain over the folded hours
     let folds = (t / 3600) as u32;
@@ -104,7 +105,16 @@ pub fn gaia_state(brief: &str, tick: u64) -> GaiaState {
     }
     let memory = format!("{mem:08x}");
 
-    GaiaState { t, weather, entropy, gravity, wind, temp, light, memory }
+    GaiaState {
+        t,
+        weather,
+        entropy,
+        gravity,
+        wind,
+        temp,
+        light,
+        memory,
+    }
 }
 
 /// gaia_wire — the compact mesh frame (single-char keys, the ternary

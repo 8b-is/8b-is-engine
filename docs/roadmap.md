@@ -24,7 +24,7 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
 - [x] the research: the MMO bibles applied, Flyxion's layers, the
   Rust+Go gist
 
-## v0.3 — the world runs without you (the current edge)
+## v0.3 — the world runs without you (shipped)
 
 - [x] **GAIA** — the world-memory: one seed, eight layers (time, weather,
   entropy, gravity, wind, temp, light, memory), deterministic across
@@ -60,6 +60,20 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   WebTransport through the same seam later — tested end to end: a browser
   delta folds into the node and the broadcast crosses the relay back
 - [ ] WebTransport (QUIC) upgrade: swap the relay's WS transport for QUIC
+
+## v0.6 — the 1.58-bit lane (the current edge)
+
+- [x] **AMD CPUs and 1-bit base models as first-class citizens**
+  (`crates/ternary`) — BitNet b1.58 `{-1,0,+1}` weights packed four to a
+  byte; an integer GEMM bit-exact by construction across the AVX2 /
+  NEON / WASM-simd128 / Vulkan / MSL lanes (*accumulate in i32, scale
+  once — integer addition cannot reorder*); the `.tern` checkpoint
+  (sections + sha256 trailer); the trained base model
+  (`sanctuary-1.58.tern`, quantization-aware uv trainer with a closed-loop
+  `--verify` congruence); the seeded dream — a pure function wired into
+  the E2E oneshot and `cmp`-verified
+- [x] the lane's docs: [ternary-model-lane.md](ternary-model-lane.md) +
+  theory §6 (addition is the lingua franca)
 
 ## v1.x — the core engine (the Rust/Go runtime)
 

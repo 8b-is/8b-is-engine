@@ -32,6 +32,9 @@ jobs:
       - name: cargo test --workspace
         run: PATH="$HOME/.cargo/bin:$PATH" cargo test --workspace
 
+      - name: cargo build --workspace --examples (incl. the dream)
+        run: PATH="$HOME/.cargo/bin:$PATH" cargo build --workspace --examples
+
       - name: the floors smoke harness (centerfugeq + pocoo copies)
         working-directory: ../centerfugeq
         run: node scripts/check-floors.mjs quantGame/*.html game/*.html demos/*.html ../pocoo.vaked.dev/demos/centerfugeq/*.html

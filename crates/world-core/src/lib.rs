@@ -8,8 +8,8 @@
 
 pub mod entity;
 pub mod fold;
-pub mod kompress;
 pub mod gaia;
+pub mod kompress;
 pub mod memory;
 pub mod render;
 pub mod sim;
@@ -21,11 +21,13 @@ pub mod wasm;
 
 pub use entity::{Entities, Entity};
 pub use fold::{Delta, Keeper, Verdict};
-pub use kompress::{compress as kcompress, decompress as kdecompress, frame as kframe, ratio as kratio};
-pub use render::arena_svg;
 pub use gaia::{gaia_state, gaia_wire, GaiaState, LAYERS, WEATHER};
+pub use kompress::{
+    compress as kcompress, decompress as kdecompress, frame as kframe, ratio as kratio,
+};
 pub use memory::{parse as parse_memory, CollectiveMemory, IndividualMemory};
+pub use render::arena_svg;
 pub use sim::{Fauna, SimWorld};
-pub use tick::Clock;
 pub use tern::{balanced_trits, lcg, mulberry32, seed_from_text};
+pub use tick::Clock;
 pub use transport::{Ledger, Ring};

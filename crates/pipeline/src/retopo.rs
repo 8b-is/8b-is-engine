@@ -37,7 +37,11 @@ pub fn inspect_mesh(path: &std::path::Path) -> Result<MeshInfo, String> {
     }
     let text = std::str::from_utf8(&bytes).map_err(|_| "not utf-8 gltf".to_string())?;
     let v: Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
-    let meshes = v.get("meshes").and_then(|m| m.as_array()).map(|a| a.len()).unwrap_or(0) as u64;
+    let meshes = v
+        .get("meshes")
+        .and_then(|m| m.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0) as u64;
     let primitives = v
         .get("meshes")
         .and_then(|m| m.as_array())
@@ -48,7 +52,11 @@ pub fn inspect_mesh(path: &std::path::Path) -> Result<MeshInfo, String> {
                 .sum()
         })
         .unwrap_or(0);
-    let accessors = v.get("accessors").and_then(|a| a.as_array()).map(|a| a.len()).unwrap_or(0) as u64;
+    let accessors = v
+        .get("accessors")
+        .and_then(|a| a.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0) as u64;
     Ok(MeshInfo {
         format: "gltf".into(),
         meshes,

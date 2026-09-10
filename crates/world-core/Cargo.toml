@@ -1,9 +1,10 @@
 [package]
 name = "world-core"
-version = "0.1.0"
-edition = "2021"
 description = "the shared world core: tern + GAIA + the fold — one source of truth, three surfaces (native, WASM, mesh)"
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
 
 [lib]
 crate-type = ["lib", "cdylib"]

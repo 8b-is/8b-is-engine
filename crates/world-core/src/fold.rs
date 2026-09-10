@@ -77,7 +77,8 @@ impl Keeper {
         if d.t <= *last_tick.get(actor).unwrap_or(&0) {
             return Verdict::Refused("tick not monotonic — cannot continue its past");
         }
-        if !(0.0..=1.0).contains(&d.h) || !(0.0..=1.0).contains(&d.r) || !(0.0..=1.0).contains(&d.s) {
+        if !(0.0..=1.0).contains(&d.h) || !(0.0..=1.0).contains(&d.r) || !(0.0..=1.0).contains(&d.s)
+        {
             return Verdict::Refused("needs out of range");
         }
         if let Some(action) = &d.action {
@@ -91,7 +92,11 @@ impl Keeper {
                 'r' => d.r,
                 _ => d.s,
             };
-            let threshold = THRESH.iter().find(|(n, _)| n == need).map(|(_, v)| *v).unwrap();
+            let threshold = THRESH
+                .iter()
+                .find(|(n, _)| n == need)
+                .map(|(_, v)| *v)
+                .unwrap();
             if attested > threshold {
                 return Verdict::Refused("action without need");
             }
@@ -105,7 +110,14 @@ mod tests {
     use super::*;
 
     fn delta(t: u64, h: f64, action: Option<&str>) -> Delta {
-        Delta { t, h, r: 0.9, s: 0.9, action: action.map(str::to_string), asleep: false }
+        Delta {
+            t,
+            h,
+            r: 0.9,
+            s: 0.9,
+            action: action.map(str::to_string),
+            asleep: false,
+        }
     }
 
     #[test]

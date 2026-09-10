@@ -162,9 +162,7 @@ impl GddExpander for CommandExpander {
             .write_all(text.as_bytes())
             .map_err(|e| ExpandError::Io(e))?;
         drop(child.stdin.take());
-        let out = child
-            .wait_with_output()
-            .map_err(|e| ExpandError::Io(e))?;
+        let out = child.wait_with_output().map_err(|e| ExpandError::Io(e))?;
         if !out.status.success() {
             return Err(ExpandError::Command(
                 String::from_utf8_lossy(&out.stderr).trim().to_string(),
@@ -225,8 +223,12 @@ garlands of 108 and vajra arms. The wire reads {-1, 0, +1}.
 
     #[test]
     fn different_briefs_never_collide() {
-        let a = DeterministicExpander.expand("the pink tent at dawn").unwrap();
-        let b = DeterministicExpander.expand("the hollow star at dusk").unwrap();
+        let a = DeterministicExpander
+            .expand("the pink tent at dawn")
+            .unwrap();
+        let b = DeterministicExpander
+            .expand("the hollow star at dusk")
+            .unwrap();
         assert_ne!(a.seed_line, b.seed_line);
         assert_ne!(a.board, b.board);
     }

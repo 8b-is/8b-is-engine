@@ -12,8 +12,8 @@ pub mod retopo;
 pub mod stager;
 
 use gdd_parser::{CommandExpander, DeterministicExpander, ExpandError, GddExpander, ZoneManifest};
-use std::path::{Path, PathBuf};
 use stager::{stage_file, StageManifest, StagedEntry};
+use std::path::{Path, PathBuf};
 
 fn env(key: &str, default: &str) -> String {
     std::env::var(key).unwrap_or_else(|_| default.to_string())
@@ -88,7 +88,9 @@ pub async fn run_pipeline(
     // stage 1: parse — the deterministic expander is pure CPU and the
     // command adapter already blocks on its child; no runtime handoff needed
     let expander = cfg.expander();
-    let manifest = expander.expand(gdd_text).map_err(|e: ExpandError| e.to_string())?;
+    let manifest = expander
+        .expand(gdd_text)
+        .map_err(|e: ExpandError| e.to_string())?;
 
     // stage 2-3: concept art + the eye (the local lanes; dark when absent)
     let mut concept_art = None;
@@ -96,11 +98,7 @@ pub async fn run_pipeline(
     if with_art {
         if cfg.art_lanes.available() {
             let art_dir = PathBuf::from("assets/generated");
-            match cfg
-                .art_lanes
-                .concept_art(&manifest.brief, &art_dir)
-                .await
-            {
+            match cfg.art_lanes.concept_art(&manifest.brief, &art_dir).await {
                 Ok(png) => {
                     let verdict = cfg
                         .art_lanes
@@ -173,6 +171,7 @@ pub fn verify_staged(cfg: &PipelineConfig) -> Result<(), String> {
 
 /// read_manifest — load the stage manifest from a directory.
 pub fn read_manifest(dir: &Path) -> Result<StageManifest, String> {
-    let text = std::fs::read_to_string(dir.join("stage-manifest.ron")).map_err(|e| e.to_string())?;
+    let text =
+        std::fs::read_to_string(dir.join("stage-manifest.ron")).map_err(|e| e.to_string())?;
     ron::from_str(&text).map_err(|e| e.to_string())
 }

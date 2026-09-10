@@ -1,0 +1,18 @@
+[package]
+name = "ternary"
+description = "the 1.58-bit lane: BitNet b1.58 {-1,0,+1} base models as first-class citizens — tri-state pack, integer GEMM bit-exact across AMD x86-64 / ARM NEON / WASM / GPU lanes, the .tern checkpoint, the forward pass, the seeded dream"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+sha2 = "0.10"
+world-core = { path = "../world-core" }
+
+[[example]]
+name = "dream"
+path = "examples/dream.rs"

@@ -1,0 +1,50 @@
+the world runs without you.
+the process dies, the strategy returns.
+GAIA is the eight-layer field: the ground, the weather, the wall, the well,
+the garden, the threshold, the sky, the witness. every layer keeps its own
+memory, and the layers together keep the world.
+the keeper folds. the fold is admissible: the world continues only when the
+new state follows from the old. ticks are monotonic, needs are bounded,
+actions are entitled or they are refused. refusal carries a reason, and the
+reason is the document.
+inscription before rendering: the world is written before it is drawn.
+commitment before appearance: the world is committed before a face is shown.
+motion before mechanism: the world moves, then the machinery explains it.
+the wanderer visits every school and sees what the people there have become.
+fearing lest he become a drunken reveller, he remains alone. fearing lest he
+become a scholar, he remains alone. every refusal names its cost, and the
+cost is the reason, and the reason is kept.
+the cast is small and seeded. from a seed the prng gives every creature its
+needs: hunger, rest, shelter. the fauna wanders within the sanctuary walls,
+between the fountain and the garden, past the lanterns, under the open sky.
+the arena is a frame, the cast is drawn from the frame, appearance is
+disposable, history never is.
+the ledger is the wall. every attested trace and every durable refusal is
+written to the wall. the ring is the hot path, the ledger is the truth, and
+the ring drains into the ledger where the two meet.
+committed means consumed: the applied map carries what the world accepted,
+tick by tick, and what the world accepted is what happened.
+phoenix continuity: when a node dies, the world does not start again; the
+world continues where the ledger left off. the clock is a continuation,
+never a replay.
+the sixteen layers of lightness: each layer is a guess about the world, and
+the guesses together are the world. see a layer, guess again, fold the
+guess into the wall.
+kompress is the compression lane: the wire is compressed only when it pays,
+the ledger's repetitive records crush to under a third, and the small
+frames stay plain.
+the dream lane is the 1.58 bit lane: weights live in three states, minus
+one, zero, plus one, packed two bits each, four to a byte, and the model
+dreams from the seed with the same prng as the world.
+every base model dreams; the engine's base model dreams the sanctuary.
+a seed is a seed everywhere: here, in the browser, in the mesh, on the
+metal, on the amd cpu, on the arm cpu, on the gpu, on the wasm sandbox.
+bit-exact means the same integer sum in every architecture: add and add
+and add until the order does not matter, then multiply the scale once.
+the multiplier scales the ternary weight, one gamma per layer, and the
+sum of weights times activations is multiplied once, so every arithmetic
+path lands on the same number.
+ternary is not a loss, it is a language: three states, four per byte,
+sixteen million parameters in four megabytes, a whole world in a pocket.
+the model is small so the world is portable; the world is portable so the
+world is everywhere; the world is everywhere so the world runs.

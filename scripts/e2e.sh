@@ -122,5 +122,17 @@ cargo test -p world-core memory 2>&1 | tail -1
 echo "— the world, drawn: the cast rendered from the arena"
 cargo run -q -p world-core --example arena -- "sanctuary" out/arena.svg
 
+echo "— the 1.58-bit lane: a base model dreams from a seed (AMD/ARM/WASM bit-exact)"
+cargo run -q -p ternary --example dream -- \
+  assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
+  "the world runs without" 240 0.8 out/sanctuary-dream.txt
+# the dream is a pure function: the same inputs, the same bytes, on
+# every surface — reproduce it and require byte equality.
+cargo run -q -p ternary --example dream -- \
+  assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
+  "the world runs without" 240 0.8 /tmp/dream-b.txt >/dev/null
+cmp out/sanctuary-dream.txt /tmp/dream-b.txt || die "the dream is not deterministic"
+rm -f /tmp/dream-b.txt
+
 echo
 echo "⟦ E2E oneshot complete :: the world runs without you ⟧"

@@ -116,7 +116,12 @@ impl Entities {
         &mut Vec<[f64; 2]>,
         &mut Vec<[f64; 3]>,
     ) {
-        (&mut self.dense, &mut self.pos, &mut self.vel, &mut self.needs)
+        (
+            &mut self.dense,
+            &mut self.pos,
+            &mut self.vel,
+            &mut self.needs,
+        )
     }
 }
 

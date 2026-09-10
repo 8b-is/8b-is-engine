@@ -119,6 +119,21 @@ mechanism-identifying confidence; the fiber above any wire frame stays
 honest. The engine reports the witness, keeps the axes separate, and lets
 the ledger earn every name.
 
+## 6. the 1.58-bit lane (addition is the lingua franca)
+
+The engine's base model is ternary (`{-1,0,+1}`, BitNet b1.58) and
+**architecture-agnostic by construction**: its forward pass accumulates in
+`i32` and applies the float scale exactly once, so integer addition — which
+cannot reorder — makes AMD Zen (AVX2), ARM (NEON), WASM (simd128), Vulkan,
+and Metal land on the same output. This is the engine's determinism
+doctrine extended from seeds to weights: a seed is a seed everywhere, and
+an arithmetic contract is a contract everywhere. The model is small so the
+world is portable (12 510 bytes shipped); the dream is a pure function
+(checkpoint + seed text + n + temperature → bytes, `cmp`-verified in the
+oneshot). Quantization is not a loss here, it is a language — three
+states, four per byte, the whole sanctuary in a pocket. See
+[ternary-model-lane.md](ternary-model-lane.md).
+
 ---
 
 *the constellation · 0 + 1 · fine touch from within · vaked.dev*

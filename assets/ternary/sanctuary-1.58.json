@@ -1,0 +1,30 @@
+{
+  "file": "sanctuary-1.58.tern",
+  "revision": 1,
+  "vocab_size": 38,
+  "dim": 128,
+  "layers": 3,
+  "params_tristates": 37632,
+  "packed_bytes": 9408,
+  "train_tokens": 3182,
+  "ce_token": 2.945636,
+  "seed": 41592,
+  "chars": "the worldunsiy.\npc,agGAI-f:kvmbx;'158z",
+  "tagline": "the 1.58-bit lane :: add and add and add until the order does not matter",
+  "sha256": "22a84e0375444facef872c80dc7cbd33dc51a574aae3ee2a9e99041f47235460",
+  "ce_verification": 2.945636,
+  "ce_curve": {
+    "step_50": 2.9904,
+    "step_100": 2.9329,
+    "step_150": 2.9327,
+    "step_200": 2.9147,
+    "step_250": 2.9113,
+    "step_300": 2.9084,
+    "step_350": 2.9135,
+    "step_400": 2.9144,
+    "step_450": 2.9183,
+    "step_500": 2.9084,
+    "step_550": 2.9143,
+    "step_600": 2.9113
+  }
+}

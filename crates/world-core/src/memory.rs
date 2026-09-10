@@ -9,8 +9,8 @@
 // collective — the world constrains forward and others learn, while no
 // single execution carries the record of what it was refused.
 
-use std::collections::BTreeMap;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 /// One actor's memory: the path it attested, tick by tick.
 #[derive(Debug, Clone, PartialEq)]
@@ -73,18 +73,25 @@ pub fn parse(ledger_bytes: &[u8]) -> (CollectiveMemory, Vec<IndividualMemory>) {
         if line.is_empty() {
             continue;
         }
-        let Ok(rec) = serde_json::from_slice::<Value>(line) else { continue };
-        let Some(actor) = rec.get("a").and_then(|v| v.as_str()) else { continue };
+        let Ok(rec) = serde_json::from_slice::<Value>(line) else {
+            continue;
+        };
+        let Some(actor) = rec.get("a").and_then(|v| v.as_str()) else {
+            continue;
+        };
         let out = rec.get("o").and_then(|v| v.as_str()).unwrap_or("admitted");
         let w = rec.get("w");
-        let t = w.and_then(|w| w.get("t")).and_then(|v| v.as_u64()).unwrap_or(0);
-        let needs = w
-            .and_then(|w| w.get("n"))
-            .map(|n| [
+        let t = w
+            .and_then(|w| w.get("t"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0);
+        let needs = w.and_then(|w| w.get("n")).map(|n| {
+            [
                 n.get("h").and_then(|v| v.as_f64()).unwrap_or(0.0),
                 n.get("r").and_then(|v| v.as_f64()).unwrap_or(0.0),
                 n.get("s").and_then(|v| v.as_f64()).unwrap_or(0.0),
-            ]);
+            ]
+        });
 
         seq += 1;
         max_tick = max_tick.max(t);
@@ -96,12 +103,14 @@ pub fn parse(ledger_bytes: &[u8]) -> (CollectiveMemory, Vec<IndividualMemory>) {
         if !ind.contains_key(actor) {
             actors.push(actor.to_string());
         }
-        let m = ind.entry(actor.to_string()).or_insert_with(|| IndividualMemory {
-            actor: actor.to_string(),
-            ticks: Vec::new(),
-            states: Vec::new(),
-            refusals: 0,
-        });
+        let m = ind
+            .entry(actor.to_string())
+            .or_insert_with(|| IndividualMemory {
+                actor: actor.to_string(),
+                ticks: Vec::new(),
+                states: Vec::new(),
+                refusals: 0,
+            });
         if out == "refused" {
             m.refusals += 1;
         } else if let Some(n) = needs {
@@ -147,7 +156,10 @@ mod tests {
         // the individual's memory is its path: one admitted state, one tick;
         // the two refusals it suffered stay with the collective, not its path
         assert_eq!(player.path_len(), 1);
-        assert_eq!(player.refusals, 2, "it incurred them, but they are not its path");
+        assert_eq!(
+            player.refusals, 2,
+            "it incurred them, but they are not its path"
+        );
         assert_eq!(player.last_state(), Some([0.5, 0.9, 0.9]));
     }
 

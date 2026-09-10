@@ -72,7 +72,14 @@ mod tests {
 
     #[test]
     fn tiny_frames_stay_plain() {
-        assert_eq!(frame(b"{\"t\":1}"), None, "too small to pay zstd's overhead");
-        assert!(frame(WIRE).is_some(), "a full wire slice is worth compressing");
+        assert_eq!(
+            frame(b"{\"t\":1}"),
+            None,
+            "too small to pay zstd's overhead"
+        );
+        assert!(
+            frame(WIRE).is_some(),
+            "a full wire slice is worth compressing"
+        );
     }
 }

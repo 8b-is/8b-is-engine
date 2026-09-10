@@ -14,8 +14,8 @@
 //! * **zero-lock main loop** — client tasks push `ServerCommand`s into one
 //!   `mpsc` channel; `tokio::select!` ticks the world without blocking I/O.
 
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -51,9 +51,17 @@ impl ZoneMode {
 /// Commands the client loops send to the main tick loop.
 #[derive(Debug)]
 pub enum ServerCommand {
-    ClientConnected { addr: SocketAddr, tx: mpsc::Sender<bytes::Bytes> },
-    ClientDisconnected { addr: SocketAddr },
-    Delta { addr: SocketAddr, payload: Vec<u8> },
+    ClientConnected {
+        addr: SocketAddr,
+        tx: mpsc::Sender<bytes::Bytes>,
+    },
+    ClientDisconnected {
+        addr: SocketAddr,
+    },
+    Delta {
+        addr: SocketAddr,
+        payload: Vec<u8>,
+    },
 }
 
 use bytes::Bytes;
@@ -257,7 +265,9 @@ async fn handle_client(
             break;
         }
     }
-    let _ = cmd_tx.send(ServerCommand::ClientDisconnected { addr }).await;
+    let _ = cmd_tx
+        .send(ServerCommand::ClientDisconnected { addr })
+        .await;
     Ok(())
 }
 
@@ -310,7 +320,10 @@ fn zone_json(
     }
     let mut ap = serde_json::Map::new();
     for (addr, e) in applied {
-        ap.insert(addr.to_string(), serde_json::to_value(e).unwrap_or_default());
+        ap.insert(
+            addr.to_string(),
+            serde_json::to_value(e).unwrap_or_default(),
+        );
     }
     serde_json::json!({
         "zone": brief,
@@ -350,8 +363,8 @@ async fn ledger_append(ledger: &Arc<Mutex<world_core::Ledger>>, actor: &str, d: 
 }
 
 pub fn new_node(brief: &str, mode: ZoneMode, port: u16) -> MeshNode {
-    let ledger_path = std::env::var("VAKED_MESH_LEDGER")
-        .unwrap_or_else(|_| format!("out/mesh-node-{port}.log"));
+    let ledger_path =
+        std::env::var("VAKED_MESH_LEDGER").unwrap_or_else(|_| format!("out/mesh-node-{port}.log"));
     if let Some(parent) = std::path::Path::new(&ledger_path).parent() {
         let _ = std::fs::create_dir_all(parent);
     }
@@ -415,7 +428,10 @@ mod tests {
 
     #[test]
     fn wire_round_trips() {
-        let d = wire_delta(b"{\"t\":7,\"n\":{\"h\":0.2,\"r\":0.9,\"s\":0.9},\"a\":\"forage the field\",\"z\":0}").unwrap();
+        let d = wire_delta(
+            b"{\"t\":7,\"n\":{\"h\":0.2,\"r\":0.9,\"s\":0.9},\"a\":\"forage the field\",\"z\":0}",
+        )
+        .unwrap();
         assert_eq!(d.t, 7);
         assert_eq!(d.h, 0.2);
         assert_eq!(d.action.as_deref(), Some("forage the field"));
@@ -425,7 +441,10 @@ mod tests {
     #[test]
     fn state_carries_gaia_and_the_fold() {
         let mut k = Keeper::default();
-        k.adjudicate("player-1", &wire_delta(b"{\"t\":1,\"n\":{\"h\":0.9,\"r\":0.9,\"s\":0.9}}").unwrap());
+        k.adjudicate(
+            "player-1",
+            &wire_delta(b"{\"t\":1,\"n\":{\"h\":0.9,\"r\":0.9,\"s\":0.9}}").unwrap(),
+        );
         let json = zone_json("sanctuary", k.seq, &k.zone, 30, &HashMap::new());
         let v: serde_json::Value = serde_json::from_str(&json).unwrap();
         let expected = world_core::gaia::gaia_state("sanctuary", 30);
@@ -471,7 +490,10 @@ mod tests {
         let text = String::from_utf8_lossy(&buf).to_string();
         let v: serde_json::Value = serde_json::from_str(&text).unwrap();
         assert!(
-            v["zone_state"].as_object().map(|o| o.len() >= 1).unwrap_or(false),
+            v["zone_state"]
+                .as_object()
+                .map(|o| o.len() >= 1)
+                .unwrap_or(false),
             "the delta was folded into the broadcast: {text}"
         );
 
@@ -493,10 +515,16 @@ mod tests {
         // a benign birth first (the first delta is the actor's attestation
         // of existence), then the poison — which must be refused durable
         let birth = br#"{"t":1,"s":6,"n":{"h":0.9,"r":0.9,"s":0.9}}"#;
-        stream.write_all(&(birth.len() as u32).to_be_bytes()).await.unwrap();
+        stream
+            .write_all(&(birth.len() as u32).to_be_bytes())
+            .await
+            .unwrap();
         stream.write_all(birth).await.unwrap();
         let poison = br#"{"t":2,"s":7,"n":{"h":0.9,"r":0.9,"s":0.9},"a":"forage the field"}"#;
-        stream.write_all(&(poison.len() as u32).to_be_bytes()).await.unwrap();
+        stream
+            .write_all(&(poison.len() as u32).to_be_bytes())
+            .await
+            .unwrap();
         stream.write_all(poison).await.unwrap();
 
         let mut buf = Vec::new();
@@ -510,7 +538,10 @@ mod tests {
                 stream.read_exact(&mut buf).await.unwrap();
                 let text = String::from_utf8_lossy(&buf).to_string();
                 let v: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if let Some(e) = v["applied"].as_object().and_then(|m| m.values().find(|e| e["in"] == 7)) {
+                if let Some(e) = v["applied"]
+                    .as_object()
+                    .and_then(|m| m.values().find(|e| e["in"] == 7))
+                {
                     return e.clone();
                 }
             }
@@ -519,13 +550,20 @@ mod tests {
         .expect("refusal record timeout");
 
         assert_eq!(entry["out"], "refused");
-        assert!(entry["seq"].as_u64().unwrap() > 0, "a refusal owns a ledger position");
+        assert!(
+            entry["seq"].as_u64().unwrap() > 0,
+            "a refusal owns a ledger position"
+        );
         handle.abort();
     }
 
     async fn find_port() -> u16 {
         use std::net::TcpListener;
-        TcpListener::bind(("127.0.0.1", 0)).unwrap().local_addr().unwrap().port()
+        TcpListener::bind(("127.0.0.1", 0))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port()
     }
 
     #[tokio::test]
@@ -543,7 +581,10 @@ mod tests {
         tokio::time::sleep(std::time::Duration::from_millis(150)).await;
         let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
         let p = br#"{"t":1,"s":1,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
-        stream.write_all(&(p.len() as u32).to_be_bytes()).await.unwrap();
+        stream
+            .write_all(&(p.len() as u32).to_be_bytes())
+            .await
+            .unwrap();
         stream.write_all(p).await.unwrap();
         tokio::time::sleep(std::time::Duration::from_millis(400)).await;
         handle1.abort();
@@ -578,7 +619,10 @@ mod tests {
 
         let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
         let p1 = br#"{"t":41,"s":41,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
-        stream.write_all(&(p1.len() as u32).to_be_bytes()).await.unwrap();
+        stream
+            .write_all(&(p1.len() as u32).to_be_bytes())
+            .await
+            .unwrap();
         stream.write_all(p1).await.unwrap();
 
         // read broadcasts until the applied map reports seq 41
@@ -593,7 +637,11 @@ mod tests {
                 stream.read_exact(&mut buf).await.unwrap();
                 let text = String::from_utf8_lossy(&buf).to_string();
                 let v: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if v["applied"].as_object().map(|m| m.values().any(|e| e["in"] == 41 && e["out"] == "admitted")).unwrap_or(false) {
+                if v["applied"]
+                    .as_object()
+                    .map(|m| m.values().any(|e| e["in"] == 41 && e["out"] == "admitted"))
+                    .unwrap_or(false)
+                {
                     return v;
                 }
             }
@@ -602,7 +650,10 @@ mod tests {
         .expect("reconciliation timeout");
 
         let p2 = br#"{"t":42,"s":42,"n":{"h":0.5,"r":0.9,"s":0.9}}"#;
-        stream.write_all(&(p2.len() as u32).to_be_bytes()).await.unwrap();
+        stream
+            .write_all(&(p2.len() as u32).to_be_bytes())
+            .await
+            .unwrap();
         stream.write_all(p2).await.unwrap();
         tokio::time::timeout(std::time::Duration::from_secs(3), async {
             loop {
@@ -613,7 +664,11 @@ mod tests {
                 stream.read_exact(&mut buf).await.unwrap();
                 let text = String::from_utf8_lossy(&buf).to_string();
                 let v: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if v["applied"].as_object().map(|m| m.values().any(|e| e["in"] == 42 && e["out"] == "admitted")).unwrap_or(false) {
+                if v["applied"]
+                    .as_object()
+                    .map(|m| m.values().any(|e| e["in"] == 42 && e["out"] == "admitted"))
+                    .unwrap_or(false)
+                {
                     return;
                 }
             }

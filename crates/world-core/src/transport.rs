@@ -216,7 +216,10 @@ mod tests {
         ledger.flush().unwrap();
         let sum = ledger.checksum().unwrap();
         assert!(sum.len() == 64, "sha256 hex");
-        assert_eq!(ledger.read_all().unwrap(), b"{\"t\":0}{\"t\":1}{\"t\":2}{\"t\":3}{\"t\":4}");
+        assert_eq!(
+            ledger.read_all().unwrap(),
+            b"{\"t\":0}{\"t\":1}{\"t\":2}{\"t\":3}{\"t\":4}"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

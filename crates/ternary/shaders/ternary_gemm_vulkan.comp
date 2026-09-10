@@ -1,0 +1,67 @@
+// shaders/ternary_gemm_vulkan.comp — the ternary GEMM on the portable
+// compute lane: Vulkan compute (GLSL 450 / GL_KHR_vulkan_glsl), the
+// first-class citizen for AMD GPUs (RADV, AMD's own driver stack) and
+// every other vendor's consumer hardware.
+//
+// THE ARITHMETIC CONTRACT IS ONE: the same integer sum the Rust scalar
+// core, the AVX2 lane, the NEON lane, and the WASM lane produce. Weights
+// are decoded from the 2-bit pack ({0b00→0, 0b01→+1, 0b10→-1}), activations
+// are i16, products are i32, the accumulation stays i32 until the very
+// end, and the float scale (s_x * gamma) is applied exactly once.
+// Integer addition is associative: the GPU's parallel grouping lands on
+// the same i32, and therefore the same f32, as every other lane.
+//
+// Bindings:
+//   0 — packed weights,  wbytes = ceil(n_in*n_out/4) bytes (u8)
+//   1 — i16 activations, n_in shorts
+//   2 — i32 out,        n_out ints
+//   3 — uvec2 dims,     (n_in, n_out)
+//   4 — float gamma
+//   5 — float s_x
+//
+// Dispatch: one invocation per output neuron: gl_GlobalInvocationID.x in
+// [0, n_out). This is the reference GPU shape — unrolled by workgroup,
+// never reordered in float space (the i32 sum cannot reorder).
+
+#version 450
+layout(local_size_x = 256) in;
+
+#define WBITS_PER_BYTE 4u
+
+layout(binding = 0, std430) readonly buffer PackedW  { uint p[]; };
+layout(binding = 1, std430) readonly buffer Acts     { int  a[]; };
+layout(binding = 2, std430) buffer       Out       { int  o[]; };
+layout(binding = 3, std430) readonly buffer Dims     { uvec2 dims; };
+layout(binding = 4, std430) readonly buffer Gamma    { float gamma; };
+layout(binding = 5, std430) readonly buffer Scale    { float s_x; };
+
+// decode one tri-state from the 2-bit pack; 0b11 is reserved and reads 0
+// (lenient — a GPU never dies on a foreign field, it maps it to silence).
+int trit(uint byte, uint field) {
+    uint v = (byte >> (field << 1u)) & 3u;
+    if (v == 1u) return 1;
+    if (v == 2u) return -1;
+    return 0;
+}
+
+void main() {
+    uint oi = gl_GlobalInvocationID.x;
+    if (oi >= dims.y) return; // oi = neuron
+
+    int acc = 0;
+    uint n_in = dims.x;
+    uint n_out = dims.y;
+    for (uint k = 0u; k < n_in; ++k) {
+        uint w_idx = oi * n_in + k;              // tri-state index
+        uint w_byte = w_idx >> 2u;               // 4 per byte
+        uint w_field = w_idx & 3u;
+        int w = trit(p[w_byte], w_field);
+        acc += w * a[k];                          // i32 accumulation
+    }
+    // the scale exactly once — identical f32 to every other lane
+    o[oi] = acc;
+}
+
+// The fp32 projection is done by the host to keep this buffer integer;
+// the host computes out_f32[oi] = o[oi] * s_x * gamma with the same
+// single f32 multiply the CPU lanes use.

@@ -368,9 +368,13 @@ is eternal, the liability is bounded, the loop has an exit.
 
 ## roadmap
 
-v0.3 — **the world runs without you** — is the current edge: GAIA, the zone
-keeper, the vision/diffuser lanes, and the Steam-shaped client stack. See
-[roadmap.md](docs/roadmap.md).
+v0.6 — **the 1.58-bit lane** (the current edge) — AMD CPUs and 1-bit base
+models as first-class citizens: BitNet b1.58 models packed 4-to-a-byte, an
+integer GEMM bit-exact across AVX2/NEON/WASM/GPU lanes, the trained
+`sanctuary-1.58.tern` base model, and the seeded dream, `cmp`-verified in
+the E2E oneshot. v0.3 shipped **the world runs without you** (GAIA, the
+zone keeper, the vision/diffuser lanes, the Steam-shaped client stack).
+See [roadmap.md](docs/roadmap.md).
 
 | Phase | Work |
 |---|---|
@@ -402,6 +406,10 @@ The MMO engine bibles, deep-researched and applied to this engine:
 - [world-models.md](docs/world-models.md) — the OSS learned-world-model map
   (Neural MMO, Generative Agents, DIAMOND, DreamerV3) wired beside the
   deterministic simulator
+- [ternary-model-lane.md](docs/ternary-model-lane.md) — the 1.58-bit lane: a
+  BitNet b1.58 base model as a first-class citizen, its `i32`-accumulation
+  GEMM bit-exact across AMD x86-64 / ARM NEON / WASM / GPU, its `.tern`
+  checkpoint, its seeded dream
 - [rust-dx.md](docs/rust-dx.md) — the fast local loop
 - **Bleeding-edge Rust + Go**: [the language-features gist](https://gist.github.com/peterlodri-sec/8fbbd9e316f4393c93df2225520afaae)
 
