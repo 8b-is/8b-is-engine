@@ -24,6 +24,7 @@ pub mod fp;
 pub mod hwultra;
 pub mod io;
 pub mod lanes;
+pub mod mem8;
 pub mod pretty;
 pub mod uqapi;
 pub mod zigq;
@@ -33,6 +34,7 @@ pub use fp::{compose, memoize1, seq, Pipe, Tap};
 pub use hwultra::{GammaScale, TernaryPack, Transport, GEMM, TRANSPORTS};
 pub use io::{attest, attest_frames, frame_len_prefix, read_len_frame, write_len_frame};
 pub use lanes::{ActionLane, ActionPlan, Compute, Level, ReasoningEffort};
+pub use mem8::{Mem8Quad, PhaseResult};
 pub use pretty::{Diagnostic, Fix};
 pub use uqapi::{scalar_authority_gemm, Cstr, Lane, ScalarLane, Uq};
 

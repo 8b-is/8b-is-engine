@@ -11,6 +11,7 @@ fn main() {
     // flag it as unexpected when the kernels are absent
     println!("cargo:rustc-check-cfg=cfg(qdecorators_zig)");
     println!("cargo:rerun-if-changed=zig/kernels.zig");
+    println!("cargo:rerun-if-changed=zig/mem8.zig");
     println!("cargo:rerun-if-env-changed=PATH");
     println!("cargo:rerun-if-env-changed=TARGET");
 
@@ -29,39 +30,54 @@ fn main() {
 
     // Apple's ld64 demands 8-byte-aligned archive members; zig's own
     // archive writer pads members correctly, so the path is
-    // build-obj → `zig ar`
-    let obj_path = out.join("zigkern.o");
-    let obj_arg = format!("-femit-bin={}", obj_path.display());
-    let compiled = Command::new(&zig)
-        .args([
-            "build-obj",
-            "zig/kernels.zig",
-            "-O",
-            "ReleaseSafe",
-            "-fPIC",
-            "-fcompiler-rt", // __zig_probe_stack + friends: the linker
-            // needs Zig's runtime in the object, never unresolved
-            "-target",
-            &zig_target,
-        ])
-        .arg(&obj_arg)
-        .output()
-        .expect("run zig build-obj");
+    // build-obj → `zig ar` — every kernel in zig/ is a citizen (the
+    // ternary kernels and the mem8 hypermesh quad share one rlib)
+    let mut objs: Vec<PathBuf> = Vec::new();
+    for src in ["zig/kernels.zig", "zig/mem8.zig"] {
+        let stem = PathBuf::from(src)
+            .file_stem()
+            .expect("zig stem")
+            .to_string_lossy()
+            .to_string();
+        let obj_path = out.join(format!("{stem}.o"));
+        let obj_arg = format!("-femit-bin={}", obj_path.display());
+        let compiled = Command::new(&zig)
+            .args([
+                "build-obj",
+                src,
+                "-O",
+                "ReleaseSafe",
+                "-fPIC",
+                "-fcompiler-rt", // __zig_probe_stack + friends: the linker
+                // needs Zig's runtime in the object, never unresolved
+                "-target",
+                &zig_target,
+            ])
+            .arg(&obj_arg)
+            .output()
+            .expect("run zig build-obj");
 
-    if !compiled.status.success() {
-        let stderr = String::from_utf8_lossy(&compiled.stderr);
-        let first: Vec<&str> = stderr.lines().take(8).collect();
-        println!("cargo:warning=zig build-obj failed — {}", first.join(" | "));
-        return;
+        if !compiled.status.success() {
+            let stderr = String::from_utf8_lossy(&compiled.stderr);
+            let first: Vec<&str> = stderr.lines().take(8).collect();
+            println!(
+                "cargo:warning=zig build-obj {src} failed — {}",
+                first.join(" | ")
+            );
+            return;
+        }
+        objs.push(obj_path);
     }
 
     let lib_path = out.join("libzigkern.a");
-    let archived = Command::new(&zig)
+    let mut ar_cmd = Command::new(&zig);
+    ar_cmd
         .args(["ar", "rcs"])
-        .arg(&lib_path.display().to_string())
-        .arg(&obj_path)
-        .status()
-        .expect("run zig ar");
+        .arg(&lib_path.display().to_string());
+    for o in &objs {
+        ar_cmd.arg(o);
+    }
+    let archived = ar_cmd.status().expect("run zig ar");
 
     if !archived.success() {
         println!("cargo:warning=zig ar failed — building without the Zig kernels");

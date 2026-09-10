@@ -8,6 +8,11 @@ to versions below.
 
 ## [Unreleased]
 
+- mem8 — the hypermesh quad: the 8-byte MEMNET memory cell (bilinear
+  phase interpolation, i32 overflow-proof, observer-relative origo, boolean
+  gates) with the Zig twin bit-exact across the 255-seed battery.
+
+
 ## [1.9.0] — the crates.io backbone — 2026-09-10
 
 ### Added
