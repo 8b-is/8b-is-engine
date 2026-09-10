@@ -28,6 +28,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: build the gateway + sidecars (release)
         working-directory: vaked-lsp
+        env:
+          CARGO_BUILD_RUSTC_WRAPPER: "" # the CI container has no sccache;
+          # an empty env override beats the workspace's local .cargo config
         run: cargo build --release --bin vaked-lsp --bin vaked-mcp --bin vaked-nats
       - name: assemble the engine bundle
         working-directory: engine
@@ -66,6 +69,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: build the gateway + sidecars (release)
         working-directory: vaked-lsp
+        env:
+          CARGO_BUILD_RUSTC_WRAPPER: ""
         run: cargo build --release --bin vaked-lsp --bin vaked-mcp --bin vaked-nats
       - name: package
         run: |
