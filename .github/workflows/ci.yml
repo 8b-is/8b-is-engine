@@ -35,6 +35,19 @@ jobs:
       - name: cargo build --workspace --examples (incl. the dream)
         run: PATH="$HOME/.cargo/bin:$PATH" cargo build --workspace --examples
 
+      - name: checkout the floors' repos (centerfugeq + pocoo)
+        uses: actions/checkout@v4
+        with:
+          repository: peterlodri-sec/centerfugeq
+          path: centerfugeq
+          lfs: true
+      - name: checkout pocoo.vaked.dev
+        uses: actions/checkout@v4
+        with:
+          repository: peterlodri-sec/pocoo.vaked.dev
+          path: pocoo.vaked.dev
+          lfs: true
+
       - name: the floors smoke harness (centerfugeq + pocoo copies)
-        working-directory: ../centerfugeq
+        working-directory: centerfugeq
         run: node scripts/check-floors.mjs quantGame/*.html game/*.html demos/*.html ../pocoo.vaked.dev/demos/centerfugeq/*.html
