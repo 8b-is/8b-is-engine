@@ -85,6 +85,23 @@ shaped turns; the floors' banners become system-voice lines; the
 engrams' kinds become labels. The mix with the instruct set happens in
 the notebook (HF dataset loaded on top).
 
+## the headless path (preferred — google-colab-cli)
+
+The MCP proxy is a browser bridge; the **Colab CLI** (`google-colab-cli`,
+`uv tool install google-colab-cli`, version 0.6.0 on the workstation) is
+the headless bridge — the README's own promise: "headless automation and
+AI agent integrations".
+
+- `colab new --gpu L4 --keep` — the VM
+- `colab upload` — the world set + the corpus into `/content`
+- `colab exec -s <s> -f run_finetune.py` — the QLoRA chain runs against
+  the remote kernel, no browser, no WebSocket
+- `colab download -r` — the exports come home; `colab ls/log` watch it
+- the ONE-TIME auth (`colab whoami`): remote copy-paste OAuth — the
+  refresh token caches in `~/.colab-cli-oauth-config.json`, and every
+  later drive is silent. `tools/unsloth/auth.sh` wraps it; `drive.sh`
+  is the whole corridor after it.
+
 ## the release ritual on the lane
 
 - fine-tune → eval (perplexity + a dream-penetration-style check) →

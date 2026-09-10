@@ -1,0 +1,31 @@
+Downloading pygments (1.2MiB)
+Downloading cryptography (3.8MiB)
+Downloading beartype (1.3MiB)
+Downloading pydantic-core (1.8MiB)
+ Downloaded pygments
+ Downloaded beartype
+ Downloaded pydantic-core
+ Downloaded cryptography
+Installed 67 packages in 75ms
+
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│                                                                              │
+│                         ▄▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀▀ █▀█                        │
+│                         █▀  █▀█ ▄▄█  █  █ ▀ █ █▄▄ █▀▀                        │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                FastMCP 4.0.3                                 │
+│                            https://gofastmcp.com                             │
+│                                                                              │
+│                  🖥  Server:      LogContextServer, 4.0.3                     │
+│                  🚀 Deploy free: https://horizon.prefect.io                  │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+[09/10/26 15:53:43] INFO     Starting MCP server                transport.py:242
+                             'LogContextServer' with transport                  
+                             'stdio'                                            
