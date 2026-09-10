@@ -109,6 +109,10 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
 - [x] **the action lanes** — Fast (thunky-lite, the boot recommendation) /
   Root, L1-L3 o1-style compute budgets, the known `r1` mode
 - [x] **the sidecar mirror** — local-optional (never a dependency), polars/arrow-parquet catalogue, sha256 dedupe, the 10 GB LRU leash, optional rustfs/minio S3 backend, the ORT lane, and the catalog[dream] penetration slice (ngram · vocab · doctrine)
+- [ ] **the obliterated lane** — unsloth QLoRA on the top-4 abliterated
+  models (hardware-friendly: Ornith-9B · gemma-E4B · Gemma-12B · the
+  27B later), the world-dataset mix, MLX + GGUF exports, the colab-mcp
+  proxy train, the 10 GB mirror gates (plan: docs/obliterated-lane.md)
 - [x] **mem8 — the hypermesh quad** — MEMNET's 8-byte memory cell: bilinear phase addressing (φ, λ fixed-point, overflow-impossible in i32 by proof), observer-relative origo, boolean interference gating, the Zig twin bit-exact against the Rust authority (255-seed battery)
 - [x] **the memory stack** — engram links, the virtual address space
   (persist `Addr`), content-hash de-dupe with the single `&mut self`

@@ -47,6 +47,7 @@
 - [contributing](#contributing)
 - [license](#license)
 - [roadmap](#roadmap)
+- [the obliterated lane](docs/obliterated-lane.md) — unsloth · MLX · GGUF on the top-4 abliterated models: the world-dataset fine-tune, the mirror's 10 GB gates, the colab-mcp flow
 - [crates-io](docs/crates-io.md) — the four backbone crates: URLs, API/SDK references, quick-start
 - [changelog](CHANGELOG.md) — released tags, keep-a-changelog
 - [semver](SEMVER.md) — the versioning policy for the backbone

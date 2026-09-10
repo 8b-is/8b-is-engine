@@ -8,6 +8,11 @@ to versions below.
 
 ## [Unreleased]
 
+- the obliterated lane scoped: unsloth · MLX · GGUF on the top-4
+  abliterated models — plan doc, the world-dataset builder (101 pairs),
+  the Colab notebook draft, the colab-mcp wiring (.mcp.json).
+
+
 - mem8 — the hypermesh quad: the 8-byte MEMNET memory cell (bilinear
   phase interpolation, i32 overflow-proof, observer-relative origo, boolean
   gates) with the Zig twin bit-exact across the 255-seed battery.
