@@ -47,6 +47,7 @@
 - [contributing](#contributing)
 - [license](#license)
 - [roadmap](#roadmap)
+- [crates-io](docs/crates-io.md) — the four backbone crates: URLs, API/SDK references, quick-start
 - [changelog](CHANGELOG.md) — released tags, keep-a-changelog
 - [semver](SEMVER.md) — the versioning policy for the backbone
 
