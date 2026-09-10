@@ -116,10 +116,10 @@ impl Mem8Quad {
     }
 }
 
-/// The Zig twin's C-ABI surface (compiled by build.rs from
-/// `zig/mem8.zig` when `qdecorators_zig` is set) — reached typed, the
-/// way the constellation prefers: the Rust authority and the Zig kernel
-/// must be bit-exact, and the tests below pin it.
+// The Zig twin's C-ABI surface (compiled by build.rs from
+// `zig/mem8.zig` when `qdecorators_zig` is set) — reached typed, the
+// way the constellation prefers: the Rust authority and the Zig kernel
+// must be bit-exact, and the tests below pin it.
 #[cfg(qdecorators_zig)]
 extern "C" {
     fn mem8_quad_evaluate(quad_ptr: *const Mem8Quad, out_ptr: *mut PhaseResult);

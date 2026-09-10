@@ -16,7 +16,7 @@ if ! colab whoami >/dev/null 2>&1; then
 fi
 
 echo "⟦ 1 · the runtime ⟧ $S (L4)"
-colab new --gpu L4 --keep -s "$S"
+colab new --gpu L4 -s "$S"
 
 echo "⟦ 2 · the world set ⟧ /content/world_dataset.jsonl"
 colab upload -s "$S" "$HERE/out/world_dataset.jsonl" /content/world_dataset.jsonl
