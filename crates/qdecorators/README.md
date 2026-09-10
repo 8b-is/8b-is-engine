@@ -31,6 +31,12 @@ lane.
   trailer), and the ASCII85 printable skin — the L1 → L3 → L2 ladder,
   bidirectional.
 
+### corelib · the memory stack (next door)
+- `corelib::persist` — `Addr` virtual addresses, de-dupe blocks, the
+  single-writer vault, `LazyCache` sessions
+- `corelib::mq` — the `Mq` FIFO, `chan()`, the `Locker` door
+- `corelib::triplebox` — the L1/L3/L2 diamond, lazy skins
+
 ### the action lanes
 - `ActionLane::{Fast, Root}` (Fast = thunky-lite, the boot
   recommendation), `Level::L1|L2|L3` with o1-style reasoning budgets,

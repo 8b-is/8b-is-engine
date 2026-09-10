@@ -12,6 +12,12 @@
 //! assert_eq!(g.nodes.len(), 8);
 //! ```
 
+pub mod mq;
+pub mod persist;
+pub mod triplebox;
+
+pub use mq::{chan, Locker, Mq};
+pub use persist::{Addr, EngramVault, LazyCache};
 pub use qdecorators::{assert_deterministic, raw_fmt, *};
 pub use ternary::{dream_seed, golden_hash_hex, pack_mulberry, *};
 pub use world_core::*;

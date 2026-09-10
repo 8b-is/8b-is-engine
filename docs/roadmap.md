@@ -108,6 +108,10 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   L2 ASCII85 printable), each step the inverse of the next
 - [x] **the action lanes** — Fast (thunky-lite, the boot recommendation) /
   Root, L1-L3 o1-style compute budgets, the known `r1` mode
+- [x] **the memory stack** — engram links, the virtual address space
+  (persist `Addr`), content-hash de-dupe with the single `&mut self`
+  writer, the session `LazyCache`, `Mq` + `chan` + the `Locker`, and
+  the `TripleBox` diamond (L1 wire · L3 stacked · L2 ascii85, lazy)
 - [x] **the python sandboxes** (nushell + nix-flakes) —
   `tools/py-sandbox`: `sandbox compile | repl | run`, one pinned
   devShell, wired as `./scaffold.sh py-sandbox`

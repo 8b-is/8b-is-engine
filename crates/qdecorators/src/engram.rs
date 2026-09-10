@@ -39,6 +39,9 @@ pub struct Engram {
     pub tags: Vec<String>,
     /// the record's weight — a float, honest about its own importance
     pub weight: f32,
+    /// links — the addresses of the engrams this record points at (the
+    /// memory's own graph; an engram that names no other is a seed)
+    pub links: Vec<String>,
 }
 
 impl Engram {
@@ -51,6 +54,7 @@ impl Engram {
             tick: 0,
             tags: Vec::new(),
             weight: 0.0,
+            links: Vec::new(),
         }
     }
 
@@ -109,6 +113,11 @@ pub fn stacked_encode(engrams: &[Engram]) -> Vec<u8> {
         for t in &e.tags {
             out.extend_from_slice(&(t.len() as u32).to_le_bytes());
             out.extend_from_slice(t.as_bytes());
+        }
+        out.extend_from_slice(&(e.links.len() as u32).to_le_bytes());
+        for l in &e.links {
+            out.extend_from_slice(&(l.len() as u32).to_le_bytes());
+            out.extend_from_slice(l.as_bytes());
         }
     }
     out.extend_from_slice(&fnv1a32(&out).to_le_bytes());
@@ -175,6 +184,18 @@ pub fn stacked_decode(bytes: &[u8]) -> Result<Vec<Engram>, String> {
             }
             v
         };
+        let links: Vec<String> = {
+            if p + 4 > body_end {
+                return Err("engram: truncated link count".into());
+            }
+            let n = u32::from_le_bytes(bytes[p..p + 4].try_into().unwrap()) as usize;
+            p += 4;
+            let mut v = Vec::with_capacity(n);
+            for _ in 0..n {
+                v.push(read_str(&mut p)?);
+            }
+            v
+        };
         out.push(Engram {
             text,
             kind,
@@ -183,6 +204,7 @@ pub fn stacked_decode(bytes: &[u8]) -> Result<Vec<Engram>, String> {
             tick,
             tags,
             weight,
+            links,
         });
     }
     if p != body_end {
@@ -279,6 +301,7 @@ mod tests {
                 tick: 108,
                 tags: vec!["fold".into(), "keeper".into(), "wire".into()],
                 weight: 1.5,
+                links: vec!["seg:0/off:4".into()],
             },
             Engram {
                 text: "sometimes he trains in his love".into(),
@@ -288,6 +311,7 @@ mod tests {
                 tick: 888,
                 tags: vec!["heart".into(), "promise".into()],
                 weight: 0.25,
+                links: vec![],
             },
         ]
     }
@@ -295,7 +319,9 @@ mod tests {
     #[test]
     fn l1_keys_are_snake_case() {
         let json = sample()[0].l1_json();
-        for key in ["text", "kind", "ctx", "seed", "tick", "tags", "weight"] {
+        for key in [
+            "text", "kind", "ctx", "seed", "tick", "tags", "weight", "links",
+        ] {
             assert!(
                 json.contains(&format!("\"{key}\":")),
                 "missing {key}: {json}"

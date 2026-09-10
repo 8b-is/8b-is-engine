@@ -8,6 +8,13 @@ to versions below.
 
 ## [Unreleased]
 
+- the memory stack finalized: `Engram.links` (the memory's own graph),
+  `corelib::persist` (`Addr` virtual address space, content-hash de-dupe
+  blocks, the single `&mut self` writer, segment splits), `LazyCache`
+  (decode-on-first-ask, session `forget`), `corelib::mq` (`Mq` FIFO,
+  `chan()`, `Locker` the single-writer door), and `TripleBox` — the
+  L1/L3/L2 diamond with lazy memoized skins.
+
 ## [0.7.0] — the kit edge — 2026-09-10
 
 ### Added
