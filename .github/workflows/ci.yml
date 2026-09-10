@@ -26,7 +26,7 @@ jobs:
           rustup toolchain install stable --profile minimal
           sudo apt-get install -y git-lfs
 
-      - uses: ziglang/setup-zig@v2
+      - uses: mlugg/setup-zig@v2
         with:
           version: 0.16.0
 
@@ -45,9 +45,9 @@ jobs:
       - name: the wasm surface — golden + the dream, byte-equal to native (three-surface determinism)
         run: |
           rustup target add wasm32-unknown-unknown
-          RUSTFLAGS="-C target-feature=+simd128" cargo build -p ternary --target wasm32-unknown-unknown
+          RUSTFLAGS="-C target-feature=+simd128" cargo build -p ternary-lane --target wasm32-unknown-unknown
           node scripts/wasm-golden.mjs target/wasm32-unknown-unknown/debug/ternary.wasm
-          cargo run -q -p ternary --example dream -- \
+          cargo run -q -p ternary-lane --example dream -- \
             assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
             "the world runs without" 64 0.8 /tmp/dream-native.txt
           cp target/wasm32-unknown-unknown/debug/ternary.wasm client/assets/ternary.wasm

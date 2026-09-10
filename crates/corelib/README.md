@@ -12,6 +12,6 @@ let grapah = UltraGraph::from_seed("sanctuary", 12, 0.35);
 let dream = dream_continuation("the world runs without", alphabet, 64, 0.8);
 ```
 
-Published on crates.io, semver-managed from `0.1.0`.
+Published on crates.io, semver-managed from `1.9.0`.
 
 *the constellation · 0 + 1 · fine touch from within · vaked.dev*

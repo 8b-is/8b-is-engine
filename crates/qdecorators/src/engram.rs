@@ -156,7 +156,7 @@ pub fn stacked_decode(bytes: &[u8]) -> Result<Vec<Engram>, String> {
         p += 8;
         let weight = f32::from_le_bytes(bytes[p..p + 4].try_into().unwrap());
         p += 4;
-        let mut read_str = |p: &mut usize| -> Result<String, String> {
+        let read_str = |p: &mut usize| -> Result<String, String> {
             if *p + 4 > body_end {
                 return Err("engram: truncated length".into());
             }

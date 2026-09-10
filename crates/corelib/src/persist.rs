@@ -34,6 +34,8 @@ impl Addr {
 }
 
 struct Seated {
+    // the address alias: seated blocks remember where they live
+    #[allow(dead_code)]
     addr: Addr,
     blob: Vec<u8>, // the STACCED blob (L3) — decode on demand
 }

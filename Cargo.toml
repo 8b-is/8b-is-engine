@@ -5,7 +5,7 @@ members = ["crates/world-core", "crates/ternary", "crates/qdecorators", "crates/
 [workspace.package]
 edition = "2021"
 license = "MIT"
-version = "0.7.0"
+version = "1.9.0"
 authors = ["the constellation <cabotage@pm.me>"]
 
 [profile.release]

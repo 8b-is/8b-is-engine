@@ -8,6 +8,10 @@ to versions below.
 
 ## [Unreleased]
 
+- publish lane wired: `qdecorators` → `world-core` → `ternary-lane` → `corelib` on
+  crates.io at 1.9.0 (the lane crate renamed `ternary-lane` — `ternary` is
+  an old crates.io name).
+
 - the memory stack finalized: `Engram.links` (the memory's own graph),
   `corelib::persist` (`Addr` virtual address space, content-hash de-dupe
   blocks, the single `&mut self` writer, segment splits), `LazyCache`
@@ -50,7 +54,7 @@ to versions below.
   ASCII85 printable skin — bidirectional, corruption-hearing.
 - **`lanes`** — the two action lanes (Fast · thunky-lite / Root) with
   L1-L3 o1-style compute budgets and the known `r1` mode.
-- **`crates/ternary::dream_continuation` + the dream, in the browser** —
+- **`crates/ternary-lane::dream_continuation` + the dream, in the browser** —
   the wasm ABI dreams inside the wasm; `client/dream-dashboard.html`;
   the dream bytes are byte-equal to the native dream.
 - **The relay's QUIC door** — WebTransport through the same compact

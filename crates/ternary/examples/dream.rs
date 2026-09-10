@@ -3,7 +3,7 @@
 //!
 //! Usage:
 //! ```text
-//! cargo run -p ternary --example dream -- \
+//! cargo run -p ternary-lane --example dream -- \
 //!   <checkpoint.tern> <manifest.json> <seed text> <n tokens> <temperature> <out.txt>
 //! ```
 //!
@@ -16,8 +16,8 @@
 use std::collections::HashMap;
 use std::fs;
 use std::process::ExitCode;
-use ternary::format::load_checkpoint;
-use ternary::{pack_mulberry, sample, CharModel};
+use ternary_lane::format::load_checkpoint;
+use ternary_lane::{pack_mulberry, sample, CharModel};
 use world_core::tern::seed_from_text;
 
 fn main() -> ExitCode {

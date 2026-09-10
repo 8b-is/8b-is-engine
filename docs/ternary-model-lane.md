@@ -1,6 +1,6 @@
 # the 1.58-bit lane — AMD CPUs and 1-bit base models as first-class citizens
 
-`crates/ternary` is the engine's **model lane**: BitNet b1.58
+`crates/ternary-lane` is the engine's **model lane**: BitNet b1.58
 `{-1, 0, +1}` base models treated the way the engine treats everything —
 small, seeded, deterministic, tested, public, and portable to every
 surface the world runs on. This document is the lane's constitution:
@@ -86,7 +86,7 @@ test guards it.
 ## the dream
 
 ```bash
-cargo run -p ternary --example dream -- \
+cargo run -p ternary-lane --example dream -- \
   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
   "the world runs without" 240 0.8 out/sanctuary-dream.txt
 ```

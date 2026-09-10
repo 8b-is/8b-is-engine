@@ -22,6 +22,8 @@ extern "C" {
     fn zig_gemm(w: *const i16, a: *const i16, n_in: usize, n_out: usize, out: *mut i32);
     #[link_name = "zig_pack"]
     fn zig_pack_c(trits: *const i8, n: usize, out: *mut u8) -> usize;
+    // the stamp is only referenced by the tests — the ABI keeps it warm
+    #[allow(dead_code)]
     fn zig_version() -> u32;
 }
 

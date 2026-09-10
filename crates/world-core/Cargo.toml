@@ -11,7 +11,7 @@ crate-type = ["lib", "cdylib"]
 
 [dependencies]
 sha2 = "0.10"
-qdecorators = { path = "../qdecorators" }
+qdecorators = { path = "../qdecorators", version = "1.9.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 memmap2 = "0.9"

@@ -174,6 +174,7 @@ impl Uq {
         {
             return "simd128";
         }
+        #[allow(unreachable_code)]
         ScalarLane::NAME
     }
 }

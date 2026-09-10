@@ -1,0 +1,34 @@
+name: publish
+
+# The backbone, on crates.io — ordered by dependency: qdecorators
+# (standalone) → world-core → ternary-lane → corelib (the facade).
+# The CARGO_REGISTRY_TOKEN repository secret is the only credential;
+# after each publish the packaged tarball is kept as an artifact (the
+# alias/subrepo story: the .crate files ARE the subrepo per release).
+on:
+  workflow_dispatch:
+  push:
+    tags: ["crates-*"]
+
+env:
+  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: publish the backbone (dependency order)
+        run: |
+          set -euo pipefail
+          for crate in qdecorators world-core ternary-lane corelib; do
+            echo "⟦ publish $crate ⟧"
+            cargo publish -p "$crate" --allow-dirty
+          done
+      - name: keep the tarballs (the alias/subrepo artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: crate-tarballs
+          path: target/package/*.crate
+          if-no-files-found: warn

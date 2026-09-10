@@ -131,12 +131,12 @@ cargo run -q -p pipeline -- graph > out/pipeline-dag.json
 rg -q 'deterministic-expander' out/pipeline-dag.json || die "the pipeline self-graph is missing a stage"
 
 echo "— the 1.58-bit lane: a base model dreams from a seed (AMD/ARM/WASM bit-exact)"
-cargo run -q -p ternary --example dream -- \
+cargo run -q -p ternary-lane --example dream -- \
   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
   "the world runs without" 240 0.8 out/sanctuary-dream.txt
 # the dream is a pure function: the same inputs, the same bytes, on
 # every surface — reproduce it and require byte equality.
-cargo run -q -p ternary --example dream -- \
+cargo run -q -p ternary-lane --example dream -- \
   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
   "the world runs without" 240 0.8 /tmp/dream-b.txt >/dev/null
 cmp out/sanctuary-dream.txt /tmp/dream-b.txt || die "the dream is not deterministic"
@@ -144,7 +144,7 @@ rm -f /tmp/dream-b.txt
 
 echo "— the third surface: the dream, in the browser's clothes (byte-equal to native)"
 ./scripts/build-wasm.sh >/dev/null
-cargo run -q -p ternary --example dream --   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json   "the world runs without" 64 0.8 /tmp/dream-native.txt >/dev/null
+cargo run -q -p ternary-lane --example dream --   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json   "the world runs without" 64 0.8 /tmp/dream-native.txt >/dev/null
 node client/dream.js --check --cmp-native /tmp/dream-native.txt   || die "the browser dream drifted from the native dream"
 rm -f /tmp/dream-native.txt
 
