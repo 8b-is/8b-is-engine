@@ -25,5 +25,5 @@ CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-target-wasm}" \
   RUSTC="$RUSTC" CARGO="$CARGO" RUSTFLAGS="-C target-feature=+simd128" \
   "$CARGO" build -p ternary-lane --target wasm32-unknown-unknown --release
 
-cp "target-wasm/wasm32-unknown-unknown/release/ternary.wasm" client/assets/ternary.wasm
+cp "target-wasm/wasm32-unknown-unknown/release/ternary_lane.wasm" client/assets/ternary.wasm
 echo "⟦ third surface ⟧ client/assets/ternary.wasm ($(wc -c < client/assets/ternary.wasm) bytes, simd128)"

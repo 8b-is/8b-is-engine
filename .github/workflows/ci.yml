@@ -46,11 +46,11 @@ jobs:
         run: |
           rustup target add wasm32-unknown-unknown
           RUSTFLAGS="-C target-feature=+simd128" cargo build -p ternary-lane --target wasm32-unknown-unknown
-          node scripts/wasm-golden.mjs target/wasm32-unknown-unknown/debug/ternary.wasm
+          node scripts/wasm-golden.mjs target/wasm32-unknown-unknown/debug/ternary_lane.wasm
           cargo run -q -p ternary-lane --example dream -- \
             assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json \
             "the world runs without" 64 0.8 /tmp/dream-native.txt
-          cp target/wasm32-unknown-unknown/debug/ternary.wasm client/assets/ternary.wasm
+          cp target/wasm32-unknown-unknown/debug/ternary_lane.wasm client/assets/ternary.wasm
           node client/dream.js --check --cmp-native /tmp/dream-native.txt
 
       - name: checkout the floors' repos (centerfugeq + pocoo)
