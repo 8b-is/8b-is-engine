@@ -1,0 +1,136 @@
+<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>the lane · the training-pipeline, drawn — qSpace · waves · the corridor</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+:root{--bg:#0b0f19;--ink:#e8d8c8;--gold:#ffd700;--cyan:#00f0ff;--pink:#ff007f;
+      --dim:#5a7a8a;--line:#1c2a44;--card:#10162a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,oklch(.16 .04 265),var(--bg) 70%);
+     color:var(--ink);font-family:ui-monospace,Menlo,monospace;padding:20px}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:12px}
+h1{color:var(--gold);letter-spacing:6px;font-size:15px;margin:0}
+.dim{color:var(--dim);font-size:11px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{color:var(--cyan);font-size:22px;display:block}.kpi span{font-size:10px;letter-spacing:2px;color:var(--dim)}
+section{margin:26px 0}
+h2{color:var(--cyan);letter-spacing:4px;font-size:12px;text-transform:uppercase}
+.wave{width:100%;height:120px;display:block;background:#0b0f19;border:1px solid var(--line);border-radius:14px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h3{color:var(--gold);font-size:11px;letter-spacing:2px;margin:0 0 8px}
+.card p,.card li{font-size:11px;color:#9fb4cf;line-height:1.6}
+.card b{color:var(--ink)}
+.mermaid{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:11px}
+td,th{border:1px solid var(--line);padding:6px 9px;text-align:left}
+footer{margin-top:30px;color:var(--dim);font-size:10px;letter-spacing:1px}
+.pill{display:inline-block;background:#14233d;border:1px solid #29487a;color:var(--cyan);border-radius:20px;padding:2px 10px;font-size:10px;margin:2px}
+</style></head><body>
+
+<header><h1>&#10216; THE LANE &#10217; v0.3.0</h1><span class="dim">training-pipeline · 8b-is · the constellation</span></header>
+
+<div class="kpis">
+  <div class="kpi"><b>20</b><span>corridor checks, green</span></div>
+  <div class="kpi"><b>6</b><span>stage transitions (one step)</span></div>
+  <div class="kpi"><b>4</b><span>obliterated picks</span></div>
+  <div class="kpi"><b>1M</b><span>context the far room dreams of</span></div>
+</div>
+
+<section>
+  <h2>the abstract wave — the wire's own breath</h2>
+  <canvas id="wave" class="wave"></canvas>
+  <p class="dim">a seeded ternary stream, drawn as a wave: +1 above the line, -1 below, 0 on it — the same mulberry32 the world runs on. the hum rides at 108.</p>
+</section>
+
+<section>
+  <h2>qSpace — the mem8 quad, drawn</h2>
+  <canvas id="qspace" class="wave"></canvas>
+  <p class="dim">the quad A-B-C-D on the phase-λ lattice: phi gates the encoder mind, lambda the decoder voice, the observer delta shifts the frame — never the geometry. the gate AND/OR/NAND collapses the interpolation into the 8-bit sink.</p>
+</section>
+
+<section>
+  <h2>the corridor — M = the stages</h2>
+  <div class="mermaid">
+  flowchart LR
+    SETUP["lane setup"] --> DIET["lane diet"]
+    DIET --> TRAIN["lane train"]
+    TRAIN --> QUANT["lane quantize"]
+    QUANT --> EVAL["lane eval"]
+    EVAL --> SHIP["lane ship"]
+    DIET -. "refused: only one step" .-> SHIP
+    TRAIN -. "nohup leaves it" .-> DAEMON["lane serve --bg"]
+    DAEMON --> VIEW["localhost:4242"]
+  </div>
+</section>
+
+<section>
+  <h2>the stages, one sentence each</h2>
+  <div class="grid">
+    <div class="card"><h3>setup</h3><p>the box bootstrap: the U.2 lake mounted, llama.cpp native AVX-512 — <b>idempotent, --preview pure</b>.</p></div>
+    <div class="card"><h3>diet</h3><p>the world's food: the cogito reservoir + the top-5 sails + the curated categories <b>(instruct · reasoning · code · web)</b> — polars is the truth.</p></div>
+    <div class="card"><h3>train</h3><p>unsloth QLoRA 4-bit on the T4/box — the effort knob (L1/L2/L3 = b 50/75/100), the mem8-conditioned rows, the <b>accelerator gate</b> that never lies.</p></div>
+    <div class="card"><h3>quantize</h3><p>imatrix on the <b>full</b> corpus (the 700 GB eats it), Q4..Q8 & the b1.58 backpack — the calibration IS the world.</p></div>
+    <div class="card"><h3>eval</h3><p>the verdict: perplexity · refusal survival · dream penetration + the <b>Council</b> (geometric-mean teachers) + the Comet judge.</p></div>
+    <div class="card"><h3>ship</h3><p>to PeetPedro/8bis-lane-models with the model card, the ledger row, the dogfood flush — <b>then it lives without you</b>.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>the box, in one card</h2>
+  <table>
+    <tr><th>resource</th><th>truth</th><th>the lane's use</th></tr>
+    <tr><td>CPU</td><td>Intel Xeon Gold 5412U</td><td>AVX-512 imatrix · the quantizers fly</td></tr>
+    <tr><td>GPU</td><td>RTX 6000 Ada 48 GB</td><td>unsloth QLoRA batch 16×2 · the 27B fits</td></tr>
+    <tr><td>RAM</td><td>~700 GB DDR5 ECC</td><td>the full corpus, resident: MAX_CHARS × the reservoir</td></tr>
+    <tr><td>DISK</td><td>~140 TB SSD (2× U.2)</td><td>the lake: every quant, every checkpoint, the mirror (1 TB lane-cap)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>the cool drawer — V4.1, reused</h2>
+  <p>
+    <span class="pill">CSA2 Full/Reindex/Reuse</span>
+    <span class="pill">the Council (OPD)</span>
+    <span class="pill">effort b 50/75/100</span>
+    <span class="pill">KV q4_0 (1/4 HBM)</span>
+    <span class="pill">the stage machine</span>
+    <span class="pill">the daemon (leave it running)</span>
+  </p>
+  <p class="dim">Every concept lands in code, not in a slide — the corridor proves it (./e2e.sh, 20 green).</p>
+</section>
+
+<footer>a seed is a seed everywhere · the constellation · 0 + 1 · fine touch from within · vaked.dev · open me: open docs/pipeline-viz.html</footer>
+
+<script>
+// the wire's breath — a seeded ternary stream as a wave
+(function(){
+  const c=document.getElementById('wave'),x=c.getContext('2d'),W=c.width=c.parentNode.clientWidth,H=120;
+  let a=41592>>>0;
+  const rnd=()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
+  let tri=[];for(let i=0;i<300;i++){const r=rnd();tri.push(r<0.33?-1:r<0.66?0:1);}
+  x.strokeStyle='#00f0ff';x.lineWidth=1.5;x.beginPath();
+  tri.forEach((t,i)=>{const y=H/2-t*22;const px=i*(W/300);i?x.lineTo(px,y):x.moveTo(px,y);});
+  x.stroke();
+  x.strokeStyle='rgba(255,0,127,.35)';x.beginPath();x.moveTo(0,H/2);x.lineTo(W,H/2);x.stroke();
+})();
+// qSpace — the quad + the observer delta
+(function(){
+  const c=document.getElementById('qspace'),x=c.getContext('2d'),W=c.width=c.parentNode.clientWidth,H=120;
+  x.strokeStyle='#00f0ff';x.lineWidth=1;
+  const cx=W/2-40,cy=H/2,r=34;
+  x.strokeRect(cx-r,cy-r,r*2,r*2); // the lattice cell
+  x.fillStyle='#ffd700';x.font='9px monospace';
+  x.fillText('A',cx-r-12,cy-r);x.fillText('B',cx+r+4,cy-r);
+  x.fillText('C',cx-r-12,cy+r+10);x.fillText('D',cx+r+4,cy+r+10);
+  x.fillStyle='#ff007f';x.beginPath();x.arc(cx+r/2,cy+r/2,3,0,7);x.fill(); // P
+  x.fillStyle='#e8d8c8';x.fillText('P',cx+r/2-18,cy+r/2-6);
+  x.strokeStyle='#ff007f';x.setLineDash([3,3]);
+  x.beginPath();x.moveTo(cx-W/2+20,cy-r);x.lineTo(cx-r,cy-r/2);x.stroke(); // the delta lobe
+  x.setLineDash([]);x.fillStyle='#00f0ff';x.fillText('delta',cx-W/2+26,cy-r-6);
+  x.strokeStyle='#3a4a5a';for(let i=0;i<5;i++){const yy=cy-r+ (i+1)*(2*r/5);x.beginPath();x.moveTo(cx-r,yy);x.lineTo(cx+r,yy);x.stroke();}
+})();
+mermaid.initialize({startOnLoad:true,theme:'dark'});
+</script>
+</body></html>
