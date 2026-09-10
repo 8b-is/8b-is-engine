@@ -8,9 +8,18 @@
 
 pub mod entity;
 pub mod fold;
+
+/// The canonical `raw_fmt!` lives in the qdecorators kit (one
+/// definition, re-exported here so world-core's own templates share it).
+/// See `qdecorators::raw_fmt!` for the double-hash convention and the
+/// footgun it closes.
+pub use qdecorators::raw_fmt;
 pub mod gaia;
+pub mod graph;
+pub mod gray;
 pub mod kompress;
 pub mod memory;
+pub mod pow2arena;
 pub mod render;
 pub mod sim;
 pub mod tern;
@@ -22,10 +31,13 @@ pub mod wasm;
 pub use entity::{Entities, Entity};
 pub use fold::{Delta, Keeper, Verdict};
 pub use gaia::{gaia_state, gaia_wire, GaiaState, LAYERS, WEATHER};
+pub use graph::UltraGraph;
+pub use gray::{changed_bits, gray_decode, gray_encode, to_gray_delta};
 pub use kompress::{
     compress as kcompress, decompress as kdecompress, frame as kframe, ratio as kratio,
 };
 pub use memory::{parse as parse_memory, CollectiveMemory, IndividualMemory};
+pub use pow2arena::{next_pow2, Pow2Slabs};
 pub use render::arena_svg;
 pub use sim::{Fauna, SimWorld};
 pub use tern::{balanced_trits, lcg, mulberry32, seed_from_text};

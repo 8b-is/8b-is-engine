@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# agy — the M1 brain: the local Antigravity/Gemini CLI, headless, with
+# the engines' model menu. The CLI is /opt/homebrew/bin/gemini
+# (antigravity cli); "agy" is its name in this house.
+#
+#   agy "the world folds from the seed"          → gemini-3-flash
+#   agy -m flat "…"                              → gemini-3-flash
+#   agy -m pro  "…"                              → gemini-3-pro
+#   agy -m <any gemini model> "…"                → passthrough
+#
+# The prompt is sent headless (-p); the GEMINI.md beside this script is
+# the world's constitution, read by the CLI as its system prompt.
+
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+model="gemini-3-flash"
+args=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -m) model="${2:-gemini-3-flash}"; shift 2;;
+    flat) model="gemini-3-flash"; shift;;
+    pro)  model="gemini-3-pro"; shift;;
+    *) args+=("$1"); shift;;
+  esac
+done
+[[ ${#args[@]} -gt 0 ]] || { echo "agy: a prompt required — agy \"…\"" >&2; exit 2; }
+
+command -v gemini >/dev/null 2>&1 || { echo "agy: the gemini CLI is missing (brew install gemini)" >&2; exit 1; }
+cd "$HERE"
+exec gemini -p "${args[@]}" -m "$model"

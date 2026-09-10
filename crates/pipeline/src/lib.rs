@@ -7,6 +7,7 @@
 //! wires it, checksums on everything that reaches `assets/staged/`.
 
 pub mod asset_gen;
+pub mod dag;
 pub mod gdd_parser;
 pub mod retopo;
 pub mod stager;
@@ -131,15 +132,37 @@ pub async fn run_pipeline(
         let _ = stage_file(png, &cfg.stage_dir);
     }
 
-    // the stage manifest: the admitted inventory
+    // the stage manifest: the admitted inventory. The directory is
+    // enumerated, not re-staged: an asset already on the stage is only
+    // re-checksummed, never copied onto itself (the old pass re-copied
+    // every existing file through temp-then-rename on every run).
     let mut entries = vec![entry.clone()];
     if let Ok(read) = std::fs::read_dir(&cfg.stage_dir) {
+        let mut seen: Vec<String> = Vec::new();
         for f in read.flatten() {
-            let e = stage_file(&f.path(), &cfg.stage_dir).ok();
-            if let Some(e) = e {
-                if !entries.iter().any(|x| x.path == e.path) {
-                    entries.push(e);
+            let path = f.path();
+            if path.is_dir() {
+                continue;
+            }
+            if let Ok(sha) = stager::sha256_file(&path) {
+                let name = path.file_name().map(|n| n.to_string_lossy().to_string());
+                let Some(name) = name else { continue };
+                if seen.contains(&name) || entries.iter().any(|x| x.path == name) {
+                    continue;
                 }
+                // the entry path owns the name; the dedupe list gets a
+                // clone-free shadow check first (path equality by name)
+                if seen.iter().any(|s| s == &name) {
+                    continue;
+                }
+                let bytes = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                let entry_name = name.clone();
+                seen.push(name);
+                entries.push(StagedEntry {
+                    path: entry_name,
+                    sha256: sha,
+                    bytes,
+                });
             }
         }
     }

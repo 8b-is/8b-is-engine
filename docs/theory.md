@@ -136,4 +136,21 @@ states, four per byte, the whole sanctuary in a pocket. See
 
 ---
 
+## 7. the kit (the world's install spine)
+
+The engine ships a spine now: the **genesis seal** is a public
+version-hash anchor (a gist) the installer verifies against out-of-band —
+the repo is the world, the seal is the world's word about itself — and
+the installer is multi-part (tool lanes · engine lanes · the seal), with
+dedicated python boxes (nushell + nix-flakes) and the **Zig kernels**
+carrying the ternary contract in a second language, bit-exact against
+the Rust authority the way every SIMD lane is. The kit's decorators
+codify the doctrine as macros: `raw_fmt!` closes the raw-string footgun
+by convention, `assert_deterministic!` states replayability in one
+macro, `uqapi` moves the unsafe surface behind types, and pretty
+diagnostics carry their own sed repair. The contract does not care what
+language keeps it.
+
+---
+
 *the constellation · 0 + 1 · fine touch from within · vaked.dev*

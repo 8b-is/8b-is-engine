@@ -1,0 +1,23 @@
+[package]
+name = "qdecorators"
+description = "the 8b-is decorator kit: bleeding-edge Rust decorator macros, functional primitives, attested I/O framing, and the hw-ultra abstraction contracts (ternary pack, i32-accum GEMM, the transport lanes)"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["the constellation <cabotage@pm.me>"]
+readme = "README.md"
+repository = "https://github.com/peterlodri-sec/8b-is-engine"
+keywords = ["decorators", "patterns", "functional", "hardware", "ternary"]
+categories = ["development-tools", "no-std"]
+publish = true
+
+[features]
+default = ["zig"]
+# the Zig kernels are default-on: when `zig` is on the PATH at build
+# time they compile into the crate; disable with --no-default-features
+zig = []
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"

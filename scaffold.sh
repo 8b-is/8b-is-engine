@@ -73,18 +73,66 @@ install_dep() {
 }
 
 # ── the lanes ──────────────────────────────────────────────────────────────
+SEAL_URL="https://gist.githubusercontent.com/peterlodri-sec/cf7552d38775ce53fd5fb9337435a0d7/raw"
+
+cmd_genesis() {
+  # part 03 · the genesis seal: the constellation's public version-hash
+  # anchor — the installer verifies the local world against the seal
+  # without touching the repo. Offline runs warn, never halt.
+  printf '%s==>%s part 03 · the genesis seal (8b.is)
+' "$GRN" "$RST"
+  if have curl; then
+    local remote
+    remote="$(curl -fsSL --max-time 8 "$SEAL_URL" 2>/dev/null || true)"
+    if [[ -n "$remote" ]]; then
+      local rver ok=1
+      rver="$(printf '%s' "$remote" | awk -F'"' -v k='"version"' '$2==k {print $4}')"
+      rver="$(printf '%s' "$remote" | grep -o '"version": "[^"]*"' | cut -d\" -f4)"
+      echo "  remote seal 8b-is-engine ${rver} (live gist)"
+      for art in sanctuary-1.58.tern ternary.wasm; do
+        rhash="$(printf '%s' "$remote" | awk -F'"' -v k="$art" '$2==k {print $4}')"
+        lpath="assets/ternary/$art"
+        [[ "$art" == "ternary.wasm" ]] && lpath="client/assets/$art"
+        lhash="$(shasum -a 256 "$lpath" 2>/dev/null | cut -d' ' -f1 || true)"
+        if [[ "$rhash" == "$lhash" && -n "$rhash" ]]; then echo "  ✓ $art attests"
+        else echo "  ✗ $art drifted (seal $rhash vs local ${lhash:-missing})"; ok=0; fi
+      done
+      [[ "$ok" == 1 ]] && echo "  the world is the world — the seal holds"
+    else warn "seal unreachable (offline?) — local verification continues"; fi
+  else warn "curl missing — seal check skipped"; fi
+}
+
+cmd_pysandbox() {
+  # the dedicated python sandbox (nushell + nix-flakes): compile / repl /
+  # run — one pinned environment, three doors.
+  local mode="${1:-doctor}"
+  shift || true
+  if ! have nix; then die "nix required for the python sandbox — nix develop tools/py-sandbox"; fi
+  local cmd="sandbox ${mode} $*"
+  nix develop "$HERE/tools/py-sandbox" -c nu -c "source tools/py-sandbox/py-sandbox.nu; ${cmd}"
+}
+
 cmd_doctor() {
-  printf '%s==>%s the tool lanes\n' "$GRN" "$RST"
+  printf '%s==>%s part 01 · the tool lanes\n' "$GRN" "$RST"
   for d in "${UTILS[@]}"; do
     if have "$d"; then printf '  %-12s %s\n' "$d" "$(command -v "$d")"
     else printf '  %-12s %s\n' "$d" "${RED}missing${RST}"; fi
   done
-  printf '%s==>%s the engine lanes\n' "$GRN" "$RST"
+  printf '%s==>%s part 02 · the engine lanes\n' "$GRN" "$RST"
   # vaked-nats built?
   if [[ -x "$HERE/../vaked-lsp/target/debug/vaked-nats" ]]; then echo "  vaked-nats   built (the actor-mesh sidecar)"; else echo "  vaked-nats   not built — cd ../vaked-lsp && cargo build --bin vaked-nats"; fi
   # NATS running?
   if lsof -iTCP:4222 -sTCP:LISTEN >/dev/null 2>&1; then echo "  nats-server  running on :4222"; else echo "  nats-server  down — ./scaffold.sh mesh"; fi
   if lsof -iTCP:9222 -sTCP:LISTEN >/dev/null 2>&1; then echo "  nats-ws      running on ws://:9222 — open client/gaia-dashboard.html"; else echo "  nats-ws      down — ./scaffold.sh mesh (the browser's door to the mesh)"; fi
+  # the local brain — agy (the antigravity gemini CLI)
+  if [[ -x "$HERE/scripts/agy" ]] && command -v gemini >/dev/null 2>&1; then echo "  agy          ready — ./scripts/agy \"the world folds from the seed\" (-m flat · -m pro)"; else echo "  agy          missing — the antigravity gemini CLI is not on this machine (scripts/agy waits for it)"; fi
+  # the python sandboxes — nushell + nix-flakes
+  if [[ -f "$HERE/tools/py-sandbox/flake.nix" ]] && have nix; then echo "  py-sandbox  flake ready — ./scaffold.sh py-sandbox [compile|repl|run]"; else echo "  py-sandbox  missing (needs nix + tools/py-sandbox/flake.nix)"; fi
+  # the zig kernels — default-on when zig is on the PATH
+  if have zig; then
+    if (cd "$HERE" && zig test crates/qdecorators/zig/kernels.zig >/dev/null 2>&1); then echo "  zig-lane     $(zig version | tr -d '
+') · kernels self-test ok"; else echo "  zig-lane     zig present, kernels test failed — rerun ./scaffold.sh verify"; fi
+  else echo "  zig-lane     missing — brew install zig (the kernels are default-on when zig is here)"; fi
   # git-lfs
   if have git-lfs; then echo "  git-lfs     $(git lfs version 2>/dev/null | head -1)"; fi
   # the swarm config
@@ -93,6 +141,7 @@ cmd_doctor() {
   if ls "$HERE"/assets/vendor/kenney/*.zip >/dev/null 2>&1; then echo "  assets      $(ls "$HERE"/assets/vendor/kenney/*.zip | wc -l | tr -d ' ') CC0 packs vendored"; else echo "  assets      none vendored"; fi
   # centerfugeq export lane
   if [[ -f "$CENTF/quantTernEngine/gen.ts" ]] && grep -q "'scene'" "$CENTF/quantTernEngine/gen.ts"; then echo "  export-lane scene modality ready"; else echo "  export-lane missing scene modality"; fi
+  cmd_genesis
 }
 
 cmd_install() {
@@ -246,6 +295,8 @@ main() {
     doctor|verify) cmd_doctor;;
     new)       cmd_new "${1:-}";;
     mesh)      cmd_mesh;;
+    genesis)   cmd_genesis;;
+    py-sandbox) cmd_pysandbox "$@";;
     export)    cmd_export "${1:-}";;
     content)   cmd_content "$@";;
     bootstrap) cmd_bootstrap;;

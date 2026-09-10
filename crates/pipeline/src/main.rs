@@ -57,6 +57,11 @@ async fn main() {
                 }
             }
         }
+        Some("graph") => {
+            // the pipeline describes itself: the layer-1 stage DAG as a
+            // tri-state ultra-graph
+            println!("{}", pipeline::dag::stage_dag_json("layer-1 ingestion"));
+        }
         _ => {
             eprintln!("usage: pipeline [run <brief-or-file> [--art] | verify | stage <src> [dst] | mesh <file>]");
             std::process::exit(2);

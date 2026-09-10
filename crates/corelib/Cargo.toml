@@ -1,0 +1,17 @@
+[package]
+name = "corelib"
+description = "the 8b-is corelib: one import for the engine's core — world-core (GAIA, the fold, the transport), the 1.58-bit lane (ternary), and the qdecorators kit"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["the constellation <cabotage@pm.me>"]
+readme = "README.md"
+repository = "https://github.com/peterlodri-sec/8b-is-engine"
+keywords = ["engine", "world", "ternary", "functional"]
+categories = ["game-engines"]
+publish = true
+
+[dependencies]
+world-core = { path = "../world-core" }
+ternary = { path = "../ternary" }
+qdecorators = { path = "../qdecorators" }

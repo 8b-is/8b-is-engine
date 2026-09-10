@@ -19,15 +19,22 @@ jobs:
         with:
           lfs: true
 
-      - name: install the toolchain (uv, node 22, cargo, git-lfs)
+      - name: install the toolchain (uv, node 22, cargo, git-lfs, zig)
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs
           rustup toolchain install stable --profile minimal
           sudo apt-get install -y git-lfs
 
+      - uses: mlugg/setup-zig@v1.2.1
+        with:
+          version: 0.16.0
+
       - name: scaffold verify (the E2E lane probe — tolerates cold lanes)
         run: ./scaffold.sh verify
+
+      - name: the raw-string guard (the delimiter footgun stays closed)
+        run: node tools/check-raw-strings.mjs
 
       - name: cargo test --workspace
         run: PATH="$HOME/.cargo/bin:$PATH" cargo test --workspace

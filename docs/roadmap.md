@@ -86,6 +86,36 @@ docs are the map ([theory](theory.md) · [game-design](game-design.md) ·
   the oneshot asserts `byte-equal to native` — the dream is a
   three-surface artifact, not just the golden
 
+## the kit lane — lands on the current edge (shipped)
+
+- [x] **the enum kit crates** — `qdecorators` (decorator macros: `raw_fmt!`
+  double-hash convention + its footgun guard, `assert_deterministic!`),
+  functional primitives (pipe/tap/seq/compose/memoize1), attested I/O
+  framing, the hardware-ultra contracts (`Transport`, `GEMM`,
+  `TernaryPack`, `GammaScale`) — and `corelib`, the one-import facade
+  over world-core + ternary + qdecorators; crates.io- and semver-ready
+- [x] **`uqapi` — the typed unsafe quotient** — the SIMD lanes as types
+  (`Uq::gemm::<Lane>`), `Cstr` RAII over the FFI string bridge, and the
+  borrow-domain lease pattern — the borrow-checker, tweaked
+- [x] **pretty diagnostics** — Python-traceback-style errors whose `Fix`
+  carries a pasteable one-line `sed` command ("try this", machine-
+  readable)
+- [x] **the Zig kernels** — the ternary GEMM + tri-state pack written in
+  Zig (`build-obj` + `zig ar`, default-on), reached typed through the C
+  ABI; Rust↔Zig bit-exactness tested against the scalar authority
+- [x] **engram → blob serialization** — the memory unit in three skins (L1
+  snake_case JSON wire · L3 STACCED stacked binary with an FNV trailer ·
+  L2 ASCII85 printable), each step the inverse of the next
+- [x] **the action lanes** — Fast (thunky-lite, the boot recommendation) /
+  Root, L1-L3 o1-style compute budgets, the known `r1` mode
+- [x] **the python sandboxes** (nushell + nix-flakes) —
+  `tools/py-sandbox`: `sandbox compile | repl | run`, one pinned
+  devShell, wired as `./scaffold.sh py-sandbox`
+- [x] **the installer's spine** — the multi-part `scaffold.sh` (part
+  01 tool lanes · 02 engine lanes · 03 the genesis seal) + the public
+  genesis-seal gist attesting version, artifacts, and the golden
+  out-of-band; `scripts/agy` waits for the M1 antigravity brain
+
 ## v1.x — the core engine (the Rust/Go runtime)
 
 - [x] **layer 1: content creation** (`./scaffold.sh content "<brief>"` +

@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["crates/world-core", "crates/ternary", "crates/pipeline", "crates/mesh-node", "crates/mesh-relay"]
+members = ["crates/world-core", "crates/ternary", "crates/qdecorators", "crates/corelib", "crates/pipeline", "crates/mesh-node", "crates/mesh-relay"]
 
 [workspace.package]
 edition = "2021"
 license = "MIT"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["the constellation <cabotage@pm.me>"]
 
 [profile.release]

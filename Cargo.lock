@@ -171,6 +171,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "corelib"
+version = "0.1.0"
+dependencies = [
+ "qdecorators",
+ "ternary",
+ "world-core",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,7 +588,7 @@ dependencies = [
 
 [[package]]
 name = "mesh-node"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "bytes",
  "serde",
@@ -590,7 +599,7 @@ dependencies = [
 
 [[package]]
 name = "mesh-relay"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "futures-util",
  "mesh-node",
@@ -711,7 +720,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "pipeline"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "ron",
  "serde",
@@ -758,6 +767,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "qdecorators"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -1187,7 +1205,7 @@ dependencies = [
 
 [[package]]
 name = "ternary"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "sha2 0.10.9",
  "world-core",
@@ -1575,9 +1593,10 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "world-core"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "memmap2",
+ "qdecorators",
  "serde",
  "serde_json",
  "sha2 0.10.9",

@@ -119,8 +119,16 @@ PY
 echo "— ultra-cogniM8 live: the two memories diverge on refusals (tested in world-core::memory)"
 cargo test -p world-core memory 2>&1 | tail -1
 
+echo "— the raw-string guard: the delimiters stay double-hash"
+node tools/check-raw-strings.mjs
+
 echo "— the world, drawn: the cast rendered from the arena"
 cargo run -q -p world-core --example arena -- "sanctuary" out/arena.svg
+
+echo "— the ultra-graphs: the relation field, drawn from the seed"
+cargo run -q -p world-core --example ultra_graph -- "sanctuary" out/ultra-graph.svg
+cargo run -q -p pipeline -- graph > out/pipeline-dag.json
+rg -q 'deterministic-expander' out/pipeline-dag.json || die "the pipeline self-graph is missing a stage"
 
 echo "— the 1.58-bit lane: a base model dreams from a seed (AMD/ARM/WASM bit-exact)"
 cargo run -q -p ternary --example dream -- \
@@ -139,6 +147,21 @@ echo "— the third surface: the dream, in the browser's clothes (byte-equal to 
 cargo run -q -p ternary --example dream --   assets/ternary/sanctuary-1.58.tern assets/ternary/sanctuary-1.58.json   "the world runs without" 64 0.8 /tmp/dream-native.txt >/dev/null
 node client/dream.js --check --cmp-native /tmp/dream-native.txt   || die "the browser dream drifted from the native dream"
 rm -f /tmp/dream-native.txt
+
+echo "— the zig lane: the kernels keep their own house, bit-exact to the authority"
+if command -v zig >/dev/null 2>&1; then
+  zig test crates/qdecorators/zig/kernels.zig >/dev/null 2>&1 || die "the zig kernels refused their own tests"
+  cargo test -p qdecorators --lib zigq 2>&1 | grep -q 'zig_is_bit_exact_with_the_scalar_authority.*ok' || die "the zig↔rust proof failed"
+  echo "  zig kernels self-test + Rust↔Zig bit-exactness: ok"
+else
+  echo "  zig missing — the lane stays scalar (install zig for the kernels)"
+fi
+
+echo "— the genesis seal: the world's word about itself (local compute)"
+SEAL_JSON="$(./scripts/genesis-seal.sh)" || die "the seal refused to compute"
+printf '%s' "$SEAL_JSON" | grep -q '"kind": "genesis-seal"' || die "the seal's shape is wrong"
+printf '%s' "$SEAL_JSON" | grep -q '"golden": "aff6dc2bc980c1a2275957b25ee075139670e3bbad4920a0aec4f9c6fc952060"' || die "the seal drifted from the golden"
+echo "  seal attests version + artifacts against the golden"
 
 echo
 echo "⟦ E2E oneshot complete :: the world runs without you ⟧"
