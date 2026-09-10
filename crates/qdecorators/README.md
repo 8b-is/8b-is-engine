@@ -1,3 +1,5 @@
+[![crates.io](https://img.shields.io/crates/v/qdecorators.svg)](https://crates.io/crates/qdecorators) [![docs.rs](https://img.shields.io/docsrs/qdecorators.svg)](https://docs.rs/qdecorators)
+
 # qdecorators — the 8b-is decorator kit
 
 Bleeding-edge Rust ergonomics from the **8b-is engine**, published

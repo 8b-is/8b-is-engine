@@ -1,3 +1,5 @@
+[![crates.io](https://img.shields.io/crates/v/corelib.svg)](https://crates.io/crates/corelib) [![docs.rs](https://img.shields.io/docsrs/corelib.svg)](https://docs.rs/corelib)
+
 # corelib — the 8b-is corelib
 
 One import for the engine's core: **world-core** (the ternary wire, GAIA,

@@ -1,3 +1,5 @@
+[![crates.io](https://img.shields.io/crates/v/world-core.svg)](https://crates.io/crates/world-core) [![docs.rs](https://img.shields.io/docsrs/world-core.svg)](https://docs.rs/world-core)
+
 # world-core — the shared world core of the 8b-is engine
 
 One source of truth, three surfaces: the **ternary wire**, **GAIA** (the
