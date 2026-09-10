@@ -148,6 +148,60 @@ impl UltraGraph {
         label
     }
 
+    /// degree_centrality — who is most connected: the friendly (+1) and
+    /// hostile (-1) bonds counted per node (the neutral zero stays
+    /// silent). Freeman's degree centrality, tri-state edition.
+    pub fn degree_centrality(&self) -> Vec<(u32, u32)> {
+        let n = self.nodes.len();
+        let mut friends = vec![0u32; n];
+        let mut foes = vec![0u32; n];
+        for &(a, b, w) in &self.edges {
+            if w == 1 {
+                friends[a as usize] += 1;
+                friends[b as usize] += 1;
+            } else if w == -1 {
+                foes[a as usize] += 1;
+                foes[b as usize] += 1;
+            }
+        }
+        (0..n).map(|i| (friends[i], foes[i])).collect()
+    }
+
+    /// closeness — the shortest-path sums over the friendly edges (BFS
+    /// from every node, deterministic order): how close a member is to
+    /// the rest of ITS component, in bonds. Hostility never shortens a
+    /// path; it only isolates. A node in a shattered graph is closest
+    /// to its own shard (the honest distance: the others are not in
+    /// the room).
+    pub fn closeness(&self) -> Vec<f32> {
+        let n = self.nodes.len();
+        let mut friendly: Vec<Vec<usize>> = vec![Vec::new(); n];
+        for &(a, b, w) in &self.edges {
+            if w == 1 {
+                friendly[a as usize].push(b as usize);
+                friendly[b as usize].push(a as usize);
+            }
+        }
+        let mut out = Vec::with_capacity(n);
+        for start in 0..n {
+            let mut dist = vec![usize::MAX; n];
+            dist[start] = 0;
+            let mut q = std::collections::VecDeque::new();
+            q.push_back(start);
+            while let Some(u) = q.pop_front() {
+                for &v in &friendly[u] {
+                    if dist[v] == usize::MAX {
+                        dist[v] = dist[u] + 1;
+                        q.push_back(v);
+                    }
+                }
+            }
+            let sum: usize = dist.iter().filter(|&&d| d != usize::MAX).map(|&d| d).sum();
+            out.push(if sum == 0 { 0.0 } else { 1.0 / sum as f32 });
+        }
+        out
+    }
+
     /// ultra_svg — the disposable look for the durable structure:
     /// circle layout (fixed by node count), color by bond (plus cyan,
     /// minus pink, zero dim), fill tinted by community.
@@ -242,6 +296,53 @@ mod tests {
         assert_eq!(c1, c2);
         assert_eq!(c1.len(), 16);
         assert!(c1.iter().all(|&l| l < 16), "renumbered to a compact range");
+    }
+
+    #[test]
+    fn degree_centrality_counts_friends_and_foes() {
+        // p_edge 1.0 on two nodes: one bond, tri-state drawn
+        let g = UltraGraph::from_seed("pair", 2, 1.0);
+        let w = g.edges[0].2;
+        let dc = g.degree_centrality();
+        let expected = if w == 1 {
+            (1u32, 0u32)
+        } else if w == -1 {
+            (0u32, 1u32)
+        } else {
+            (0u32, 0u32)
+        };
+        assert_eq!(dc, vec![expected, expected]);
+    }
+
+    #[test]
+    fn closeness_is_bfs_deterministic() {
+        let a = UltraGraph::from_seed("sanctuary", 12, 0.5);
+        let b = UltraGraph::from_seed("sanctuary", 12, 0.5);
+        let c1 = a.closeness();
+        let c2 = b.closeness();
+        assert_eq!(c1, c2, "the same seed, the same closeness");
+        // a friendly chain of three: endpoints sum 1+2=3 → 1/3, the
+        // center sums 1+1=2 → 1/2 (build a deterministic friendly line)
+        // closeness lives in (0, 1]: 1/sum, sum ≥ 1 for anyone with a
+        // reachable self; a lone shard-mate reads 0.0 (nobody else in
+        // the room)
+        for seed in ["sanctuary", "the tent", "the yard"] {
+            let g = UltraGraph::from_seed(seed, 9, 0.6);
+            let cc = g.closeness();
+            assert!(cc.iter().all(|&c| c >= 0.0 && c <= 1.0), "{seed}: in range");
+            assert_eq!(cc.len(), 9);
+        }
+        // and the pair from the degree test: a friendly single bond
+        // gives both members closeness 1/1 = 1.0
+        let g = UltraGraph::from_seed("pair", 2, 1.0);
+        match g.edges[0].2 {
+            1 => assert_eq!(g.closeness(), vec![1.0, 1.0]),
+            -1 | 0 => {
+                // no friendly bond: two lone shards, each 0.0
+                assert_eq!(g.closeness(), vec![0.0, 0.0])
+            }
+            _ => unreachable!(),
+        }
     }
 
     #[test]
