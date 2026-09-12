@@ -1,0 +1,180 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>the circumsolar momentum bank — a conservation-law PoC</title>
+<style>
+:root{--bg:#030607;--ink:#a8c4bb;--sun:#ffe25a;--craft:#4fb8ff;--pellet:#ff7a3d;--dim:#5a7a6a;--line:#12221c}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 500px at 70% -10%,#0a1410,var(--bg));color:var(--ink);
+     font-family:ui-monospace,Menlo,monospace;padding:16px;display:grid;grid-template-columns:minmax(340px,420px) 1fr;gap:16px}
+h1{color:var(--sun);letter-spacing:4px;font-size:13px;margin:0 0 4px}
+.dim{color:var(--dim);font-size:10px;line-height:1.5}
+.panel{background:#07110d;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+.panel h2{color:var(--craft);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:0 0 10px}
+label{display:grid;grid-template-columns:1fr 64px auto;gap:8px;font-size:11px;align-items:center;margin:6px 0}
+label b{text-align:right;color:var(--sun);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}
+table{border-collapse:collapse;width:100%;font-size:10px;margin-top:8px}
+td,th{border:1px solid var(--line);padding:3px 6px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;margin-top:8px}
+.ledger div{background:#0a1812;border:1px solid var(--line);border-radius:8px;padding:8px}
+.ledger b{display:block;font-size:17px;color:var(--sun);font-variant-numeric:tabular-nums}
+.ledger span{font-size:9px;letter-spacing:1px;color:var(--dim)}
+.neg{color:#ff7a7a!important}
+canvas{width:100%;height:100%;border:1px solid var(--line);border-radius:12px;background:#030607;min-height:520px}
+button{background:#0a1812;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 14px;
+       font-family:inherit;font-size:11px;cursor:pointer}
+button.active{background:#12261d;color:var(--sun);border-color:#29487a}
+.verdict{font-size:11px;margin-top:10px;color:var(--craft)}
+.verdict b{color:var(--sun)}
+</style></head><body>
+<aside>
+  <h1>&#10216; THE MOMENTUM BANK &#10217;</h1>
+  <div class="dim">a circumsolar gravitational momentum exchange: pellets fall on sun-diving orbits,
+  the solar well gives them hundreds of km/s, and a 20-minute magsail encounter transfers a
+  controlled slice of that orbital energy to a passing craft. The machinery arranges encounters;
+  the Sun supplies the velocity. This file proves the EXCHANGE conserves energy exactly.</div>
+
+  <div class="panel">
+    <h2>the encounter</h2>
+    <label>perihelion r<sub>p</sub> <input type="range" id="rp" min="1.1" max="10" step="0.1" value="1.1">
+      <b id="rpV">1.1 R☉</b></label>
+    <label>ship mass M <input type="range" id="M" min="10" max="500" step="10" value="100">
+      <b id="MV">100 t</b></label>
+    <label>pellet stream ṁ <input type="range" id="mdot" min="0.5" max="20" step="0.1" value="4.17">
+      <b id="mdotV">4.17 kg/s</b></label>
+    <label>relative speed u <input type="range" id="u" min="20" max="200" step="5" value="100">
+      <b id="uV">100 km/s</b></label>
+    <label>coupling η <input type="range" id="eta" min="0" max="1" step="0.01" value="1">
+      <b id="etaV">1.00</b></label>
+    <label>window Δt <input type="range" id="dt" min="300" max="3600" step="60" value="1200">
+      <b id="dtV">1200 s</b></label>
+    <button id="run" class="active">RUN ENCOUNTER</button>
+  </div>
+
+  <div class="panel">
+    <h2>the ledger (live)</h2>
+    <div class="ledger">
+      <div><b id="dEsc">—</b><span>ΔE spacecraft GJ</span></div>
+      <div><b id="dEp">—</b><span>−ΔE pellets GJ</span></div>
+      <div><b id="vp">—</b><span>v∞ after km/s</span></div>
+      <div><b id="dv">—</b><span>Δv imparted km/s</span></div>
+      <div><b id="perr">—</b><span>energy error</span></div>
+      <div><b id="flux">—</b><span>beam P at ship GW</span></div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="panel">
+    <h2>the sweep — 10 &amp; 20 km/s burns</h2>
+    <table id="sweep"></table>
+    <div class="dim">the Oberth cross-term 2·v<sub>esc</sub>·Δv: the same local burn becomes worth far more
+      deeper in the well. μ☉=1.327e11 km³/s².</div>
+  </div>
+</aside>
+
+<main>
+  <canvas id="cv"></canvas>
+  <div class="dim" style="margin-top:8px">cyan = spacecraft hyperbola · orange = pellet streams (deflected at the
+    interaction plane) · the encounter is the <b>phase-space transaction</b>: the craft exits on a higher-energy
+    hyperbola, the pellets on a lower bound ellipse.</div>
+</main>
+
+<script>
+const X=document.getElementById('cv').getContext('2d');
+const GM=1.32712440018e20; // m^3/s^2 — SI, one regime for the ledger
+const RSUN=6.957e8;        // m
+let playing=false, tWindow=0, W,H;
+
+const $=id=>document.getElementById(id);
+function slider(id,vid,fmt){const el=$(id);el.oninput=()=>{$(vid).textContent=fmt(+el.value);calc()};return()=>+el.value}
+const vRp=slider('rp','rpV',v=>v.toFixed(1)+' R☉'), vM=slider('M','MV',v=>v+' t'),
+      vMdot=slider('mdot','mdotV',v=>v.toFixed(2)+' kg/s'), vU=slider('u','uV',v=>v+' km/s'),
+      vEta=slider('eta','etaV',v=>v.toFixed(2)), vDt=slider('dt','dtV',v=>v+' s');
+
+function esc(r){return Math.sqrt(2*GM/r)}
+function calc(){
+  const rp=vRp()*RSUN, M=vM()*1e3, mdot=vMdot(), u=vU()*1e3, eta=vEta(), dt=vDt();
+  const ve=esc(rp);                 // m/s — parabolic perihelion speed
+  const N=Math.round(dt/10);        // the integrator: 10 s steps
+  const step=dt/N;
+  let vc=ve, dEstream=0, dEsc=0;
+  const dvStep=2*eta*u*mdot*step/M;   // this step's craft acceleration
+  for(let k=0;k<N;k++){            // symplectic midpoint: both energies
+    const vmid=vc+dvStep/2;        // share the same instantaneous frame
+    const vin=vmid+u, vout=vmid+(1-2*eta)*u;  // heliocentric pellet speeds
+    dEstream+=0.5*mdot*step*(vout*vout-vin*vin);
+    dEsc+=M*dvStep*vmid;           // = ½M((vmid+dv/2)² − (vmid−dv/2)²)
+    vc=vmid+dvStep/2;
+  }
+  const dv=vc-ve;
+  const err=Math.abs(dEsc+dEstream)/Math.max(Math.abs(dEsc),Math.abs(dEstream));
+  const vinf=Math.sqrt(Math.max(0,2*dEsc/M))/1000;
+  $( 'dEsc').textContent=(dEsc/1e9).toFixed(1);
+  $('dEp').textContent=(-dEstream/1e9).toFixed(1);
+  $('vp').textContent=vinf.toFixed(1);
+  $('dv').textContent=(dv/1000).toFixed(2);
+  $('perr').textContent=err.toExponential(2);
+  $('flux').textContent=(dEsc/dt/1e9).toFixed(1);
+  $('verdict').innerHTML = err<1e-6
+    ? '<b>conservation exact</b> — the stream lost what the craft gained; the phase-space transaction closed.'
+    : '<b>check the operator</b> — energy does not balance yet ('+err.toExponential(2)+').';
+  return {rp,M,mdot,u,eta,dt,ve,dv,dEsc,dEstream,vinf,err};
+}
+function sweep(){
+  const rows=[];
+  for(const rp of [5,2,1.5,1.1]){
+    const ve=esc(rp*RSUN)/1000;
+    rows.push([rp.toFixed(1)+' R☉', ve.toFixed(0),
+      Math.sqrt(2*ve*10+100).toFixed(1), Math.sqrt(2*ve*20+400).toFixed(1)]);
+  }
+  $('sweep').innerHTML='<tr><th>r<sub>p</sub></th><th>v<sub>peri</sub></th><th>v∞ (Δv=10)</th><th>v∞ (Δv=20)</th></tr>'+
+    rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+}
+function draw(t){
+  requestAnimationFrame(draw);
+  const cw=X.canvas.width=Math.min(innerWidth-30,1400)*(devicePixelRatio||1),
+        ch=X.canvas.height=520*(devicePixelRatio||1);
+  X.setTransform(devicePixelRatio||1,0,0,devicePixelRatio||1,0,0);W=innerWidth-30;H=520;
+  X.fillStyle='#030607';X.fillRect(0,0,W,H);
+  const cx=W*0.62, cy=H*0.5, sx=Math.min(W,H)/360;
+  const rp=vRp()*RSUN;
+  // sun
+  X.fillStyle='#ffe25a';X.beginPath();X.arc(cx,cy,2.2*sx,0,7);X.fill();
+  // craft hyperbola: r(θ)=p/(1+e cosθ), p=rp(1+e), e=1.2
+  const e=1.2,p0=rp*(1+e);
+  X.strokeStyle='#4fb8ff';X.lineWidth=1.6;X.beginPath();
+  for(let a=-1.9;a<=1.9;a+=0.01){
+    const r=p0/(1+e*Math.cos(a)), x=cx+(r/RSUN)*22*sx*Math.cos(a), y=cy-(r/RSUN)*22*sx*Math.sin(a);
+    a===-1.9?X.moveTo(x,y):X.lineTo(x,y);
+  }X.stroke();
+  // interaction plane at perihelion, with a shaded exchange band
+  X.strokeStyle='rgba(255,255,255,.14)';X.setLineDash([4,4]);
+  X.beginPath();X.moveTo(cx-(rp/RSUN)*22*sx,cy-90);X.lineTo(cx-(rp/RSUN)*22*sx,cy+90);X.stroke();X.setLineDash([]);
+  // pellet stream: two streams from behind, deflected at the plane
+  const ph=vRp()*2;
+  for(let s=-1;s<=1;s+=2){
+    X.strokeStyle='#ff7a3d';X.lineWidth=1.1;X.beginPath();
+    for(let a=-1.4;a<=1.4;a+=0.02){
+      const r=p0/(1+e*Math.cos(a)), x=cx+(r/RSUN)*22*sx*Math.cos(a)+s*(ph*0.06*sx),
+            y=cy-(r/RSUN)*22*sx*Math.sin(a)+s*(40+ (a<0?-6:6));
+      a===-1.4?X.moveTo(x,y):X.lineTo(x,y);
+    }X.stroke();
+  }
+  // craft position in the window
+  const dt=vDt(), frac=playing?Math.min(1,tWindow/dt):0.35;
+  const a=-1.9+3.8*frac, r=p0/(1+e*Math.cos(a));
+  const px=cx+(r/RSUN)*22*sx*Math.cos(a), py=cy-(r/RSUN)*22*sx*Math.sin(a);
+  X.shadowColor='#4fb8ff';X.shadowBlur=14;X.fillStyle='#4fb8ff';
+  X.beginPath();X.arc(px,py,3.4*sx,0,7);X.fill();X.shadowBlur=0;
+  X.fillStyle='#a8c4bb';X.font='10px ui-monospace,monospace';
+  X.fillText('craft '+ (vPeriNow()/1000).toFixed(0)+' km/s',px+10,py-8);
+  const state=calc();
+  if(playing&&tWindow>=dt){playing=false;$('run').classList.add('active');$('run').textContent='RUN ENCOUNTER'}
+}
+function vPeriNow(){return esc(vRp()*RSUN)}
+$('run').onclick=()=>{playing=true;tWindow=0;$('run').classList.remove('active');$('run').textContent='ENCOUNTER IN FLIGHT'};
+setInterval(()=>{if(playing){tWindow+=50}},50);
+sweep();calc();requestAnimationFrame(draw);
+</script>
+</body></html>
