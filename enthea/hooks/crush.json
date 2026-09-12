@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(bash|edit|write|multiedit|view|grep)$",
+        "command": "./hooks/doctrine.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}
