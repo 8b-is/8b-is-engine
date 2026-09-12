@@ -10,9 +10,9 @@ one sentence per door:
   `peterlodri-sec/enthea`; this is the doorway into this body.
 - **entheai** — the bigger sibling, the manifest, the radio assets, the
   crates; home stays its own repo; the pocket copy rides here.
-- **6502.is** — not a local repo: a live channel link. The merge points
-  at it from the constellation's map (engines of the past speak the same
-  frequency; the 8-bit seed of everything here).
+- **6502-is** — a 3d visual6502.org (visual6502, in three dimensions): the
+  engine of the engine, the 8-bit seed everything here decodes from —
+  merged in from `8b-is/6502-is` (vite + simulation, 8.5MB).
 
 Bulk excluded at merge: `.git`, `.crush`, `node_modules`, `target`,
 `dist`, `.venv`, `__pycache__`, `.wrangler`, `.benchmark` — the build
