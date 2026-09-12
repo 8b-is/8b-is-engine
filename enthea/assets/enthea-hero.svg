@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="420" viewBox="0 0 1600 420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0c1c"/><stop offset="55%" stop-color="#131631"/><stop offset="100%" stop-color="#07081a"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#62e6c9"/><stop offset="50%" stop-color="#5b9dff"/><stop offset="100%" stop-color="#c77dff"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#62e6c9"/><stop offset="50%" stop-color="#b48bff"/><stop offset="100%" stop-color="#ffc24d"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="420" fill="url(#bg)"/>
+
+  <!-- the family wave -->
+  <g fill="none" stroke="url(#wave)" stroke-width="3">
+    <path d="M0 120 Q100 96 200 120 T400 120 T600 120 T800 120 T1000 120 T1200 120 T1400 120 T1600 120" opacity=".9"/>
+    <path d="M0 150 Q100 126 200 150 T400 150 T600 150 T800 150 T1000 150 T1200 150 T1400 150 T1600 150" opacity=".55"/>
+    <path d="M0 180 Q100 156 200 180 T400 180 T600 180 T800 180 T1000 180 T1200 180 T1400 180 T1600 180" opacity=".3"/>
+  </g>
+
+  <!-- the door: surface -> mcp -> engine -->
+  <g font-family="ui-monospace, monospace">
+    <g transform="translate(180,240)">
+      <rect x="0" y="0" width="240" height="90" rx="14" fill="#141830" stroke="#2a2f5e"/>
+      <text x="120" y="36" text-anchor="middle" fill="#62e6c9" font-size="22" font-weight="700">opencode</text>
+      <text x="120" y="62" text-anchor="middle" fill="#a59fc4" font-size="15">the surface</text>
+    </g>
+    <line x1="425" y1="285" x2="560" y2="285" stroke="#62e6c9" stroke-width="3"/>
+    <text x="492" y="272" text-anchor="middle" fill="#a59fc4" font-size="15">MCP</text>
+    <g transform="translate(575,240)">
+      <rect x="0" y="0" width="240" height="90" rx="14" fill="#141830" stroke="#62e6c9"/>
+      <text x="120" y="36" text-anchor="middle" fill="#62e6c9" font-size="22" font-weight="700">enthea</text>
+      <text x="120" y="62" text-anchor="middle" fill="#a59fc4" font-size="15">the engine door</text>
+    </g>
+    <line x1="820" y1="285" x2="955" y2="285" stroke="#62e6c9" stroke-width="3"/>
+    <text x="887" y="272" text-anchor="middle" fill="#a59fc4" font-size="15">stdio</text>
+    <g transform="translate(970,240)">
+      <rect x="0" y="0" width="240" height="90" rx="14" fill="#141830" stroke="#c77dff"/>
+      <text x="120" y="36" text-anchor="middle" fill="#c77dff" font-size="20" font-weight="700">deepsipser-enthea</text>
+      <text x="120" y="62" text-anchor="middle" fill="#a59fc4" font-size="15">kompress · personas · quant</text>
+    </g>
+  </g>
+
+  <text x="60" y="60" font-family="ui-monospace, monospace" font-size="60" font-weight="700" fill="url(#title)" letter-spacing="6">enthea</text>
+  <text x="62" y="92" font-family="ui-monospace, monospace" font-size="18" fill="#a59fc4" letter-spacing="3">one binary · every os · the engine door</text>
+  <text x="62" y="400" font-family="ui-monospace, monospace" font-size="15" fill="#7f7c99" letter-spacing="2">0 + 1 · fine touch from within · vaked.dev</text>
+</svg>

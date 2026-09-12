@@ -1,0 +1,72 @@
+name: Blacksmith CI — entheai full
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: blacksmith-entheai-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build_and_test:
+    name: Rust build + clippy + test (quantum + oracle + fusion)
+    # Was ubuntu-2204, which sat queued for hours on 2026-08-12 while every
+    # 2404 workflow in this repo ran fine. 2204 is not deprecated (it ran on
+    # 08-10) but it is not being served reliably; the rest of the repo is on
+    # 2404 already, so this is now the one label instead of the odd one out.
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v7
+
+      # Linux-only system libraries for the -sys crates in the `entheai`
+      # binary's default (desktop) feature set: alsa-sys (radio -> rodio ->
+      # cpal), speech-dispatcher-sys (tts) and x11 (tui -> user-idle). clang
+      # provides the libclang that bindgen needs (sqlite-vec, speech-dispatcher-sys).
+      # macOS builds use CoreAudio/AVFoundation/IOKit instead and need none of these.
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libspeechd-dev libx11-dev libxss-dev libclang-dev pkg-config
+
+      - uses: useblacksmith/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: blacksmith-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: blacksmith-cargo-
+
+      # Same list peter-layer.yml already installs. Without it the whole
+      # workspace compiles and then rust-lld fails on -lX11 -lXss -lspeechd
+      # -lasound, so the run burns a full build before failing at the link step.
+      - name: Linux build dependencies
+        run: |
+          # libasound2-dev: rodio/cpal (radio) · libspeechd-dev: tts (/speak) ·
+          # X11 family: the idle-sensor chain (x11/XScreenSaver/Xi/Xtst).
+          sudo apt-get update -qq && sudo apt-get install -y -qq \
+            libasound2-dev libspeechd-dev \
+            libx11-dev libxss-dev libxi-dev libxtst-dev \
+            pkg-config
+
+      - name: Build
+        run: |
+          cargo build -p entheai-quantum
+          cargo build -p entheai-orchestrator
+          cargo build -p entheai
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy -p entheai-quantum -p entheai-orchestrator -p entheai --all-targets -- -D warnings
+
+      - name: Test — quantum emulator
+        run: cargo test -p entheai-quantum --lib
+
+      - name: Test — oracle (fusion)
+        run: cargo test -p entheai-orchestrator --lib oracle
+
+      - name: Test — orchestrator
+        run: cargo test -p entheai-orchestrator --lib

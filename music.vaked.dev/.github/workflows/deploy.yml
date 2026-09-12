@@ -1,0 +1,25 @@
+name: deploy
+# Push-to-deploy for music.vaked.dev (CF Pages project "music-vaked-dev").
+# Static single-file site — the site directory is uploaded as-is, no build step.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: assemble
+        run: |
+          rm -rf _site && mkdir -p _site
+          cp -r index.html 404.html favicon.svg robots.txt site.webmanifest llms.txt LICENSE _headers sovereign-sdk.js _site/
+          cp -r icon-192.png icon-512.png apple-touch-icon.png og-image.png og-image.svg _site/
+          if [ -d assets ]; then cp -r assets _site/; fi
+      - name: deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=music-vaked-dev --branch=main

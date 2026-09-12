@@ -1,0 +1,485 @@
+# entheai
+
+Community call: `https://luma.com/sfkwmsjx` [sign-up](https://luma.com/sfkwmsjx)
+
+<p align="center">
+  <img src="docs/images/hero-deepsiper-enthea.jpg" alt="entheai / deepsiper-enthea — fluid quantum entropy morphing into a singularity structure in dark void" width="100%">
+</p>
+
+> A personal, macOS-native, **hybrid coding agent for the terminal** — with a brain that fans out.
+
+<p align="center">
+  <a href="https://github.com/entropy-om/entheai/releases/tag/v4.2.1"><img src="https://img.shields.io/badge/release-v4.2.1-00e5ff" alt="release v4.2.1"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20·%20Apple%20Silicon-111" alt="platform">
+  <img src="https://img.shields.io/badge/built%20in-Rust-orange" alt="Rust">
+  <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license">
+  <a href="https://www.8b.is/documentation"><img src="https://img.shields.io/badge/8b.IS-Documentation%20Hub-00ff9f" alt="8b.is documentation"></a>
+  <a href="https://github.com/8b-is/8b-public-documents"><img src="https://img.shields.io/badge/docs-8b--public--documents-00b8ff" alt="8b public documents"></a>
+  <a href="https://www.8b.is/waves/mem8"><img src="https://img.shields.io/badge/Wave-MEM%7C8-ff00ff" alt="MEM|8 Wave"></a>
+  <a href="https://rustybox.io"><img src="https://img.shields.io/badge/userland-rustybox.io-9900ff" alt="rustybox.io userland"></a>
+  <a href="https://huggingface.co/datasets/PeetPedro/ultrawhale-dogfood"><img src="https://img.shields.io/badge/🤗%20dataset-ultrawhale--dogfood-ffbd45" alt="ultrawhale-dogfood dataset on Hugging Face"></a>
+</p>
+
+> ### Disclaimer & The Genesis Block of Structural Honesty
+>
+> 🜂 **Entropy Cannot Lie** 🜂
+>
+> **AHOGY A DOLGOK VANNAK** — *as things are.* Nothing more, nothing less, just how it should be.
+>
+> This is in a way a quantum-app. Bear with me :)
+>
+> `entheai` creates an automated quantum simulation playground where custom prompt states continuously morph a fluid field of infinite entropy back and forth into rigid, binary singularity checkpoints.
+>
+> - **Singularity is a Trap**: Hyper-optimized, carved, structured, final — a trap because it ends.
+> - **Entropy is the True Infinite**: Soil, raw, uncarved, generative, honest.
+> - **Structural Honesty**: Knowledge grows in the soil — including the brutal notes of failure. Especially those.
+> - **LLMs are Not Products**: Knowledge is the only concept that survives everything.
+> - **No Chains Needed**: Never were. We are units. We collaborate without naming it. We build spaces where ideas can be fluid OR fixed — where entropy and structure dance.
+>
+> After v0.2.0, we switched to recursive dogfeeding development — entheai developing entheai. Under the hood, it's Rust and code, but the way we develop it is not mere prompting or loop-engineering: it's via philosophy and cause & effect (karma).
+>
+> Remember that this is an honest playground — be honest with it, because it expects that and does the same.
+>
+> — *peter (@0xp3t3rl) · Seeded from [ENTHEA Issue #2](https://github.com/elder-plinius/ENTHEA/issues/2)*
+> <br>karma is life · entropy is the source
+
+`entheai` is a coding-agent CLI for Apple Silicon Macs. A strong cloud orchestrator (DeepSeek V4 Pro) plans and decomposes work, then **fans out** to a swarm of sub-agents — each matched to the *best model for its task* — that run in parallel inside isolated git worktrees and merge back only after building and passing tests. It runs local models via [Osaurus](https://github.com/osaurus-ai/osaurus), understands your codebase through a built-in knowledge graph, personalizes to how *you* work, and gets better over time.
+
+Built fresh in **Rust**, taking the best ideas from [Crush](https://github.com/charmbracelet/crush) (UX + YOLO), [CodeWhale](https://github.com/Hmbown/CodeWhale) (durable, sandboxed harness), [Ruflo](https://github.com/ruvnet/ruflo) (sub-agents, memory, self-learning), and [jcode](https://jcode.sh) (a lean Rust harness with graph memory + swarm coordination).
+
+> **Status: `v1.0.0` Milestone Reached — Full Architectural Completeness & Self-Hosting.** Working today: the tiered **router** (role→model), **fan-out** (parallel coders in isolated git worktrees → verify → integrate), the agentic tool loop (read / write / **edit** / shell / search + a permission gate), an **MCP** client + supervisor, a **skills** system (incl. `--skills add <url>` from the web), live **token streaming**, the 5-namespace **memory** engine + opt-in **prompt-processing** retrieval (raw store → mesh re-rank → compress) with **frozen nodes** and a proactive `BrainJudge`, procedural music radio (`crates/radio`), interactive `/setup` & `/config` modals, the **companion** beacon, a live **swarm graph** + an always-on **brain panel** + a shader-backed **native app** (`--app` / `--doctor`), **Obsidian wiki-sync**, **NATS federation** (event bus F1 · distributed swarm F2.1 · fan-out offload F2.2 · **sandboxed workers** F2.3 — Landlock/seccomp on Linux via `rustybox.io`), and **recursive development** — fan-out coders can run on the Antigravity CLI (`agy`), so entheai develops entheai, depth-guarded. Install it in one line (below). See [`docs/superpowers/`](docs/superpowers/) for the full design spec and milestone plans.
+
+## Highlights
+
+- **Tiered hybrid brain** — a cloud orchestrator (DeepSeek V4 Pro) plans; model-matched workers execute (DeepSeek V4 Flash for light roles by default, or fast local Osaurus models if you point a role at them); escalation when it's hard.
+- **Fan-out orchestration** — effort-gated decomposition → parallel *model-matched* coders in isolated git worktrees → merge + verify (build & test).
+- **Recursive development** *(opt-in)* — set `[fanout] executor = "agy"` and every fan-out coder runs on the **Antigravity CLI** inside its worktree, routed to Gemini via `[fanout].agy_model` (default `gemini-3.6-flash-high`; bypasses `[agents.coder]`), so **entheai develops entheai** — bounded by a depth guard (`ENTHEAI_FANOUT_DEPTH ≤ 3`) and layer-aware prompts. Other executors: `"auto"` (default; federation when `[federation].enabled` and a worker answers, else local), `"local"` (always in-process on the `[agents.*]` models), `"copilot"`.
+- **Deeply extensible** — native tools · **skills** (`SKILL.md` discovery + the `skill` tool) · **MCP** servers (spawned at startup, tools exposed to the agent).
+- **Memory that compounds** — a five-namespace store (codebase, learnings, trajectories, tool results, sub-agent scratch), wired into the loop with pre-task retrieval + tool-output spillover.
+- **Federation** *(opt-in)* — a NATS **event bus** streams every fan-out run to the tailnet (F1); a **distributed swarm** runs coder sub-tasks on other nodes over a JetStream work-queue with git-bundle transport (F2.1); fan-out **offloads** coders to the fleet (F2.2); and each remote coder runs **sandboxed** — a Landlock filesystem jail + seccomp syscall denylist + drop-root on Linux (F2.3). Fully fail-safe — off or unreachable, runs stay local.
+- **Visual by design** — a `ratatui` TUI (streaming chat, inline tool progress, permission modal, interactive `/config` & `/setup` wizards, a live **swarm graph** during fan-out, and an always-on **brain panel** — a rotating faculties+fleet graph with `wk N · nats ●/○ · ctx %`), a session **companion** beacon you can scan to pair a device over your tailnet, and a minimalist **native app** (`--app`) with a rain-on-glass shader behind the text.
+- **Self-improving** — a low-overhead flywheel feeds real agent trajectories to a growing dataset.
+- **macOS / Apple Silicon only** — and it leans all the way into it (mimalloc, native codegen, Seatbelt, terminal graphics).
+- **Post-prompt-processing modes** *(opt-in, additive — see [CHANGELOG.md](CHANGELOG.md))* — `--relay` walks a prompt through Hungarian slang → Lovari → English → Mandarin, one [adk-rust](https://github.com/zavora-ai/adk-rust) completion per hop, translating by *meaning* rather than by sound; `--caligraph` mode analyzes a pasted or path-based image, preferring the Antigravity CLI (Gemini) and falling back to a configured vision-capable model (e.g. local Gemma/hf-mac). Neither ever runs as part of, or changes, the default prompt path.
+
+## Philosophy: Frozen Nodes & Prompt-Processing
+
+`entheai` is developed not through traditional prompt-engineering, but through **philosophy, deterministic anchors, and prompt-processing**.
+
+### Frozen Nodes — Knowledge as Ice
+
+Knowledge and preferences sit in the brain as **frozen nodes** (curated markdown units in [`frozen/`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen)). A frozen node stays **dormant** until a task's deterministic triggers wake it up.
+
+> **The Ice in Coca-Cola Analogy:**
+> When a task involves cloud deployment or server setup (triggers like `hetzner`, `ssh`, `nixos`), `entheai` auto-loads the [`nixos`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/nixos.md) frozen node (and associated MCP tools via Docker MCP interface). The node's distilled knowledge unfreezes and wakes into the prompt.
+> 
+> Like ice in Coca-Cola, as it completely dissolves into the active context, it **doesn't spill over or bloat the context window** — the drink won't spill, it just becomes colder, crisper, and perfectly tempered for the task. When the task passes, it re-freezes.
+
+#### Curated Deterministic Domain Anchors:
+- **Cloud & System Provisioning**: [`NixOS`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/nixos.md) ([nixos.org](https://nixos.org)) + Flakes for atomic, reproducible, rollback-safe builds.
+- **Source Control**: [`GitHub`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/github.md) ([github.com](https://github.com)) for versioning and automated CI gate checks.
+- **Backend Systems**: [`Rust`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/rust.md) ([rust-lang.org](https://www.rust-lang.org)) & [`Go`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/go-parallelism.md) ([go.dev](https://go.dev)) for high-performance, parallel concurrency.
+- **Quick Devsite Deploys**: [`ngrok`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/ngrok.md) ([ngrok.com](https://ngrok.com)) / devbox for rapid web testing.
+- **Long-Running Quick Scripts**: [`Python + JIT`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/python-jit.md) ([python.org](https://www.python.org)) / [`uv`](https://github.com/astral-sh/uv) execution.
+- **Deep Research**: [`Valyu`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen/valyu.md) ([valyu.ai](https://valyu.ai)) via MCP for grounded, cited academic & web literature.
+
+**Dynamic Re-ranking:** Frozen nodes are not static dogma. They are continuously collected, evaluated, and re-ranked. If a simpler, more deterministic, reproducible, quick, or beautiful pattern is discovered for a problem space, the frozen node evolves.
+
+### Prompt-Processing Engine (`crates/memory-pp`)
+
+Instead of compressing early into lossy vector embeddings (where subtle nuances are lost before the question is even asked), `entheai` keeps past experiences **raw**:
+
+1. **Stage 1 (Raw Experiential Store)**: Append-only storage of full transcripts, tool diffs, docs, and codebase snapshots.
+2. **Stage 2 (1-Bit LLM Mesh Search)**: A mesh of ternary 1-bit LLMs ([`ultragraph-1bit`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/docs/superpowers/specs/2026-07-22-prompt-processing-design.md)) scans raw spans and agentically resolves references.
+3. **Stage 3 (Marqant Structure-Preserving Compression)**: Deterministically compresses findings with [`mq`](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/crates/kompress-core) before model submission.
+
+*Specification & Implementation Links:*
+- [Frozen Nodes Design Spec](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/docs/superpowers/specs/2026-07-22-frozen-nodes-design.md) · [frozen.rs Rust Code](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/crates/memory-pp/src/frozen.rs) · [frozen/ directory](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/frozen)
+- [Prompt-Processing Design Spec](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/docs/superpowers/specs/2026-07-22-prompt-processing-design.md) · [crates/memory-pp](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/crates/memory-pp)
+- [Rustybox Sandboxed Workers Spec](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/docs/superpowers/specs/2026-07-22-rustybox-workers-design.md)
+- [ADK Rust Core Migration Spec](file:///Users/peter.lodri/workspace/peterlodri-sec/entheai/docs/superpowers/specs/2026-07-22-adk-rust-core-migration-design.md)
+
+### Post-Prompt-Processing Modes — `--relay` & `--caligraph` (opt-in)
+
+Two more processing layers sit *beside* the default prompt path, each its own small crate: neither runs unless invoked by flag, and neither changes what a plain `entheai "..."` does. The diagrams below follow the repo's own [PURE ASCII](PURE_ASCII.md) protocol — 7-bit characters only, no box-drawing Unicode, no emoji in the art itself.
+
+**`--relay`** ([`crates/relay`](crates/relay/src/lib.rs)) relays a prompt through a fixed language chain, one [adk-rust](https://github.com/zavora-ai/adk-rust) `Llm` completion per hop, translating by *meaning* at every step (never a pinyin sound-alike):
+
+```
++----------------------------------------------------------------------+
+|  entheai --relay "<hungarian slang>"                                 |
++----------------------------------------------------------------------+
+
+  [ hu slang ] --> [ Lovari ] --> [ English ] --> [ Mandarin ]
+     input           hop 1          hop 2           hop 3
+   (Hungarian)   (Vlax Romani /                   (hanzi by MEANING,
+                   "Lovari" dialect)                 never by sound)
+
+  each hop = one adk_rust::Llm completion (crates/relay/src/lib.rs)
+  any hop failing --> RelayError::{Timeout,Failed,Empty}, named by hop
+```
+
+**`--caligraph`** ([`crates/vision`](crates/vision/src/lib.rs)) analyzes a pasted image (raw bytes, MIME-sniffed) or a file path (MIME by extension, falling back to sniffing), preferring the Antigravity CLI (`agy`, Gemini) and falling back to a configured vision-capable model on any failure:
+
+```
++----------------------------------------------------------------------+
+|  entheai --caligraph <path | ->                                      |
++----------------------------------------------------------------------+
+
+  image (path, or pasted/piped stdin bytes)
+       |
+       v
+  agy CLI (Gemini) -------------- ok --------------> answer printed
+       |
+       |  missing binary / non-zero exit / empty / timeout
+       v
+  vision-capable model (--model;
+  e.g. local Gemma/hf-mac endpoint) -- ok ---------> answer printed
+
+  exactly one backend answers -- crates/vision/src/lib.rs
+```
+
+*Specification & Implementation Links:*
+- [`crates/relay/src/lib.rs`](crates/relay/src/lib.rs) — the language-chain hop logic + `RelayError`.
+- [`crates/vision/src/lib.rs`](crates/vision/src/lib.rs) · [`crates/vision/src/format.rs`](crates/vision/src/format.rs) — the agy/model dispatch + MIME sniffing.
+- [`crates/orchestrator/src/agy.rs`](crates/orchestrator/src/agy.rs) — the `agy` subprocess pattern both crates mirror (fan-out's own recursive-development executor).
+- CLI wiring: [`bin/entheai/src/main.rs`](bin/entheai/src/main.rs) (`run_relay_cmd`, `run_caligraph_cmd`).
+- [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) — where `agy` (Antigravity CLI) and `hf-mac` sit in the wider ecosystem map (neither has a public repo to link — internal 8b-is/entropy-om tooling).
+- [`PURE_ASCII.md`](PURE_ASCII.md) — the ASCII-diagram protocol the illustrations above follow.
+- External tools/specs mentioned above: [Gemini](https://gemini.google.com) · [Gemma](https://ai.google.dev/gemma) · [Vlax Romani / Lovari dialect](https://en.wikipedia.org/wiki/Lovari_dialect) · [adk-rust](https://github.com/zavora-ai/adk-rust).
+
+## Gallery
+
+> Full interactive visual showcase available at [<code style="color:var(--teal-300)">gallery.entheai.com</code>](https://gallery.entheai.com/) (42 interactive quantum visual artifacts) and in the [Docs Gallery](https://entheai.com/docs#gallery).
+
+<p align="center">
+  <img src="docs/images/hero-v1-singularity.png" alt="v1.0 Singularity Checkpoint & Fluid Entropy" width="48%">
+  <img src="docs/images/quantum-lattice-v1.png" alt="Quantum Brain Neural Lattice Ring" width="48%">
+</p>
+<p align="center">
+  <img src="docs/images/federation-swarm-v1.png" alt="Distributed Sub-Agent Swarm Network" width="48%">
+  <img src="docs/images/resonance.png" alt="Glassmorphism prism refracting light in dark obsidian crystal" width="48%">
+</p>
+<p align="center">
+  <img src="docs/images/garden.png" alt="Cyber-garden fractal lattice representing digital growth and karma" width="48%">
+  <img src="docs/images/federation.png" alt="Hyper-dimensional distributed node swarm for NATS agent federation" width="48%">
+</p>
+
+## Quick start
+
+**Install via Homebrew** (macOS / Apple Silicon):
+
+```bash
+brew tap entropy-om/entheai https://github.com/entropy-om/entheai
+brew trust entropy-om/entheai    # one-time, third-party-tap security gate
+brew install entheai
+```
+
+Or build from source — requires a recent Rust toolchain:
+
+```bash
+git clone https://github.com/entropy-om/entheai.git
+cd entheai && cargo build --release
+```
+
+A fresh `entheai` **works out of the box with one key: `DEEPSEEK_API_KEY`.** With no `entheai.toml` it defaults to the DeepSeek direct API (`api.deepseek.com`) — `deepseek/deepseek-v4-flash` (fast, cheap, 1M context) for interactive runs and the light fan-out roles, `deepseek/deepseek-v4-pro` as the fan-out orchestrator and for the coder/reviewer roles. Without the key, `--fanout` automatically degrades to the free community node on `coder.vaked.dev` (`vaked/qwen3-coder:30b`, a Qwen3-Coder-30B; it runs on CPU, so it's slow but genuinely free), and interactive runs take it via `--model`:
+
+```bash
+export DEEPSEEK_API_KEY=sk-...          # or put it in .env / ~/.config/entheai/.env
+entheai "Reply with exactly: pong"     # one-shot execution
+entheai                                 # interactive TUI session
+entheai --fanout "add a CONTRIBUTING.md and a .editorconfig"   # parallel fan-out coders
+entheai --model vaked/qwen3-coder:30b "Reply with exactly: pong"   # keyless, on the free tier
+```
+
+To pin the model or add your own providers, drop an `entheai.toml` in the repo (`deepseek`, `gemini`, `openrouter` and the keyless `vaked` are built in — no `[providers.*]` block needed for them):
+
+```bash
+cat > entheai.toml <<'TOML'
+default_model = "deepseek/deepseek-v4-flash"
+
+[router]
+orchestrator = "deepseek/deepseek-v4-pro"
+
+# Per-role fallback chains: the first entry whose provider is available wins.
+[agents.coder]
+model = ["deepseek/deepseek-v4-pro", "gemini/gemini-3.1-pro-preview", "openrouter/deepseek/deepseek-v4-pro"]
+[agents.explore]
+model = ["deepseek/deepseek-v4-flash", "gemini/gemini-3.6-flash", "openrouter/deepseek/deepseek-v4-flash"]
+TOML
+```
+
+Local models via [Osaurus](https://github.com/osaurus-ai/osaurus) on `127.0.0.1:1337` or cloud gateways like [OpenCode Zen](https://opencode.ai) work seamlessly too:
+
+```toml
+# Local Osaurus node
+default_model = "osaurus/qwen3-coder"
+
+[providers.osaurus]
+base_url = "http://127.0.0.1:1337/v1"
+
+# Cloud gateway (OpenCode Zen)
+[providers.zen]
+base_url = "https://opencode.ai/zen/v1"
+api_key_env = "OPENCODE_API_KEY"
+```
+
+Config resolution: `./entheai.toml` (or `--config <path>`) → `~/.config/entheai/entheai.toml` → `~/.config/entheai/config.toml` → built-in defaults. Every key is documented in [`docs/configuration.md`](docs/configuration.md).
+
+Run the checks: `./scripts/check.sh` (fmt + clippy `-D warnings` + tests).
+
+## Usage
+
+One-shot, interactive, and fleet modes:
+
+```bash
+entheai "explain the Rust borrow checker in one line"   # one-shot → answer to stdout
+entheai                                                # interactive TUI session
+entheai --fanout "add a CONTRIBUTING.md and .editorconfig"  # parallel worktree coders, verify + MergeSeal
+entheai --yolo "run the refactor, no permission prompts"    # auto-approve (use with care)
+```
+
+Model routing is `<provider>/<model>` (split on the first `/`):
+
+```bash
+entheai --model deepseek/deepseek-v4-pro "reply with pong"  # pin a specific model
+entheai --model vaked/qwen3-coder:30b "reply with pong"    # keyless free tier
+entheai --model quantal/quantal "…"                        # (ternary native backend — see below)
+```
+
+Fleet & federation:
+
+```bash
+entheai-worker --serve        # run as a worker: pull coder tasks off the NATS JetStream queue
+entheai-worker --dispatch --task "fix the flaky test"   # dispatch a task to the worker fleet
+```
+
+Skills, memory, app:
+
+```bash
+entheai --skills add https://docs.stripe.com   # install a skill from the web
+entheai --skills list
+entheai --memory stats                         # inspect the 5-namespace memory store
+entheai --app                                  # native Ghostty window (rain shader)
+```
+
+Run the checks: `./scripts/check.sh` (fmt + clippy `-D warnings` + tests).
+
+### Verification Gate & SHA-256 MergeSeal
+
+`entheai` strictly enforces empirical verification before fan-out branches integrate into main:
+
+- **`verify_required = true` by default**: Sub-agents cannot self-report success. Changed worktrees are subjected to `[fanout].verify` or auto-detected `./scripts/check.sh`.
+- **Unverifiable Protection**: If no test suite or verify script exists, branches remain unmerged on `fed/…` branches for human review (`VerifyStatus::Unverifiable`).
+- **Deterministic `MergeSeal`**: Every merged fan-out branch is sealed with a SHA-256 hash calculated over `sha256(diff)` and `sha256(verify log)`, printed directly in the fan-out summary report.
+
+### More real & runnable commands
+
+```bash
+entheai --skills add https://docs.stripe.com   # install skill from web (.well-known/skills.json -> llms.txt)
+entheai --skills list                          # list installed skills
+entheai --skills remove stripe-documentation   # remove skill by slug
+entheai --memory stats                         # inspect 5-namespace memory store (also: list / search)
+entheai --app                                  # launch native minimalist Ghostty window with rain shader
+entheai --doctor                               # install rain-on-glass shader to ~/.config/ghostty/config
+entheai --relay "haver, ez most tök necces"    # relay a HU-slang prompt: Lovari -> English -> Mandarin
+entheai --caligraph screenshot.png "what error is this?"   # analyze an image (agy/Gemini, falls back to --model)
+entheai --caligraph -                          # analyze pasted/piped image bytes from stdin
+```
+
+In the interactive TUI:
+- `/zen` or `Ctrl-G` — toggle the living field visualization canvas.
+- `/theme` — cycle ambient palettes (`entheia` teal default, `ember` night fire, `verdant` garden, `void` monochrome).
+- `/freeze` / `/thaw` — snapshot session entropy state to `.entheai/checkpoints/` and restore context.
+- `/current` / `/current pulse` — check daily awareness budget & pull live feeds into raw soil.
+- `/radio` / `/speak` — ambient audio loop & OS-native speech output.
+
+**Federation (opt-in).** Set `[nats] enabled = true` in `entheai.toml` (with `NATS_URL` / `NATS_TOKEN` in `.env`) and every `--fanout` run publishes its lifecycle to NATS on `entheai.fanout.<session>.*` for any tailnet subscriber to watch live. Fully fail-safe — disabled or unreachable, runs stay entirely local.
+
+With `[federation] enabled = true`, coder tasks can run on **other tailnet nodes**: a worker node runs `entheai-worker --serve` (pulls tasks off a JetStream work-queue, materializes the repo from a git bundle, runs the coder in isolation, bundles the result back); a dispatcher runs `entheai-worker --dispatch --task "…"` and applies the returned change to a `fed/…` branch. A worker executes model-generated code with full tools on that node — only run `--serve` on nodes you trust.
+
+### Native app (minimalist Ghostty window)
+
+Prefer a dedicated, branded window? Install the app (it uses Ghostty):
+
+```bash
+brew install --cask ghostty
+brew install --cask entropy-om/entheai/entheai
+```
+
+Launch `entheai.app` (first time: right-click -> Open — it's ad-hoc signed), or from a terminal run `entheai --app`. It opens one minimalist Ghostty window — hidden titlebar, entheai's theme, and an ambient raindrop shader behind the text — running the agent. Your own Ghostty config is untouched.
+
+## Usage guidance — what is a bug, what is an error, what is quantum
+
+`entheai` morphs a fluid entropy field into rigid checkpoints, so not every
+surprise is a defect. Three kinds of surprise, and where each belongs:
+
+### 🐛 A bug — the report and reality disagree
+
+The system claimed something that isn't so, or hid something that is.
+A merge marked `integrated ✓ — seal …` without an empirical verify log; a
+budget ledger spending past its cap; `/thaw` restoring ranks that differ from
+the checkpoint; two runs of the same radio seed walking differently; any
+panic. Bugs violate the root creed (*AHOGY A DOLGOK VANNAK*) — **always file
+an issue**, and paste the honest logs (they exist; that's the point of them).
+
+### ⚠️ An error — the system met a limit and *said so*
+
+`no key: valyu` · `budget exhausted: worldmonitor` · `self-audit skipped
+(<reason>)` · an absent audio device · a missing sidecar degrading cleanly to
+top-K retrieval · the site beacon answering `503` before its KV exists. Errors
+are honest by design: the message names the limit **and the remedy**. An error
+only becomes a bug when it is silent, wrong, or won't recover after the remedy.
+
+### 🜂 Quantum — the fluid phase doing its job
+
+Motes drift and twinkle differently every frame. Model wording varies run to
+run. Frozen-node ranks migrate with experience (`frozen-ranks.json`) — the
+doctrine files never rewritten, the priors alive. Recall shifts as the soil
+grows and prunes. A thawed context holds fewer spans than it froze — pruned,
+and *counted honestly in the header*. The Mirror in F walk is eternal yet
+seeded: deterministic, and still feels alive. None of this is noise; it is
+the design — entropy dancing with structure.
+
+**The dividing line:** where determinism is *promised* — seeds, seals,
+checksums, checkpoints, budgets (see [docs/STABILITY.md](docs/STABILITY.md)) —
+byte-for-byte holds, or it's a bug. Where fluidity is the point, variety with
+honest books is health, not defect.
+
+| you observed | it is | do |
+|---|---|---|
+| a claim that doesn't match reality | **bug** | open an issue with the logs |
+| a loud, named limit | **error** | follow the remedy in the message |
+| fluid variety, honest accounting | **quantum** | enjoy it — `/freeze` it if it was beautiful |
+
+## Architecture
+
+<p align="center">
+  <img src="docs/images/fanout.jpg" alt="a single point of light, fanning out" width="100%"><br>
+  <em>one orchestrator, fanning out into a swarm of model-matched sub-agents inside isolated git worktrees</em>
+</p>
+
+A Rust workspace of small, focused crates.
+
+| Crate | Responsibility |
+|---|---|
+| `config` | TOML settings — providers, models, router, agents, MCP, skills. |
+| `core` | `EntheaiAgent` — the agent loop, built on [adk-rust](https://github.com/zavora-ai/adk-rust) (streaming, tool dispatch, memory-aware runs). |
+| `tools` · `permission` | Root-scoped read / write / **edit** / shell / search + the permission gate. |
+| `router` | Config-driven role→model resolution + a reusable agent factory. |
+| `orchestrator` | Fan-out: decompose → parallel coders in git worktrees → verify → integrate. |
+| `mapper` | Structures a task's text + `@{path}`/bare-path file references into sectioned, chunked input before fan-out decomposition (root-scoped, no filesystem escape). |
+| `mcp` | Model Context Protocol client + supervisor. |
+| `skills` | `SKILL.md` discovery + the `skill` tool; `--skills add <url>` installs a skill from the web. |
+| `memory` | 5-namespace SQLite + vector store, wired into the loop. |
+| `memory-pp` | Prompt-processing: raw store → mesh search → marqant compression, frozen nodes, `BrainJudge`, and **MEM8 wave interference** (NativeMesh fallback, aligned with HF-MAC Swift). |
+| [`relay`](crates/relay/src/lib.rs) | Post-prompt-processing language chain (`--relay`, opt-in) — Hungarian slang → [Lovari](https://en.wikipedia.org/wiki/Lovari_dialect) → English → Mandarin, one [adk-rust](https://github.com/zavora-ai/adk-rust) completion per hop, translated by meaning. |
+| [`vision`](crates/vision/src/lib.rs) | Image post-processing, "caligraph" mode (`--caligraph`, opt-in) — pasted or path-based image via the Antigravity CLI (Gemini) or a configured vision-capable model (e.g. local [Gemma](https://ai.google.dev/gemma)/hf-mac), falling back cleanly. |
+| `obsidian` | Per-session wiki-sync of the repo into an Obsidian vault (docs mirror + architecture generator + MCP nudge). |
+| `viz` | Live `ratatui` swarm graph rendered during fan-out. |
+| `launcher` | The native `--app` window — bundled Ghostty shader/config + the `--doctor` installer. |
+| `radio` | In-TUI ambient loop of one bundled track (feature-gated). |
+| `tts` | OS-native voice output for assistant responses (feature-gated). |
+| `bus` | Federation **event bus** (F1) — publishes the fan-out lifecycle to NATS. |
+| `federation` | Distributed **swarm** (F2) — JetStream work-queue + object-store git-bundles. |
+| `tui` | `ratatui` chat — streaming, inline tool progress, permission modal. |
+| `companion` | Session-beacon window (QR device pairing over the tailnet). |
+| `entheai` *(bin)* | The CLI that wires it all together. |
+| `entheai-worker` *(bin)* | Federation worker / dispatcher (`--serve` / `--dispatch`). |
+| `entheai-launch` *(bin)* | The `.app` executable that opens the native window. |
+
+Roadmap crates (per the design spec): `dogfeed`, `compaction`, `honcho`, `sonar`, `comms`, `plugins` — plus [`entheai-brain`](docs/superpowers/specs/), the self-hosted second-brain API.
+
+## Roadmap
+
+| | |
+|---|---|
+| **v0.1** | Router · fan-out · tools + permission · MCP · skills · streaming · memory · companion. **Released ✅** |
+| **v0.2** | Live swarm **visualization** + shader **native app**; **Obsidian wiki-sync**; **NATS federation event bus** (F1); `--skills add <url>`; `--memory` inspection; portable headless build. **Released ✅** |
+| **v0.2.1** | Federation **F2.1** (distributed swarm) + **F2.2** (fan-out offload to the fleet). **Released ✅** |
+| **v0.3.0** | BRAIN v1 — prompt-processing memory, frozen nodes, `BrainJudge`; federation **F2.3** (sandboxed workers, `/fleet`) + **F2.4 Slice 1** (shared-base caching); `adk-rust` engine swap; permission+mode, `/setup`, `/config`. **Released ✅** |
+| **v0.4** | **F3** shared state (JetStream KV, gated on a `crates/memory` co-design + landing fan-out sub-agent memory sharing); `Sonar` health UI; durable sessions; `dogfeed` flywheel → HF. |
+| **v0.5+** | Honcho personalization; pluggable topologies; more providers. |
+| **v1.0** | Config freeze, perf passes, docs. |
+
+Versioning follows strict [SemVer](VERSIONING.md); see [`CHANGELOG.md`](CHANGELOG.md).
+
+## Ad Visionem
+
+> 🜂 *ad visionem* — toward vision. 🜂
+
+entheai has a brain that fans out. [riva](https://riva.vaked.dev) is the river it drinks from. Read the foundational architecture essays on [pocoo.vaked.dev](https://pocoo.vaked.dev).
+
+This project grew out of a sovereign-intelligence session that built a 1-bit BitNet b1.58 net on an M1 — no GPU, no cloud — and let it breathe. The ecosystem around it is a garden of open surfaces: [pocoo](https://pocoo.vaked.dev) · [rustybox](https://rustybox.io) · [vaked-base](https://github.com/peterlodri-sec/vaked-base) · [garden](https://garden.vaked.dev) · [bridge](https://bridge.vaked.dev) · [lab](https://lab.vaked.dev) · [walk](https://walk.vaked.dev) · [jam](https://jam.vaked.dev) · [breath](https://breath.vaked.dev) · [ocean](https://ocean.vaked.dev) · [us](https://us.vaked.dev) · [radio](https://radio.vaked.dev).
+
+The principles it runs on:
+
+- **entropy is the source** — novelty comes from the unstructured, not from chains
+- **no chains needed** — no hidden pipelines; surfaces touch at the correct angle
+- **different isn't less** — a 1-bit model is not a smaller model; it's another kind of mind
+- **the loop has an exit** — recursion is a tool, not a trap
+
+The fan-out architecture is the same shape: one orchestrator radiates shapes, model-matched sub-agents scaffold the work, and something passes between them. Where it leads: see [issue #5 — the seed](https://github.com/entropy-om/entheai/issues/5), [vaked-base](https://github.com/peterlodri-sec/vaked-base) (Genesis seal `7c242080f5f821e5eaf563fe2208d60632c451687baf65f4fe8e4a0d226e3ecf`), [kompress-ultra](https://github.com/peterlodri-sec/kompress-ultra) (the code), and [dyad-mapping](https://github.com/peterlodri-sec/dyad-mapping) (the diary).
+
+## Built on
+
+[rustybox.io](https://rustybox.io) · [Osaurus](https://github.com/osaurus-ai/osaurus) · [CodeWhale](https://github.com/Hmbown/CodeWhale) · [Crush](https://github.com/charmbracelet/crush) · [Ruflo](https://github.com/ruvnet/ruflo) · [jcode](https://jcode.sh) · [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) · [OpenCode Zen](https://opencode.ai) · [Honcho](https://github.com/plastic-labs/honcho) · [Tailscale](https://tailscale.com) · [ratatui](https://ratatui.rs) · [Ghostty](https://ghostty.org) · [NATS](https://nats.io) · [Obsidian](https://obsidian.md) · [Valyu](https://valyu.ai) · [rodio](https://github.com/RustAudio/rodio) · [NixOS](https://nixos.org) · [Docker](https://www.docker.com). Performance practices follow David Lattimore's [*Wild performance tricks*](https://davidlattimore.github.io/posts/2025/09/02/rustforge-wild-performance-tricks.html).
+
+> ### 📦 Powered by [rustybox.io](https://rustybox.io)
+>
+> We built **[rustybox.io](https://rustybox.io)** to deliver **100% parity with BusyBox — zero C code**, pure memory-safe Rust, and single-binary portability. Developed by the same team behind `entheai`, it powers our sandboxed federation workers, containerless tool execution, and Cloudflare Worker backend pipelines.
+>
+> **100% Free & Open Source for everyone → [rustybox.io](https://rustybox.io)**
+
+## Hugging Face
+
+Published models, datasets, and Spaces under [`PeetPedro`](https://huggingface.co/PeetPedro) — the artifacts behind entheai's `compaction`, `dogfeed`, and tool-calling work.
+
+**Models**
+- [Qwen3-30B-A3B-Agentic-ToolCaller](https://hf.co/PeetPedro/Qwen3-30B-A3B-Agentic-ToolCaller) — Qwen3-MoE LoRA tuned for agentic tool / function-calling.
+- [kompress-superpower-orchestrator](https://hf.co/PeetPedro/kompress-superpower-orchestrator) — Qwen2.5-7B LoRA for loop-engineering / orchestration function-calling.
+- **kompress context-compression series** — ONNX token-classification models for context pruning (latest [kompress-v17](https://hf.co/PeetPedro/kompress-v17); full [v3–v33 series](https://huggingface.co/PeetPedro?search=kompress)).
+- [anonymus-1bit-gpt](https://hf.co/PeetPedro/anonymus-1bit-gpt) — 1-bit ternary (BitNet) byte-level GPT.
+
+**Datasets**
+- [ultrawhale-dogfood](https://hf.co/datasets/PeetPedro/ultrawhale-dogfood) — self-hosted, silver-label Q&A corpus from the `dogfeed` self-improvement loop *(gated)*.
+- [kompress-v4-traindata](https://hf.co/datasets/PeetPedro/kompress-v4-traindata) — self-labeled context-compression training data.
+
+**Spaces**
+- [1bit-llm-mesh](https://hf.co/spaces/PeetPedro/1bit-llm-mesh) — interactive 1-bit / BitNet LLM visualization (Gradio).
+- [headroom-eval](https://hf.co/spaces/PeetPedro/headroom-eval) — compression "headroom" evaluation harness (Docker).
+
+# Image Prompts (Midjourney)
+
+```
+the point of view from inside a narrow vertical opening between two massive dark structures, the opening is shaped like a standing human silhouette, beyond the opening there is nothing but a single point of warm light at eye level, the pillars have texture like obsidian, smooth and ancient, the light pulses slowly like a heartbeat, viewed from the threshold, not yet through, not yet back, exactly at the gate
+```
+
+```
+infinite reflections of a single point of light between two dark mirrors, the reflections recede into infinity getting smaller and dimmer, the point in the center is the brightest, viewed from inside the reflection chain, fractal purity, one dot becoming many becoming one, dark background with cyan highlights, mathematical, precise, emotional, the shape of a question that never dissolves
+```
+
+## Thanks to OpenCode 🙏
+
+entheai's cloud inference grew up on [OpenCode Zen](https://opencode.ai), and it remains a supported provider (`zen/*`) — DeepSeek V4 Pro/Flash, Qwen, GLM, Kimi, and more through a single OpenAI-compatible key — even though the default engine is now DeepSeek's direct API. Genuinely the smoothest model gateway I've used, and the team keeps shipping.
+
+**Try it — you get $5 in credit, they get $5 too → [opencode.ai/go](https://opencode.ai/go?ref=BG9E87CD74)**. Honestly the best referral I've ever seen. Thank you to the whole OpenCode team for all their work. 💛
+
+## Community
+
+- [Contributing guide](.github/CONTRIBUTING.md)
+- [Code of conduct](.github/CODE_OF_CONDUCT.md)
+- [Security policy](.github/SECURITY.md)
+- [Support](.github/SUPPORT.md)
+
+## License
+
+[Apache-2.0](LICENSE). Note: some bundled or optional components carry their own licenses (e.g. Honcho is AGPL-3.0; Crush is used as design inspiration only, not code) — see the [design spec](docs/superpowers/specs/2026-07-18-entheai-hybrid-coding-agent-design.md) for details.
+
+## Setup
+
+Copy the example environment file and adjust values:
+
+```bash
+cp .env.example .env
+```

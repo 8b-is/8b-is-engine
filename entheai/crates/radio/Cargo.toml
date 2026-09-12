@@ -1,0 +1,24 @@
+[package]
+name = "entheai-radio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# Audio output + decoding for the bundled track (mp3, covered by rodio's
+# default `mp3` feature). Optional (behind `audio`, default-on): rodio →
+# cpal → ALSA on Linux is the only system-library dependency here, so gating
+# it lets the core build headless.
+rodio = { version = "0.20", optional = true }
+tokio = { workspace = true, features = ["sync"] }
+
+[features]
+# `audio` (default) links the real rodio player. Without it the crate keeps the
+# same public API (Command/Event/Radio) but the player thread is a silent
+# stub — commands are accepted, playback is a no-op — so the TUI is unchanged
+# and the build needs no audio system libs.
+default = ["audio"]
+audio = ["dep:rodio"]
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync", "time"] }

@@ -1,0 +1,12 @@
+_site/
+.DS_Store
+node_modules/
+*.log
+.wrangler/
+*.wav
+*.mp4
+
+working_memory.md
+
+__pycache__/
+*.pyc

@@ -1,0 +1,17 @@
+[package]
+name = "entheai-router"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+entheai-config = { path = "../config" }
+entheai-core = { path = "../core" }
+entheai-permission = { path = "../permission" }
+entheai-tools = { path = "../tools" }
+tokio = { workspace = true, features = ["sync"] }
+anyhow.workspace = true
+log = "0.4"
+
+[dev-dependencies]
+async-trait.workspace = true

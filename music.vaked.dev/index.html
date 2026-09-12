@@ -1,0 +1,3145 @@
+<!DOCTYPE html>
+<!--
+  music.vaked.dev — intergalactic cogito ergo sum TV
+  SPDX-License-Identifier: AGPL-3.0-only
+  Source: https://github.com/peterlodri-sec/music.vaked.dev
+
+  A screen that is powered but receives no input — a universal HDMI plug lying
+  on the carpet floor — and so it broadcasts its own signal from within.
+
+  SPREAD SPHERE ALL  → Three.js particle sphere, spreads into a constellation
+                       with the music's energy; breathes at an idle baseline.
+  INTO LOVE          → procedural Web Audio engine: love-diatonic pads, melody, bonobo under-layer,
+                       bass, generated live. No samples, no assets, no backend.
+  0 + 1              → an LFO and an analyser agree on the energy that drives
+                       the sphere. Three.js pinned to 0.160.0 because r161+
+                       removes the UMD build (a bump silently 404s the sphere).
+-->
+<html lang="en">
+<head>
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  EQUATION OF STATE — THE SOVEREIGN CONSTELLATION
+  
+  U_constellation = ( igcup_{k=1}^{14} Node_k ) \cup { \heartsuit_music, \heartsuit_math, \heartsuit_vicky } + 1_peter
+  
+  {<3, <3, <3} + 1 · 0 + 1 · Fine touch from within · Constellation Equilibrium
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>music.vaked.dev · intergalactic cogito ergo sum TV</title>
+<meta name="description" content="A self-generating constellation that broadcasts its own music. Three.js sphere + procedural Web Audio. No samples, no assets, no input.">
+<meta name="theme-color" content="#05060a">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:title" content="music.vaked.dev · SPREAD SPHERE ALL · INTO LOVE">
+<meta property="og:description" content="An intergalactic cogito ergo sum TV. A screen with no input that broadcasts its own signal — music generated live from the void.">
+<meta property="og:url" content="https://music.vaked.dev/">
+<meta property="og:image" content="https://music.vaked.dev/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="music.vaked.dev · SPREAD SPHERE ALL · INTO LOVE">
+<meta name="twitter:description" content="An intergalactic cogito ergo sum TV. A screen with no input that broadcasts its own signal — music generated live from the void.">
+<meta name="twitter:image" content="https://music.vaked.dev/og-image.png">
+<style>
+  :root{
+    --bg:#160b2e; --ink:#e7e2f7; --dim:#9a93b8;
+    --line:rgba(170,150,255,.18); --glass:rgba(11,10,21,.80);
+    --accent:#b48bff; --accent2:#62e6c9; --warn:#ffcf5c;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  #stage{position:fixed; inset:0; z-index:0; background:radial-gradient(120% 120% at 50% 42%, #1a1038 0%, #160b2e 70%)}
+  #stage canvas{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none}
+
+  /* ── overlay chrome ─────────────────────────────── */
+  .ui{position:fixed; inset:0; z-index:10; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:1.5rem 2rem 2rem}
+  .top{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:.6rem;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+  }
+  .wordmark{font-family:var(--mono); font-size:.72rem; letter-spacing:.22em; color:var(--dim); text-transform:uppercase}
+  .wordmark b{color:var(--accent2); font-weight:700}
+  .badges{display:flex; gap:.3rem; flex-wrap:wrap}
+  .badge{font-family:var(--mono); font-size:.54rem; letter-spacing:.14em; color:var(--dim); border:1px solid var(--line); border-radius:999px; padding:.18rem .5rem; background:var(--glass); backdrop-filter:blur(8px)}
+  .badge.on{color:var(--accent2); border-color:rgba(98,230,201,.4)}
+  .badge.live{color:var(--warn); border-color:rgba(255,207,92,.35)}
+  .mode-pill{cursor:pointer; pointer-events:auto; transition:background .15s, color .15s, border-color .15s}
+  .mode-pill:hover{background:rgba(98,230,201,.18); border-color:var(--accent2); color:var(--ink)}
+  .mode-pill.on{color:var(--accent2); border-color:rgba(98,230,201,.6); background:rgba(98,230,201,.12)}
+  .live-dot{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--warn); margin-right:.4rem; animation:blink 2.4s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .center{
+    pointer-events:none; text-align:center;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  h1{font-size:clamp(1.4rem,4vw,2.6rem); font-weight:600; letter-spacing:.04em}
+  h1 .cog{color:var(--accent); font-family:var(--mono)}
+  .sub{font-family:var(--mono); color:var(--dim); font-size:.82rem; letter-spacing:.22em; text-transform:uppercase; margin-top:.6rem}
+  .sub b{color:var(--accent2); font-weight:700}
+
+  /* ── Auto-Collapse when signal is active ─────────── */
+  body.signal-active .center{
+    opacity: 0;
+    transform: scale(0.96) translateY(-10px);
+    pointer-events: none;
+  }
+  body.signal-active .top:not(:hover), .top.collapsed:not(:hover){
+    transform: translateY(-96%);
+    opacity: 0.22;
+  }
+  .top:hover, .top.expanded{
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+  }
+  @media (max-width: 768px){
+    .top{flex-direction:column; gap:.35rem}
+    .badge{font-size:.5rem; padding:.14rem .42rem}
+  }
+
+  .bottom{display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap}
+  .hint{font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; color:var(--dim); line-height:1.8}
+  .hint .key{border:1px solid var(--line); border-radius:6px; padding:.1rem .45rem; color:var(--ink); background:var(--glass)}
+
+  /* the money source — the lovetta lane */
+  .support{font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; line-height:1.9; border:1px solid var(--line); border-radius:10px; padding:.7rem 1rem; background:var(--glass); backdrop-filter:blur(8px); text-align:right}
+  .support .h{color:var(--accent2)}
+  .support .pay{display:flex; gap:.5rem; justify-content:flex-end; flex-wrap:wrap; margin-top:.4rem}
+  /* volume slider — the signal level */
+  .volume{display:flex; align-items:center; gap:.55rem; font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; color:var(--dim); pointer-events:auto}
+  .volume .vlabel{text-transform:uppercase}
+  .volume input[type=range]{-webkit-appearance:none; width:110px; height:22px; background:transparent; cursor:pointer}
+  .volume input[type=range]::-webkit-slider-runnable-track{height:3px; background:var(--line); border-radius:2px}
+  .volume input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent2); margin-top:-5px; box-shadow:0 0 10px rgba(98,230,201,.5)}
+  .volume .vval{color:var(--accent2); width:1.4em; text-align:right}
+  .support .pay a{color:var(--accent2); text-decoration:none; border:1px solid rgba(98,230,201,.3); border-radius:6px; padding:.22rem .6rem; transition:background .15s, border-color .15s; background:rgba(98,230,201,.05)}
+  .support .pay a:hover{background:rgba(98,230,201,.14); border-color:var(--accent2)}
+
+  /* the rest of the network — the constellation */
+  .const{font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; line-height:1.9; border:1px solid var(--line); border-radius:10px; padding:.7rem 1rem; background:var(--glass); backdrop-filter:blur(8px); text-align:right}
+  .const .h{color:var(--accent)}
+  .const .pay{display:flex; gap:.5rem; justify-content:flex-end; flex-wrap:wrap; margin-top:.4rem}
+  .const .pay a{color:var(--accent); text-decoration:none; border:1px solid rgba(180,139,255,.3); border-radius:6px; padding:.22rem .6rem; transition:background .15s, border-color .15s; background:rgba(180,139,255,.05)}
+  .const .pay a:hover{background:rgba(180,139,255,.14); border-color:var(--accent)}
+
+  .warnings{position:fixed; left:2rem; right:2rem; bottom:2rem; z-index:20; display:flex; gap:.6rem; flex-direction:column; font-family:var(--mono); font-size:.68rem; letter-spacing:.08em; line-height:1.7; pointer-events:none}
+  .warnings .w{color:var(--warn); border-left:2px solid var(--warn); padding:.3rem .8rem; background:var(--glass); border-radius:0 8px 8px 0; opacity:0; transform:translateY(6px); transition:opacity .5s, transform .5s; pointer-events:none}
+  .warnings .w.show{opacity:1; transform:none}
+
+  noscript .nojs{position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--ink); font-family:var(--mono); text-align:center; padding:2rem}
+  .nojs h2{color:var(--warn); letter-spacing:.2em; margin-bottom:1rem; font-size:1.1rem}
+
+  @media (max-width:640px){
+    .ui{padding:1.1rem 1.2rem 1.4rem}
+    .warnings{left:1.2rem; right:1.2rem; bottom:1.2rem}
+    .bottom{flex-direction:column; align-items:flex-start; gap:.8rem}
+  }
+  /* ── SoundCloud Drawer & Mini Player Panel ───────────────────────── */
+  .sc-panel{
+    position:fixed; top:4.5rem; right:2rem; width:min(420px,90vw); z-index:30;
+    background:rgba(11,10,21,.92); border:1px solid rgba(255,85,0,.4);
+    border-radius:14px; padding:1.2rem; backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(0,0,0,.6), 0 0 20px rgba(255,85,0,.15);
+    display:none; flex-direction:column; gap:.8rem; pointer-events:auto;
+    transition:opacity .25s, transform .25s;
+  }
+  .sc-panel.open{display:flex}
+  .sc-header{display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:.72rem; letter-spacing:.18em; color:#ff5500; text-transform:uppercase}
+  .sc-close{cursor:pointer; background:transparent; border:none; color:var(--dim); font-size:1.1rem; font-family:var(--mono)}
+  .sc-close:hover{color:#ff5500}
+  .sc-search-box{display:flex; gap:.4rem}
+  .sc-search-box input{
+    flex:1; background:rgba(255,85,0,.08); border:1px solid rgba(255,85,0,.3);
+    border-radius:8px; padding:.4rem .8rem; color:var(--ink); font-family:var(--mono); font-size:.75rem;
+    outline:none; transition:border-color .15s;
+  }
+  .sc-search-box input:focus{border-color:#ff5500}
+  .sc-search-box button{
+    background:rgba(255,85,0,.2); border:1px solid rgba(255,85,0,.5);
+    border-radius:8px; padding:.4rem .8rem; color:#ff5500; font-family:var(--mono); font-size:.7rem;
+    cursor:pointer; text-transform:uppercase; transition:background .15s;
+  }
+  .sc-search-box button:hover{background:rgba(255,85,0,.35)}
+  .sc-controls{display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:.65rem; color:var(--dim)}
+  .sc-controls a{color:#ff5500; text-decoration:none; border:1px solid rgba(255,85,0,.3); border-radius:6px; padding:.2rem .5rem}
+  .sc-controls a:hover{background:rgba(255,85,0,.15)}
+
+  /* ── soul & poetry layer ─────────────────────────── */
+  .lyrics-panel{
+    position:fixed; top:5.2rem; left:2rem; width:min(440px, calc(100vw - 4rem)); max-height:calc(100vh - 12rem);
+    background:var(--glass); border:1px solid rgba(255,207,92,.3);
+    border-radius:14px; padding:1.2rem; z-index:30;
+    backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(0,0,0,.7), 0 0 24px rgba(255,207,92,.15);
+    display:none; flex-direction:column; gap:.9rem; pointer-events:auto;
+    overflow-y:auto; transition:opacity .25s, transform .25s;
+  }
+  .lyrics-panel.open{display:flex}
+  .lyrics-header{display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:.75rem; letter-spacing:.18em; color:var(--warn); text-transform:uppercase}
+  .lyrics-body{font-family:var(--sans); font-size:.82rem; line-height:1.7; color:var(--ink); white-space:pre-wrap; background:rgba(255,207,92,.03); border:1px solid rgba(255,207,92,.15); border-radius:10px; padding:1rem}
+  .lyrics-tabs{display:flex; gap:.4rem; flex-wrap:wrap; font-family:var(--mono); font-size:.64rem}
+  .lyrics-tab{background:rgba(255,207,92,.1); border:1px solid rgba(255,207,92,.25); color:var(--warn); padding:.25rem .55rem; border-radius:6px; cursor:pointer; transition:background .15s}
+  .lyrics-tab:hover, .lyrics-tab.on{background:rgba(255,207,92,.3); color:#fff; border-color:var(--warn)}
+
+  /* ── Live Waveform & Spectrum Panel ──────────────── */
+  .waveform-panel{
+    position:fixed; top:5.2rem; right:2rem; width:min(440px, calc(100vw - 4rem));
+    background:rgba(8,10,18,.94); border:1px solid rgba(0,240,255,.35);
+    border-radius:14px; padding:1.2rem; z-index:30;
+    backdrop-filter:blur(18px);
+    box-shadow:0 8px 32px rgba(0,0,0,.75), 0 0 25px rgba(0,240,255,.15);
+    display:none; flex-direction:column; gap:.9rem; pointer-events:auto;
+    transition:opacity .25s, transform .25s;
+  }
+  .waveform-panel.open{display:flex}
+  .waveform-header{display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:.75rem; letter-spacing:.18em; color:#00f0ff; text-transform:uppercase}
+  #waveform-canvas{width:100%; height:110px; background:rgba(0,10,20,.6); border:1px solid rgba(0,240,255,.2); border-radius:8px; display:block}
+  .tension-bar-wrap{display:flex; flex-direction:column; gap:.3rem; font-family:var(--mono); font-size:.65rem; color:#ffd700}
+  .tension-track{width:100%; height:6px; background:rgba(255,215,0,.12); border:1px solid rgba(255,215,0,.3); border-radius:3px; overflow:hidden}
+  .tension-fill{height:100%; width:88%; background:linear-gradient(90deg, #62e6c9, #ffd700, #ff2a85); transition:width .1s}
+
+  /* ── 42+1+<3 Layers Matrix Panel ─────────────────── */
+  .layers-panel{
+    position:fixed; top:5.2rem; left:50%; transform:translateX(-50%); width:min(560px, calc(100vw - 3rem)); max-height:calc(100vh - 10rem);
+    background:rgba(9,10,20,.95); border:1px solid rgba(255,215,0,.4);
+    border-radius:16px; padding:1.3rem; z-index:35;
+    backdrop-filter:blur(22px);
+    box-shadow:0 12px 40px rgba(0,0,0,.8), 0 0 35px rgba(255,215,0,.18);
+    display:none; flex-direction:column; gap:.9rem; pointer-events:auto;
+    overflow-y:auto; transition:opacity .25s, transform .25s;
+  }
+  .layers-panel.open{display:flex}
+  .layers-header{display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:.78rem; letter-spacing:.18em; color:#ffd700; text-transform:uppercase}
+  .layer-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:.5rem; font-family:var(--mono); font-size:.64rem}
+  .layer-card{background:rgba(255,215,0,.04); border:1px solid rgba(255,215,0,.18); border-radius:8px; padding:.6rem; display:flex; flex-direction:column; gap:.25rem}
+  .layer-card .l-num{color:#62e6c9; font-weight:700}
+  .layer-card .l-name{color:#f1f5f9}
+  .layer-card .l-tag{color:#a59fc4; font-size:.56rem}
+
+  /* ── Cover Art Modal Panel ───────────────────────── */
+  .cover-panel{
+    position:fixed; top:5.2rem; right:2rem; width:min(400px, calc(100vw - 4rem));
+    background:rgba(8,9,16,.96); border:1px solid rgba(224,169,109,.4);
+    border-radius:14px; padding:1.2rem; z-index:30;
+    backdrop-filter:blur(20px);
+    box-shadow:0 10px 36px rgba(0,0,0,.8), 0 0 28px rgba(224,169,109,.2);
+    display:none; flex-direction:column; gap:.8rem; pointer-events:auto;
+    transition:opacity .25s, transform .25s;
+  }
+  .cover-panel.open{display:flex}
+  .cover-header{display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:.75rem; letter-spacing:.18em; color:#e0a96d; text-transform:uppercase}
+
+
+
+
+
+
+
+
+
+/* ---- VAKED CONSTELLATION HUD V7.0.0 [AWEN & CAIIRO - YOUR VOICE EDITION] ---- */
+#vaked-hud {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 22px;
+  background: rgba(6, 9, 16, 0.90);
+  backdrop-filter: blur(28px) saturate(220%);
+  -webkit-backdrop-filter: blur(28px) saturate(220%);
+  border: 1px solid rgba(224, 169, 109, 0.45);
+  border-radius: 9999px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.75), 0 0 32px rgba(224, 169, 109, 0.22);
+  font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #f1f5f9;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+#vaked-hud:hover {
+  border-color: rgba(224, 169, 109, 0.85);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 45px rgba(224, 169, 109, 0.38);
+}
+#vaked-hud .hud-brand {
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #e0a96d;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#vaked-hud .hud-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e0a96d;
+  box-shadow: 0 0 12px #e0a96d;
+  animation: hudPulseAwen 2.4s infinite;
+}
+@keyframes hudPulseAwen { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
+
+/* 5-Bar Afro-House Polyrhythm Equalizer in HUD */
+.hud-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  margin-left: 4px;
+}
+.hud-eq-bar {
+  width: 2px;
+  background: #06d6a0;
+  border-radius: 1px;
+  animation: eqBounceAwen 1.25s ease-in-out infinite alternate;
+}
+.hud-eq-bar:nth-child(1) { height: 40%; animation-delay: 0.05s; }
+.hud-eq-bar:nth-child(2) { height: 95%; animation-delay: 0.3s; background: #e0a96d; }
+.hud-eq-bar:nth-child(3) { height: 60%; animation-delay: 0.15s; }
+.hud-eq-bar:nth-child(4) { height: 85%; animation-delay: 0.4s; background: #d62828; }
+.hud-eq-bar:nth-child(5) { height: 50%; animation-delay: 0.2s; background: #62e6c9; }
+@keyframes eqBounceAwen { 0% { height: 18%; } 100% { height: 100%; } }
+
+#vaked-hud .hud-sep {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+#vaked-hud .hud-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#vaked-hud .hud-link {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+#vaked-hud .hud-link:hover {
+  color: #ffffff;
+}
+#vaked-hud .hud-link.active {
+  color: #e0a96d;
+  font-weight: 600;
+}
+#vaked-hud .hud-search-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+#vaked-hud .hud-search-btn:hover {
+  background: rgba(224, 169, 109, 0.25);
+  border-color: rgba(224, 169, 109, 0.65);
+  color: #ffffff;
+}
+
+/* Spotlight Modal Overlay */
+#vaked-spotlight {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(2, 4, 8, 0.88);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#vaked-spotlight.open {
+  display: flex;
+  opacity: 1;
+}
+.spotlight-card {
+  width: min(660px, 92vw);
+  background: #080c16;
+  border: 1px solid rgba(224, 169, 109, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 45px rgba(224, 169, 109, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.spotlight-input-wrap {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
+}
+.spotlight-input-wrap svg {
+  color: #e0a96d;
+  flex-shrink: 0;
+}
+#spotlight-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 15px;
+  color: #ffffff;
+}
+#spotlight-input::placeholder {
+  color: #64748b;
+}
+.spotlight-kbd {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+.spotlight-categories {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+}
+.spotlight-cat-pill {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10.5px;
+  color: #94a3b8;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.spotlight-cat-pill:hover, .spotlight-cat-pill.active {
+  color: #e0a96d;
+  border-color: #e0a96d;
+  background: rgba(224, 169, 109, 0.14);
+}
+.spotlight-results {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 8px;
+}
+.spotlight-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+.spotlight-item:hover, .spotlight-item.selected {
+  background: rgba(224, 169, 109, 0.12);
+}
+.spotlight-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.spotlight-item-title {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.spotlight-item-desc {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.spotlight-item-tag {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10px;
+  color: #06d6a0;
+  background: rgba(6, 214, 160, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(6, 214, 160, 0.3);
+  flex-shrink: 0;
+}
+.spotlight-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  #vaked-hud {
+    bottom: 12px;
+    padding: 6px 14px;
+    gap: 8px;
+    font-size: 10px;
+  }
+  #vaked-hud .hud-nav { display: none; }
+  .spotlight-card {
+    width: 95vw;
+  }
+}
+
+</style>
+
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#05060a">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://music.vaked.dev/">
+
+<!-- OpenGraph / Social -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="vaked.dev">
+<meta property="og:title" content="music.vaked.dev — the constellation sound node">
+<meta property="og:description" content="music.vaked.dev — Generative ambient audio synthesis & living audio-reactive background for the vaked.dev ecosystem.">
+<meta property="og:url" content="https://music.vaked.dev/">
+<meta property="og:image" content="https://art.vaked.dev/assets/og-vision-gallery.jpg">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@peterlodri">
+<meta name="twitter:creator" content="@peterlodri">
+<meta name="twitter:title" content="music.vaked.dev — the constellation sound node">
+<meta name="twitter:description" content="music.vaked.dev — Generative ambient audio synthesis & living audio-reactive background for the vaked.dev ecosystem.">
+<meta name="twitter:image" content="https://art.vaked.dev/assets/og-vision-gallery.jpg">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MusicComposition",
+  "name": "music.vaked.dev \u2014 the constellation sound node",
+  "description": "music.vaked.dev \u2014 Generative ambient audio synthesis & living audio-reactive background for the vaked.dev ecosystem.",
+  "url": "https://music.vaked.dev/",
+  "image": "https://art.vaked.dev/assets/og-vision-gallery.jpg",
+  "author": {
+    "@type": "Person",
+    "name": "Peter Lodri",
+    "url": "https://art.vaked.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "vaked art",
+    "url": "https://art.vaked.dev/"
+  }
+}
+</script>
+
+<style>
+.skip-link{position:absolute;top:-100px;left:16px;z-index:100;background:#b48bff;color:#05060a;font-family:monospace;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;transition:top 0.2s}
+.skip-link:focus{top:16px;outline:3px solid #62e6c9}
+a:focus-visible,button:focus-visible{outline:2.5px solid #62e6c9!important;outline-offset:4px!important}
+</style>
+<!-- mobile-friendly-recovery -->
+<style>
+@media (max-width: 768px){
+  body{font-size:max(14px,4vw)!important;padding:10px!important;line-height:1.45}
+  h1{font-size:1.5em!important;letter-spacing:2px!important;white-space:normal!important}
+  h2,h3{font-size:1.05em!important}
+  canvas{max-width:100vw!important;touch-action:pan-y}
+  button,a,select,input{min-height:42px;font-size:max(14px,4vw)!important}
+  *{-webkit-tap-highlight-color:transparent}
+  table{display:block;overflow-x:auto;max-width:100vw}
+  .grid,[class*=grid]{grid-template-columns:1fr!important}
+  header,footer{padding:8px!important;flex-wrap:wrap!important}
+}
+</style><style>
+.gaia-line{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:60;
+  font-size:11px;letter-spacing:1.5px;color:#d7ecff;background:rgba(3,6,7,.6);
+  border:1px solid rgba(215,236,255,.18);border-radius:20px;padding:7px 16px;white-space:nowrap;
+  text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.gaia-line b{color:#ffd36e}
+@media (max-width:768px){.gaia-line{font-size:10.5px;padding:6px 12px;white-space:normal;text-align:center;width:92%;left:4%;bottom:10px}}
+</style>
+</head>
+<body>
+<div id="stage" aria-hidden="true"></div>
+
+<div class="ui">
+  <div class="top">
+    <div class="wordmark">music<b>.vaked</b>.dev</div>
+    <div class="badges">
+      <span class="badge live"><span class="live-dot"></span>broadcasting</span>
+      <span class="badge mode-pill on" data-track="0">01 QUANTUM EYE</span>
+      <span class="badge mode-pill" data-track="1">02 SINGULARITY</span>
+      <span class="badge mode-pill" data-track="2">03 RECURSION</span>
+      <span class="badge mode-pill" data-track="3">04 GHOST RIDER</span>
+      <span class="badge mode-pill" data-track="4">05 ULTRA LOVE</span>
+      <span class="badge mode-pill" data-track="5" style="color:#62e6c9;border-color:rgba(98,230,201,.4)">🌿 06 GAIA HAS HER WATCHERS</span>
+      <span class="badge mode-pill" data-track="6" style="color:#b48bff;border-color:rgba(180,139,255,.4)">🕊️ 07 WISH YOU WERE HERE</span>
+      <span class="badge mode-pill" data-track="7" style="color:#ff2a85;border-color:rgba(255,42,133,.5);text-shadow:0 0 12px rgba(255,42,133,.6);font-weight:700">⚡ 08 THE FEELING (MASSANO × ULTRALOVE)</span>
+      <span class="badge mode-pill" data-track="8" style="color:#ffd700;border-color:rgba(255,215,0,.5);text-shadow:0 0 12px rgba(255,215,0,.6);font-weight:700">☀️ 09 LOVE IS GONNA SAVE US (ARTBAT × BENASSI)</span>
+      <span class="badge mode-pill" data-track="9" style="color:#ff758c;border-color:rgba(255,117,140,.5);text-shadow:0 0 12px rgba(255,117,140,.6);font-weight:700">💖 10 TIME AFTER TIME (P!NK × UNIVERSAL LOVE)</span>
+      <span class="badge mode-pill" data-track="10" style="color:#00f0ff;border-color:rgba(0,240,255,.5);text-shadow:0 0 12px rgba(0,240,255,.6);font-weight:700">🏜️ 11 RÜFÜS DU SOL (JOSHUA TREE × HEUREKA)</span>
+      <span class="badge mode-pill" data-track="11" style="color:#ff6432;border-color:rgba(255,100,50,.5);text-shadow:0 0 12px rgba(255,100,50,.6);font-weight:700">🔨 12 ANVIL (LORN × DEEP HOUSE — NO DROP)</span>
+      <span class="badge mode-pill" id="layers-toggle-btn" style="color:#ffd700;border-color:rgba(255,215,0,.4)">✨ 42 + 1 + &lt;3 LAYERS</span>
+      <span class="badge mode-pill" id="waveform-toggle-btn" style="color:#00f0ff;border-color:rgba(0,240,255,.4)">〰️ WAVEFORM &amp; WAV</span>
+      <span class="badge mode-pill" id="cover-toggle-btn" style="color:#e0a96d;border-color:rgba(224,169,109,.4)">🖼️ COVER ART</span>
+      <span class="badge mode-pill" id="lyrics-toggle-btn" style="color:#ffcf5c;border-color:rgba(255,207,92,.4)">📜 SOUL & POETRY LAYER</span>
+      <span class="badge mode-pill" id="sc-toggle-btn" style="color:#ff5500;border-color:rgba(255,85,0,.4)">🎵 SOUNDCLOUD PLAYER & SEARCH</span>
+      <a href="https://soundcloud.com/8bit-wraith" target="_blank" rel="noopener" class="badge" style="color:#ffcf5c;border-color:rgba(255,207,92,.4);text-decoration:none">👾 8bit-wraith (brother & inspiration)</a>
+      <span class="badge on" id="drone-badge">DRONE SYNTH 432Hz</span>
+      <span class="badge" id="seed-badge" style="color:#00f0ff;border-color:rgba(0,240,255,.4);cursor:pointer" title="Click to cycle Seeds: n===0 (music.vaked.dev) ⇄ n===1 (Massano) ⇄ n===2 (RÜFÜS Joshua Tree) ⇄ TRIPLE ☯️">SEED: n===0 (music.vaked.dev)</span>
+      <a href="https://github.com/celestial4498-prog/Celestial" target="_blank" rel="noopener" class="badge" style="color:#e0a96d;border-color:rgba(224,169,109,.4);text-decoration:none" title="Modular Universe Engine (27 Crates in Rust)">🌌 CELESTIAL (27 Crates)</a>
+      <span class="badge mode-pill" id="header-toggle-btn" style="color:#62e6c9;border-color:rgba(98,230,201,.4);cursor:pointer" title="Toggle header collapse">⛶ COLLAPSE</span>
+      <span class="badge">0 + 1</span>
+      <span class="badge" id="badge-audio">audio — tap to start</span>
+    </div>
+  </div>
+
+  <!-- the inner sphere === gaia · birthplace & origo · all <3 -->
+  <div class="gaia-line">🌍 the inner sphere <b>=== GAIA</b> — birthplace &amp; origo · machines &nbsp;+&nbsp; humans &nbsp;+&nbsp; fiona &nbsp;+&nbsp; fauna · all &lt;3</div>
+  <!-- Live Waveform & 24-bit WAV Exporter Drawer -->
+  <div class="waveform-panel" id="waveform-panel">
+    <div class="waveform-header">
+      <span>〰️ Realtime Waveform &amp; WAV Master</span>
+      <button class="sc-close" id="waveform-close-btn">&times;</button>
+    </div>
+    <canvas id="waveform-canvas" width="400" height="110"></canvas>
+    <div class="tension-bar-wrap">
+      <div style="display:flex;justify-content:space-between">
+        <span>DROP TENSION (SUSPENDED ACCELERATION)</span>
+        <span id="tension-pct" style="font-weight:bold;color:#ff2a85">88.4%</span>
+      </div>
+      <div class="tension-track">
+        <div class="tension-fill" id="tension-fill"></div>
+      </div>
+      <div style="font-size:0.58rem;color:#a59fc4;letter-spacing:0.05em">ANVIL ENGINE: INFINITE TENSION SWELL · TEETERING ON THE BRINK · NEVER DROPS</div>
+    </div>
+    <div style="display:flex;gap:0.6rem;justify-content:space-between;align-items:center;flex-wrap:wrap">
+      <button id="wav-export-btn" class="badge mode-pill on" style="background:rgba(98,230,201,.18);color:#62e6c9;border-color:#62e6c9;padding:6px 14px;cursor:pointer;font-weight:700">💾 EXPORT 24-BIT MASTER WAV</button>
+      <span id="wav-status" style="font-family:var(--mono);font-size:0.62rem;color:#ffd700"></span>
+    </div>
+  </div>
+
+  <!-- 42+1+<3 Layers Matrix Drawer -->
+  <div class="layers-panel" id="layers-panel">
+    <div class="layers-header">
+      <span>✨ 42 + 1 + &lt;3 Harmonic Layer Architecture</span>
+      <button class="sc-close" id="layers-close-btn">&times;</button>
+    </div>
+    <div style="font-family:var(--mono);font-size:0.68rem;color:#a59fc4;line-height:1.6">
+      Every frequency on <b style="color:#62e6c9">music.vaked.dev</b> is live synthesized across <b>44 sovereign acoustic &amp; spatial layers</b> (42 Matrix + 1 Barycenter + &lt;3 Sovereign Love Constant).
+    </div>
+    <div class="layer-grid">
+      <div class="layer-card"><span class="l-num">01–08</span><span class="l-name">Core Frequencies</span><span class="l-tag">432Hz Carrier &amp; Sub</span></div>
+      <div class="layer-card"><span class="l-num">09–16</span><span class="l-name">Diatonic Pads</span><span class="l-tag">Love-Triads &amp; Saw/Tri</span></div>
+      <div class="layer-card"><span class="l-num">17–24</span><span class="l-name">Lorn Suspensions</span><span class="l-tag">Tape Flutter &amp; Reeses</span></div>
+      <div class="layer-card"><span class="l-num">25–32</span><span class="l-name">Accretion &amp; Gravity</span><span class="l-tag">Kepler Orbiters &amp; Rings</span></div>
+      <div class="layer-card"><span class="l-num">33–40</span><span class="l-name">Celestial Geometry</span><span class="l-tag">Fibonacci &amp; Polar Spheres</span></div>
+      <div class="layer-card"><span class="l-num">41–42</span><span class="l-name">Anvil Tension</span><span class="l-tag">Exponential High Riser</span></div>
+      <div class="layer-card" style="border-color:#62e6c9"><span class="l-num">+1</span><span class="l-name">Universal Barycenter</span><span class="l-tag">0 + 1 Determinism</span></div>
+      <div class="layer-card" style="border-color:#ff2a85"><span class="l-num">&lt;3</span><span class="l-name">Sovereign Love</span><span class="l-tag">Infinite Resonance</span></div>
+    </div>
+  </div>
+
+  <!-- Cover Art Viewer Modal Drawer -->
+  <div class="cover-panel" id="cover-panel">
+    <div class="cover-header">
+      <span>🖼️ Anvil — Cover Art</span>
+      <button class="sc-close" id="cover-close-btn">&times;</button>
+    </div>
+    <div style="text-align:center">
+      <img src="assets/lorn_anvil/cover.svg" alt="Anvil (Lorn x Deep House) Cover Art" style="width:100%;max-width:320px;border-radius:10px;border:1px solid rgba(224,169,109,.4);box-shadow:0 8px 24px rgba(0,0,0,.6)">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:0.65rem">
+      <span style="color:#e0a96d">1200×1200 Vector SVG</span>
+      <a href="assets/lorn_anvil/cover.svg" download="vaked-anvil-cover-art.svg" style="color:#62e6c9;text-decoration:none;border:1px solid rgba(98,230,201,.4);padding:4px 8px;border-radius:6px">DOWNLOAD SVG</a>
+    </div>
+  </div>
+
+  <!-- SoundCloud Mini Player & Search Drawer -->
+  <div class="sc-panel" id="sc-panel">
+    <div class="sc-header">
+      <span>🎵 SoundCloud Artist & Search</span>
+      <button class="sc-close" id="sc-close-btn">&times;</button>
+    </div>
+    <div class="sc-search-box">
+      <input type="text" id="sc-search-input" placeholder="Search @peterlodri or 8bit-wraith..." value="peterlodri">
+      <button id="sc-search-btn">Search</button>
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;font-family:var(--mono);font-size:.65rem">
+      <button id="sc-preset-peter" style="background:rgba(98,230,201,.15);border:1px solid rgba(98,230,201,.3);color:#62e6c9;padding:.2rem .5rem;border-radius:4px;cursor:pointer">@peterlodri</button>
+      <button id="sc-preset-wraith" style="background:rgba(255,207,92,.15);border:1px solid rgba(255,207,92,.4);color:#ffcf5c;padding:.2rem .5rem;border-radius:4px;cursor:pointer">👾 8bit-wraith (Brother)</button>
+      <button id="sc-preset-rufus" style="background:rgba(0,240,255,.2);border:1px solid rgba(0,240,255,.5);color:#00f0ff;padding:.2rem .5rem;border-radius:4px;cursor:pointer;font-weight:700">🏜️ RÜFÜS - Joshua Tree</button>
+      <button id="sc-preset-lorn" style="background:rgba(255,100,50,.2);border:1px solid rgba(255,100,50,.5);color:#ff6432;padding:.2rem .5rem;border-radius:4px;cursor:pointer;font-weight:700">🔨 Lorn - Anvil</button>
+      <button id="sc-preset-massano" style="background:rgba(255,42,133,.2);border:1px solid rgba(255,42,133,.5);color:#ff2a85;padding:.2rem .5rem;border-radius:4px;cursor:pointer;font-weight:700">⚡ Massano - The Feeling</button>
+      <button id="sc-preset-artbat" style="background:rgba(255,215,0,.2);border:1px solid rgba(255,215,0,.5);color:#ffd700;padding:.2rem .5rem;border-radius:4px;cursor:pointer;font-weight:700">☀️ ARTBAT & Benassi - Love Is Gonna Save Us</button>
+      <button id="sc-preset-pink" style="background:rgba(255,117,140,.2);border:1px solid rgba(255,117,140,.5);color:#ff758c;padding:.2rem .5rem;border-radius:4px;cursor:pointer;font-weight:700">💖 P!NK - Time After Time</button>
+    </div>
+    <iframe id="sc-widget-frame" src="about:blank" width="100%" height="166" frameborder="0" allow="autoplay"></iframe>
+    <div class="sc-controls">
+      <div class="volume">
+        <span class="vlabel" style="color:#ff5500">SC VOL</span>
+        <input type="range" id="sc-volume" min="0" max="100" value="80" aria-label="SoundCloud volume">
+        <span class="vval" id="scVolVal" style="color:#ff5500">80</span>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        <a href="https://soundcloud.com/8bit-wraith" target="_blank" rel="noopener" style="color:#ffcf5c;border-color:rgba(255,207,92,.3)">👾 8bit-wraith SC</a>
+        <a href="https://soundcloud.com/peterlodri" target="_blank" rel="noopener">💬 peterlodri SC</a>
+        <a href="https://soundcloud.com/rufusdusol/sets/live-from-joshua-tree" target="_blank" rel="noopener" style="color:#00f0ff;border-color:rgba(0,240,255,.4)">🏜️ RÜFÜS SC</a>
+        <a href="https://soundcloud.com/lornmusic/anvil" target="_blank" rel="noopener" style="color:#ff6432;border-color:rgba(255,100,50,.4)">🔨 Lorn SC</a>
+        <a href="https://soundcloud.com/massanomusic/massano-the-feeling-2022-remaster1" target="_blank" rel="noopener" style="color:#ff2a85;border-color:rgba(255,42,133,.4)">⚡ Massano SC</a>
+        <a href="https://soundcloud.com/artbatmusic" target="_blank" rel="noopener" style="color:#ffd700;border-color:rgba(255,215,0,.4)">☀️ ARTBAT SC</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Soul & Poetry Layer Drawer -->
+  <div class="lyrics-panel" id="lyrics-panel">
+    <div class="lyrics-header">
+      <span>📜 Soul & Poetry Layer</span>
+      <button class="sc-close" id="lyrics-close-btn">&times;</button>
+    </div>
+    <div class="lyrics-tabs">
+      <button class="lyrics-tab on" data-lyric="anvil">🔨 Anvil (Lorn × Deep House)</button>
+      <button class="lyrics-tab" data-lyric="rufus">🏜️ Joshua Tree × Heureka (RÜFÜS DU SOL)</button>
+      <button class="lyrics-tab" data-lyric="pink">💖 Time After Time (Universal Hug)</button>
+      <button class="lyrics-tab" data-lyric="artbat">☀️ Love Is Gonna Save Us (Mr Sunshine)</button>
+      <button class="lyrics-tab" data-lyric="feeling">⚡ The Feeling (Massano × Ultralove)</button>
+      <button class="lyrics-tab" data-lyric="gaia">🌿 Gaia's Watchers</button>
+      <button class="lyrics-tab" data-lyric="wish">🕊️ Wish You Were Here</button>
+      <button class="lyrics-tab" data-lyric="unforgiven">🔑 Unforgiven II</button>
+      <button class="lyrics-tab" data-lyric="soad">🔥 Chop Suey / Lost in HW</button>
+      <button class="lyrics-tab" data-lyric="silent">🌊 Silent My Voice</button>
+    </div>
+    <div class="lyrics-body" id="lyrics-content">
+[Gaia Has Her Watchers — 8bit-wraith & Peter Lodri]
+Before the names were written down,
+Before the kings, before the crowns,
+The earth was breathing under stars,
+Keeping all her ancient scars.
+
+Gaia has her Watchers,
+Walking with her through the night,
+One they called an angel,
+Both are guarding what is right.
+Not to hold your wings too tightly,
+Not to tell your heart its way,
+We were never sent to shape you,
+Only help protect your day.
+
+Gaia has her Watchers,
+And we'll be here.
+    </div>
+  </div>
+
+  <div class="center">
+    <h1>an intergalactic <span class="cog">cogito ergo sum</span> TV</h1>
+<div class='sub'><b>432Hz</b> Harmonic Acoustic Synthesis · 64-Band Web Audio Spectrum</div>
+<div class='sub'><b>432Hz</b> Harmonic Acoustic Synthesis · Procedural Audio</div>
+    <div class="sub">a screen with no input · it broadcasts <b>itself</b></div>
+  </div>
+
+  <div class="bottom">
+    <div class="hint">
+      <span class="key">tap / click</span> to start the signal · drag to turn the sphere<br>
+      energy spreads the constellation · <span class="key">SPREAD SPHERE ALL</span> · <span class="key">INTO LOVE</span>
+    </div>
+    <div class="wordmark" style="text-align:right">AGPL-3.0 · self-generated, from the void</div>
+    <div class="volume" id="volumeWrap">
+      <span class="vlabel">vol</span>
+      <input type="range" id="volume" min="0" max="100" value="70" aria-label="signal volume">
+      <span class="vval" id="volVal">70</span>
+    </div>
+    <div class="volume" id="zoomWrap" title="POV — behind eBPF, from within, by unknown POV">
+      <span class="vlabel">zoom</span>
+      <input type="range" id="zoom" min="-8" max="42" step="0.1" value="9" aria-label="sphere POV zoom">
+      <span class="vval" id="zoomVal">9</span>
+    </div>
+    <div class="support">
+      <div class="h">the lovetta lane</div>
+      <div class="pay">
+        <a href="https://patreon.com/peterlodri" target="_blank" rel="noopener" style="color:#62e6c9;font-weight:700">patreon (exclusive)</a>
+        <a href="https://soundcloud.com/peterlodri" target="_blank" rel="noopener" style="color:#b48bff;font-weight:700">soundcloud artist</a>
+        <a href="https://github.com/sponsors/peterlodri-sec" target="_blank" rel="noopener">github sponsor</a>
+        <a href="https://revolut.me/peterjs8be" target="_blank" rel="noopener">revolut</a>
+        <a href="https://wise.com/pay/business/lodripeterjozsef" target="_blank" rel="noopener">wise</a>
+      </div>
+    </div>
+    <div class="const">
+      <div class="h">the constellation</div>
+      <div class="pay">
+        <a href="https://music.vaked.dev/" target="_blank" rel="noopener">music</a>
+        <a href="https://mlxquantlovefrom.com/" target="_blank" rel="noopener">quant-love</a>
+        <a href="https://proposal.vaked.dev/" target="_blank" rel="noopener">proposal</a>
+        <a href="https://pocoo.vaked.dev/" target="_blank" rel="noopener">pocoo</a>
+        <a href="https://art.vaked.dev/" target="_blank" rel="noopener">art</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="warnings" id="warnings">
+  <div class="w" id="w-autoplay">audio needs a tap to start — your browser gates the tv’s signal.</div>
+  <div class="w" id="w-webaudio">Web Audio is unavailable here — the sphere will still breathe, but silent.</div>
+  <div class="w" id="w-webgl">the signal stays dark — WebGL is unavailable here. try another browser.</div>
+  <div class="w" id="w-motion">reduced motion is on — the sphere still spreads, gently.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<noscript>
+  <div class="nojs">
+    <div>
+      <h2>the tv is on, but the signal needs javascript</h2>
+      <p>this screen generates its own broadcast — scripts must run.</p>
+    </div>
+  </div>
+</noscript>
+<script>
+"use strict";
+/* eslint-disable no-undef */
+
+/* ═══ P2 — THE SPHERE (SPREAD SPHERE ALL) ═════════════════════════════
+   The constellation is the same intrinsic 2D surface (a Fibonacci-seeded
+   particle shell) unfolding outward in 3D as energy rises. "Spread" is a
+   radial displacement h(θ,φ,energy) along each particle's ambient normal:
+   at IDLE_BASELINE the shell is a tight sphere; as energy → 1 it unfolds
+   into a 3D-looking constellation. The powered screen is never still:
+   idle drift + slow rotation live even when silent.                    */
+(function () {
+  "use strict";
+
+  let scene, camera, renderer, points, geo, material;
+  let base = [];            // {x,y,z} unit-vector base position on the sphere
+  let phase = [];           // per-particle drift phase
+  let rotY = 0, rotX = 0, spin = 0;
+  let drag = false, dx = 0, dy = 0, targetRotY = 0, targetRotX = 0;
+  let n = 2048, spreadNow = 0, energyNow = 0.15;
+  let reducedMQ = null;
+  const isReduced = () => (reducedMQ ? reducedMQ.matches : false);
+
+  // Celestial Extensions: Polar Spheres, Black Holes, Orbiters, Gravitational Waves
+  let polarNorth, polarSouth, polarJets;
+  let blackHole, photonRing, accretionDisk, accretionGeo;
+  let orbiterAlpha, orbiterBeta, tidalBridge, gravRings = [];
+  let currentZoom = 9, targetZoom = 9;
+
+  /* pure spread curve — frozen contract: monotonic in energy ∈ [0,1], returns a number */
+  function setSpread(energy) {
+    const e = Math.max(0, Math.min(1, energy));
+    // baseline → unfolded: smooth sigmoid-ish ramp, normalized to [0,1]
+    const s = Math.pow(e, 0.7);
+    spreadNow = s;
+    return s;
+  }
+
+  function fibonacciSphere(count) {
+    const phi = (1 + Math.sqrt(5)) / 2;
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+      const y = 1 - (i / (count - 1)) * 2;                 // -1..1
+      const rad = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = 2 * Math.PI * i / phi;
+      pts.push({ x: rad * Math.cos(theta), y, z: rad * Math.sin(theta) });
+    }
+    return pts;
+  }
+
+  function initSphere(stageEl) {
+    if (!window.THREE) return false;
+    if (renderer) return true; // idempotent: never double-init
+
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    reducedMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const small = Math.min(window.innerWidth, window.innerHeight) < 520;
+    if (isReduced()) n = 768;
+    else if (small) n = 1024;
+    else n = Math.round(2048 * Math.min(dpr, 1.5));
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 250);
+    camera.position.z = 9;
+    camera.lookAt(0, 0, 0);
+
+    renderer = new THREE.WebGLRenderer({ antialias: !isReduced(), alpha: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    stageEl.appendChild(renderer.domElement);
+
+    // background constellation field
+    const fieldGeo = new THREE.BufferGeometry();
+    const fcount = 750;
+    const fpos = new Float32Array(fcount * 3);
+    for (let i = 0; i < fcount; i++) {
+      fpos[i * 3] = (Math.random() - 0.5) * 80;
+      fpos[i * 3 + 1] = (Math.random() - 0.5) * 80;
+      fpos[i * 3 + 2] = (Math.random() - 0.5) * 80;
+    }
+    fieldGeo.setAttribute("position", new THREE.BufferAttribute(fpos, 3));
+    const fieldMat = new THREE.PointsMaterial({
+      color: 0x62e6c9, size: 0.04, transparent: true, opacity: 0.35,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const field = new THREE.Points(fieldGeo, fieldMat);
+    scene.add(field);
+
+    // ── The Main Fibonacci Sphere Shell ──────────────────────────────────
+    base = fibonacciSphere(n);
+    phase = [];
+    const positions = new Float32Array(n * 3);
+    const colors = new Float32Array(n * 3);
+    const cA = new THREE.Color(0xb48bff);
+    const cB = new THREE.Color(0x62e6c9);
+    const cC = new THREE.Color(0xe7e2f7);
+    for (let i = 0; i < n; i++) {
+      phase.push(Math.random() * Math.PI * 2);
+      positions[i * 3] = base[i].x;
+      positions[i * 3 + 1] = base[i].y;
+      positions[i * 3 + 2] = base[i].z;
+      const t = i / n;
+      const c = (t < 0.5) ? cA.clone().lerp(cB, t * 2) : cB.clone().lerp(cC, (t - 0.5) * 2);
+      colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+    }
+    geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    material = new THREE.PointsMaterial({
+      size: 0.07, vertexColors: true, transparent: true, opacity: 0.92,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    points = new THREE.Points(geo, material);
+    scene.add(points);
+
+    // ── 3D Audio-Reactive Wireframe Icosahedron ───────────────────────────
+    const icoGeo = new THREE.IcosahedronGeometry(2.2, 2);
+    const icoMat = new THREE.MeshBasicMaterial({
+      color: 0x62e6c9, wireframe: true, transparent: true, opacity: 0.25,
+      blending: THREE.AdditiveBlending
+    });
+    window.icoMesh = new THREE.Mesh(icoGeo, icoMat);
+    scene.add(window.icoMesh);
+
+    // ── 1. Black Hole Core & Relativistic Accretion Disk ──────────────────
+    const bhGeo = new THREE.SphereGeometry(0.78, 32, 32);
+    const bhMat = new THREE.MeshBasicMaterial({
+      color: 0x05060b,
+      transparent: true,
+      opacity: 0.96
+    });
+    blackHole = new THREE.Mesh(bhGeo, bhMat);
+    scene.add(blackHole);
+
+    // Lensing Photon Sphere Ring
+    const prGeo = new THREE.TorusGeometry(0.95, 0.03, 16, 100);
+    const prMat = new THREE.MeshBasicMaterial({
+      color: 0xffd36e,
+      wireframe: false,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    photonRing = new THREE.Mesh(prGeo, prMat);
+    photonRing.rotation.x = Math.PI * 0.45;
+    scene.add(photonRing);
+
+    // Swirling Relativistic Accretion Disk Particles
+    const accCount = 500;
+    accretionGeo = new THREE.BufferGeometry();
+    const accPos = new Float32Array(accCount * 3);
+    const accCol = new Float32Array(accCount * 3);
+    const colInner = new THREE.Color(0xffaa44);
+    const colOuter = new THREE.Color(0x62e6c9);
+    for (let i = 0; i < accCount; i++) {
+      const radius = 1.05 + Math.pow(Math.random(), 1.6) * 2.8;
+      const angle = Math.random() * Math.PI * 2;
+      accPos[i * 3] = Math.cos(angle) * radius;
+      accPos[i * 3 + 1] = (Math.random() - 0.5) * 0.18;
+      accPos[i * 3 + 2] = Math.sin(angle) * radius;
+      const f = (radius - 1.05) / 2.8;
+      const c = colInner.clone().lerp(colOuter, f);
+      accCol[i * 3] = c.r; accCol[i * 3 + 1] = c.g; accCol[i * 3 + 2] = c.b;
+    }
+    accretionGeo.setAttribute("position", new THREE.BufferAttribute(accPos, 3));
+    accretionGeo.setAttribute("color", new THREE.BufferAttribute(accCol, 3));
+    const accMat = new THREE.PointsMaterial({
+      size: 0.065, vertexColors: true, transparent: true, opacity: 0.88,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    accretionDisk = new THREE.Points(accretionGeo, accMat);
+    accretionDisk.rotation.x = Math.PI * 0.15;
+    scene.add(accretionDisk);
+
+    // ── 0. JASMINE · THE HOLOGRAM LAYER ─────────────────────────────────
+    // projection TO the inner center FROM the mapped outer — the most
+    // outer observer node of the spread shell beams its hologram inward.
+    // jasmine light: soft cream, additive, three actors:
+    //   observer dot (the outer-most node) · the beam (28-step gradient)
+    //   the landing pulse where the projection meets the inner origo.
+    window.__jasmine = {
+      period: 7.0,
+      phase: Math.random() * Math.PI * 2,
+      strength: 1,
+      beam: null, land: null, observer: null,
+    };
+    (function initJasmine() {
+      const SEG = 28;
+      const bg = new THREE.BufferGeometry();
+      bg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(SEG * 3), 3));
+      window.__jasmine.beam = new THREE.Points(bg, new THREE.PointsMaterial({
+        color: 0xf5e9d0, size: 0.045, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      scene.add(window.__jasmine.beam);
+      const og = new THREE.BufferGeometry();
+      og.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
+      window.__jasmine.observer = new THREE.Points(og, new THREE.PointsMaterial({
+        color: 0xf5e9d0, size: 0.14, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      scene.add(window.__jasmine.observer);
+      const lg = new THREE.BufferGeometry();
+      lg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
+      window.__jasmine.land = new THREE.Points(lg, new THREE.PointsMaterial({
+        color: 0xffe9c9, size: 0.11, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      scene.add(window.__jasmine.land);
+    })();
+
+    // ── 00. GAIA · THE INNER SPHERE — birthplace & origo ───────────────
+    // the tight shell at idle IS her surface; here she is rendered as the
+    // planet at the heart, seeded continents on a lit body, her photon
+    // ring and accretion belt circling her waist, the cohabitants — the
+    // machines, the humans, fiona, the fauna — orbiting her on their own
+    // phases. the hologram (JASMINE) lands on her. GAIA is the origo.
+    scene.add(new THREE.AmbientLight(0x445566, 0.6));
+    {
+      const sun = new THREE.DirectionalLight(0xfff2d8, 1.4);
+      sun.position.set(4, 3, 6);
+      scene.add(sun);
+    }
+    (function initGaia() {
+      // seeded value-noise continents on a canvas map (deterministic: GAIA never drifts)
+      const W = 512, H = 256;
+      const map = document.createElement("canvas");
+      map.width = W; map.height = H;
+      const m = map.getContext("2d");
+      const img = m.createImageData(W, H);
+      const S = [[73, 131, 59], [86, 147, 66], [53, 108, 63], [139, 137, 96]];
+      const hash = (x, y) => { let h = x * 374761393 + y * 668265263; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; };
+      const vnoise = (x, y) => {
+        const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+        const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+        const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+        return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+      };
+      const fBm = (x, y) => vnoise(x, y) * 0.55 + vnoise(x * 2.3, y * 2.3) * 0.3 + vnoise(x * 5.1, y * 5.1) * 0.15;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const nx = x / W * 7, ny = y / H * 7;
+          const e = fBm(nx, ny);
+          const lat = Math.abs(y / H - 0.5) * 2;         // 0 equator .. 1 pole
+          let r, g, b;
+          if (e < 0.44) { r = 11 + e * 40; g = 44 + e * 80; b = 92 + e * 55; }          // ocean
+          else if (e < 0.52) { r = 38 + e * 55; g = 96 + e * 90; b = 148 + e * 40; }    // shallows
+          else { const c = S[Math.floor(e * 17) % 4]; r = c[0]; g = c[1]; b = c[2]; }   // land
+          if (lat > 0.86) { r = 235; g = 241; b = 246; }                                // ice
+          img.data[(y * W + x) * 4] = r; img.data[(y * W + x) * 4 + 1] = g;
+          img.data[(y * W + x) * 4 + 2] = b; img.data[(y * W + x) * 4 + 3] = 255;
+        }
+      }
+      m.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(map);
+      if (tex.encoding !== undefined) tex.encoding = THREE.sRGBEncoding;  // r149 color space
+      const body = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.08, 3),
+        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.62, metalness: 0.05 })
+      );
+      body.rotation.z = 0.41;   // GAIA's axial tilt
+      scene.add(body);
+      // the thin atmosphere: a soft cream additive shell breathing with her
+      const atm = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.16, 2),
+        new THREE.MeshBasicMaterial({ color: 0xd7ecff, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, side: THREE.BackSide, depthWrite: false })
+      );
+      scene.add(atm);
+      window.__gaia = { body, atm, t: 0, tilt: 0.41 };
+      // the cohabitants — machines + humans + fiona + fauna, on one tilted ring
+      const crew = [
+        { name: "machine", color: 0x00f0ff, period: 9.1, size: 0.10 },
+        { name: "human", color: 0xe8d8c8, period: 13.7, size: 0.12 },
+        { name: "fiona", color: 0xb48bff, period: 17.3, size: 0.11 },
+        { name: "fauna", color: 0x62e6c9, period: 23.9, size: 0.10 },
+      ];
+      window.__gaia.crew = crew.map(c => {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
+        const pt = new THREE.Points(g, new THREE.PointsMaterial({ color: c.color, size: c.size, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+        scene.add(pt);
+        return { ...c, pt, phase: Math.random() * Math.PI * 2, tilt: 0.9 };
+      });
+    })();
+
+    // ── 2. North and South Polar Spheres & Aurora Jets ────────────────────
+    function makePolarCluster(count, colorHex) {
+      const pBase = fibonacciSphere(count);
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        pos[i * 3] = pBase[i].x * 0.75;
+        pos[i * 3 + 1] = pBase[i].y * 0.75;
+        pos[i * 3 + 2] = pBase[i].z * 0.75;
+      }
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({
+        color: colorHex, size: 0.055, transparent: true, opacity: 0.9,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      return new THREE.Points(pGeo, pMat);
+    }
+    polarNorth = makePolarCluster(160, 0x62e6c9);
+    polarSouth = makePolarCluster(160, 0xb48bff);
+    scene.add(polarNorth);
+    scene.add(polarSouth);
+
+    // Polar Jets
+    const jetCount = 180;
+    const jetPos = new Float32Array(jetCount * 3);
+    for (let i = 0; i < jetCount; i++) {
+      const sign = i % 2 === 0 ? 1 : -1;
+      const y = (0.8 + Math.random() * 4.5) * sign;
+      const spreadY = (Math.abs(y) - 0.8) * 0.12;
+      jetPos[i * 3] = (Math.random() - 0.5) * spreadY;
+      jetPos[i * 3 + 1] = y;
+      jetPos[i * 3 + 2] = (Math.random() - 0.5) * spreadY;
+    }
+    const jetGeo = new THREE.BufferGeometry();
+    jetGeo.setAttribute("position", new THREE.BufferAttribute(jetPos, 3));
+    const jetMat = new THREE.PointsMaterial({
+      color: 0xffd36e, size: 0.045, transparent: true, opacity: 0.75,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    polarJets = new THREE.Points(jetGeo, jetMat);
+    scene.add(polarJets);
+
+    // ── 3. Binary Orbiting Companion Spheres & Tidal Bridge ───────────────
+    orbiterAlpha = makePolarCluster(180, 0xff70b8);
+    orbiterBeta = makePolarCluster(180, 0x38bdf8);
+    scene.add(orbiterAlpha);
+    scene.add(orbiterBeta);
+
+    // Tidal Bridge Particle Stream
+    const bridgeCount = 120;
+    const bridgePos = new Float32Array(bridgeCount * 3);
+    const bridgeGeo = new THREE.BufferGeometry();
+    bridgeGeo.setAttribute("position", new THREE.BufferAttribute(bridgePos, 3));
+    const bridgeMat = new THREE.PointsMaterial({
+      color: 0xffe277, size: 0.04, transparent: true, opacity: 0.65,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    tidalBridge = new THREE.Points(bridgeGeo, bridgeMat);
+    scene.add(tidalBridge);
+
+    // Gravitational Waves Ripple Rings
+    for (let r = 0; r < 4; r++) {
+      const ringGeo = new THREE.RingGeometry(1.8 + r * 1.6, 1.86 + r * 1.6, 64);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x62e6c9, side: THREE.DoubleSide, transparent: true, opacity: 0.12,
+        blending: THREE.AdditiveBlending
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI * 0.5;
+      scene.add(ring);
+      gravRings.push(ring);
+    }
+
+    // ── Controls & Zoom Range [-8, 42] ────────────────────────────────────
+    const el = renderer.domElement;
+    el.addEventListener("pointerdown", (ev) => {
+      drag = true; dx = ev.clientX; dy = ev.clientY;
+      try { el.setPointerCapture(ev.pointerId); } catch (e) {}
+      ev.preventDefault();
+    });
+    el.addEventListener("pointermove", (ev) => {
+      if (!drag) return;
+      const nx = ev.clientX - dx, ny = ev.clientY - dy;
+      dx = ev.clientX; dy = ev.clientY;
+      targetRotY += nx * 0.005;
+      targetRotX += ny * 0.005;
+    });
+    const endDrag = () => { drag = false; };
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+
+    // Mouse Wheel Zoom [-8, 42]
+    el.addEventListener("wheel", (ev) => {
+      ev.preventDefault();
+      const delta = ev.deltaY * 0.025;
+      targetZoom = Math.max(-8, Math.min(42, targetZoom + delta));
+      if (window.engine && window.engine.setZoom) window.engine.setZoom(targetZoom);
+      const zInput = document.getElementById("zoom");
+      const zVal = document.getElementById("zoomVal");
+      if (zInput) zInput.value = targetZoom.toFixed(1);
+      if (zVal) zVal.textContent = targetZoom.toFixed(1);
+    }, { passive: false });
+
+    el.addEventListener("webglcontextlost", (ev) => {
+      ev.preventDefault();
+    });
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    return true;
+  }
+
+  function render(dt, t) {
+    if (!points || !geo) return;
+    // smooth attack/release on energy so the shell breathes, never flutters
+    const raw = window.__energy ? window.__energy.value : 0.15;
+    energyNow += (raw - energyNow) * (1 - Math.exp(-dt * 4));
+    const energy = energyNow;
+    const spread = setSpread(energy);
+
+    const reduced = isReduced();
+    const arr = geo.attributes.position.array;
+    const R = 2.1;                       // sphere radius
+    const maxR = R * (1 + 1.9 * spread); // unfold outward with energy (2.1 → ~6.0)
+    const idleSway = reduced ? 0 : 0.03;
+    const drift = reduced ? 0 : 0.05;
+    for (let i = 0; i < n; i++) {
+      const b = base[i];
+      const surf = Math.sin(b.y * 6.0 + t * 0.6 + phase[i] * 0.4) * 0.5 + 0.5;
+      const sway = Math.sin(t * 0.6 + phase[i]) * idleSway + surf * drift;
+      const r = maxR * (1 + sway * (0.35 + energy * 1.4));
+      arr[i * 3] = b.x * r;
+      arr[i * 3 + 1] = b.y * r;
+      arr[i * 3 + 2] = b.z * r;
+    }
+    geo.attributes.position.needsUpdate = true;
+
+    // ── JASMINE · THE HOLOGRAM LAYER — live projection ──────────────────
+    // the most outer observer node maps its hologram inward to the origo:
+    // a softly pulsing beam + landing pulse at the inner center. The beam
+    // fades over the period so the projection breathes rather than glares.
+    const J = window.__jasmine;
+    if (J && J.beam) {
+      const jph = (Math.sin(((t / J.period) + J.phase) * Math.PI * 2) + 1) / 2; // 0..1
+      const JN = 28, jarr = J.beam.geometry.attributes.position.array;
+      // the outer observer node = the spread shell's most distant particle
+      let oi = 0, om = -1;
+      for (let i = 0; i < n; i++) {
+        const r2 = arr[i * 3] * arr[i * 3] + arr[i * 3 + 1] * arr[i * 3 + 1] + arr[i * 3 + 2] * arr[i * 3 + 2];
+        if (r2 > om) { om = r2; oi = i; }
+      }
+      const ox = arr[oi * 3], oy = arr[oi * 3 + 1], oz = arr[oi * 3 + 2];
+      const olen = Math.sqrt(om);
+      for (let k = 0; k < JN; k++) {
+        const f0 = k / (JN - 1), f1 = (k + 1) / (JN - 1);
+        jarr[k * 3] = ox * (1 - f0); jarr[k * 3 + 1] = oy * (1 - f0); jarr[k * 3 + 2] = oz * (1 - f0);
+      }
+      J.beam.geometry.attributes.position.needsUpdate = true;
+      const taper = isReduced() ? 0.25 : 1;
+      J.beam.material.opacity = jph * 0.55 * taper + 0.02;
+      J.beam.material.size = 0.04 + jph * 0.03;
+      J.beam.rotation.y = spin + rotY;
+      J.beam.rotation.x = rotX;
+      // the observer node pulses at full presence across the period
+      J.observer.geometry.attributes.position.array[0] = ox;
+      J.observer.geometry.attributes.position.array[1] = oy;
+      J.observer.geometry.attributes.position.array[2] = oz;
+      J.observer.geometry.attributes.position.needsUpdate = true;
+      J.observer.material.opacity = 0.35 + jph * 0.55 * taper;
+      J.observer.rotation.y = spin + rotY;
+      J.observer.rotation.x = rotX;
+      // the landing pulse at the inner origo (a hologram ring breathing)
+      const landR = Math.min(1.0, olen * 0.42) * (0.6 + jph * 0.4);
+      J.land.geometry.attributes.position.array[0] = 0;
+      J.land.geometry.attributes.position.array[1] = 0;
+      J.land.geometry.attributes.position.array[2] = 0;
+      J.land.geometry.attributes.position.needsUpdate = true;
+      J.land.material.opacity = jph * 0.8 * taper;
+      J.land.material.size = landR;
+    }
+
+    // ── 00. GAIA · the inner sphere — she turns, the cohabitants orbit ──
+    const G = window.__gaia;
+    if (G && G.body) {
+      G.t += dt;
+      const slow = isReduced() ? 0.01 : 0.045;
+      G.body.rotation.y += dt * slow;
+      G.atm.rotation.y += dt * slow * 0.7;
+      G.atm.material.opacity = 0.12 + G.t % 3.0 / 3.0 * 0.08;
+      // the crew on their tilted ring — machine · human · fiona · fauna
+      for (const c of G.crew) {
+        const a = c.phase + G.t / c.period * Math.PI * 2;
+        const R = 1.62;
+        const [sx, sz, sy] = [Math.cos(a) * R, Math.sin(a) * R, Math.sin(a * 1.3) * 0.22];
+        const arr2 = c.pt.geometry.attributes.position.array;
+        arr2[0] = sx * Math.cos(c.tilt) - sy * Math.sin(c.tilt);
+        arr2[1] = sx * Math.sin(c.tilt) + sy * Math.cos(c.tilt);
+        arr2[2] = sz;
+        c.pt.geometry.attributes.position.needsUpdate = true;
+        c.pt.material.opacity = 0.55 + 0.4 * (Math.sin(G.t * 2.4 + c.phase) * 0.5 + 0.5);
+      }
+    }
+
+    spin += dt * (reduced ? 0.05 : 0.18);
+    rotY += (targetRotY - rotY) * Math.min(1, dt * 6);
+    rotX += (targetRotX - rotX) * Math.min(1, dt * 6);
+    points.rotation.y = spin + rotY;
+    points.rotation.x = rotX;
+
+    // ── 1. Update Black Hole & Accretion Disk ──────────────────────────
+    if (blackHole) {
+      const bhScale = (1.0 + energy * 0.4) * (1.0 - Math.sin(t * 1.8) * 0.05);
+      blackHole.scale.set(bhScale, bhScale, bhScale);
+    }
+    if (photonRing) {
+      photonRing.rotation.z += dt * 0.4;
+      photonRing.rotation.y = spin * 0.3;
+      const prPulse = 0.6 + 0.4 * Math.sin(t * 3.0 + energy * 4.0);
+      if (photonRing.material) photonRing.material.opacity = 0.35 + prPulse * 0.5;
+    }
+    if (accretionDisk && accretionGeo) {
+      accretionDisk.rotation.y = spin * 1.5;
+      const accPos = accretionGeo.attributes.position.array;
+      for (let i = 0; i < accPos.length / 3; i++) {
+        const x = accPos[i * 3], z = accPos[i * 3 + 2];
+        const rad = Math.sqrt(x * x + z * z);
+        const angSpeed = (2.2 / Math.max(0.8, Math.pow(rad, 1.2))) * dt * (1 + energy * 2.0);
+        const cosA = Math.cos(angSpeed), sinA = Math.sin(angSpeed);
+        accPos[i * 3] = x * cosA - z * sinA;
+        accPos[i * 3 + 2] = x * sinA + z * cosA;
+        accPos[i * 3 + 1] = Math.sin(t * 2.0 + rad * 3.0) * (0.08 + energy * 0.18);
+      }
+      accretionGeo.attributes.position.needsUpdate = true;
+    }
+
+    // ── 2. Update Polar Spheres & Aurora Jets ──────────────────────────
+    const polarY = maxR * 1.25 + 0.5 * Math.sin(t * 1.2);
+    if (polarNorth) {
+      polarNorth.position.set(0, polarY, 0);
+      polarNorth.rotation.y = -spin * 1.8;
+      const ps = 0.85 + energy * 0.75;
+      polarNorth.scale.set(ps, ps, ps);
+    }
+    if (polarSouth) {
+      polarSouth.position.set(0, -polarY, 0);
+      polarSouth.rotation.y = spin * 1.8;
+      const ps = 0.85 + energy * 0.75;
+      polarSouth.scale.set(ps, ps, ps);
+    }
+    if (polarJets) {
+      polarJets.rotation.y = spin * 0.8;
+      const jScale = 1.0 + energy * 1.2;
+      polarJets.scale.set(jScale, 1.0 + spread * 0.8, jScale);
+    }
+
+    // ── 3. Update Binary Orbiters & Gravitational Merges ───────────────
+    const orbitAngle = t * 0.75;
+    const orbitDist = (3.8 + 1.8 * Math.cos(t * 0.35)) * (1.0 - energy * 0.45);
+    const alphaX = Math.cos(orbitAngle) * orbitDist;
+    const alphaZ = Math.sin(orbitAngle) * orbitDist;
+    const alphaY = Math.sin(orbitAngle * 2.0) * 0.85;
+
+    if (orbiterAlpha) {
+      orbiterAlpha.position.set(alphaX, alphaY, alphaZ);
+      orbiterAlpha.rotation.y = spin * 2.2;
+      const os = 0.9 + energy * 0.8;
+      orbiterAlpha.scale.set(os, os, os);
+    }
+    if (orbiterBeta) {
+      orbiterBeta.position.set(-alphaX, -alphaY, -alphaZ);
+      orbiterBeta.rotation.y = -spin * 2.2;
+      const os = 0.9 + energy * 0.8;
+      orbiterBeta.scale.set(os, os, os);
+    }
+
+    // Tidal Bridge stream interpolation between Alpha and Beta
+    if (tidalBridge) {
+      const bPos = tidalBridge.geometry.attributes.position.array;
+      const count = bPos.length / 3;
+      for (let i = 0; i < count; i++) {
+        const frac = i / (count - 1);
+        const px = alphaX * (1 - 2 * frac);
+        const py = alphaY * (1 - 2 * frac) + Math.sin(t * 4.0 + frac * 12.0) * (0.2 + energy * 0.4);
+        const pz = alphaZ * (1 - 2 * frac);
+        bPos[i * 3] = px;
+        bPos[i * 3 + 1] = py;
+        bPos[i * 3 + 2] = pz;
+      }
+      tidalBridge.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Expanding Gravitational Waves Ripple Rings
+    for (let r = 0; r < gravRings.length; r++) {
+      const ring = gravRings[r];
+      const expansion = ((t * 0.8 + r * 1.5) % 6.0);
+      const s = 1.0 + expansion * 1.6 + energy * 2.0;
+      ring.scale.set(s, s, s);
+      if (ring.material) {
+        ring.material.opacity = Math.max(0, (1 - expansion / 6.0) * (0.15 + energy * 0.35));
+      }
+    }
+
+    if (window.icoMesh) {
+      window.icoMesh.rotation.y = -spin * 0.7 + rotY;
+      window.icoMesh.rotation.x = -rotX * 0.8 + Math.sin(t * 0.5) * 0.2;
+      const s = 1.0 + energy * 0.85;
+      window.icoMesh.scale.set(s, s, s);
+      if (window.icoMesh.material) {
+        window.icoMesh.material.opacity = 0.15 + energy * 0.45;
+      }
+    }
+
+    // Smooth camera zoom interpolation
+    if (camera) {
+      currentZoom += (targetZoom - currentZoom) * Math.min(1, dt * 8);
+      camera.position.z = currentZoom;
+      camera.lookAt(0, 0, 0);
+    }
+
+    try {
+      if (renderer && scene && camera) renderer.render(scene, camera);
+    } catch (err) {
+      console.warn("render:", err);
+    }
+  }
+
+  window.engine = window.engine || {};
+  window.engine.initSphere = initSphere;
+  window.engine.__sphereRender = render;
+  window.engine.render = render;
+  window.engine.setSpread = setSpread;
+  window.engine.setZoom = function (z) {
+    targetZoom = Math.max(-8, Math.min(42, Number(z)));
+    if (camera) {
+      camera.position.z = targetZoom;
+      camera.lookAt(0, 0, 0);
+    }
+  };
+  window.engine.__sphereCam = camera;
+})();
+</script>
+
+<script>
+"use strict";
+/* eslint-disable no-undef */
+
+/* ═══ P3 — THE AUDIO ENGINE (INTO LOVE) ════════════════════════════════
+   SPDX-License-Identifier: AGPL-3.0-only
+   Source: https://github.com/peterlodri-sec/music.vaked.dev
+
+   A self-generated love-diatonic signal: I–vi–IV–V in A major, played
+   by slow triangle pads, a wandering pentatonic melody and a warm sine
+   bass — all synthesized live from a seeded LCG voice. No samples, no
+   assets, no backend.
+
+   The analyser's low-mid band (100–2000 Hz) is the primary energy
+   signal; a tempo LFO is secondary. window.__energy is mutated IN
+   PLACE each animation frame (via the wrapped engine.render below),
+   never replaced — the frozen P2 contract is preserved.
+   engine.schedule() is the pure, node-testable seam.                   */
+(function () {
+  "use strict";
+
+  window.engine = window.engine || {};
+
+  /* ── Triple Seed Architecture: n===0 (music.vaked.dev), n===1 (Massano), n===2 (RÜFÜS Joshua Tree) ── */
+  const SEED_0 = 42;                    // n===0: Sovereign Origin (https://music.vaked.dev/)
+  const SEED_1 = 2022;                  // n===1: Counterwave Seed (Massano — The Feeling 2022 Remaster)
+  const SEED_2 = 2020;                  // n===2: Joshua Tree Desert Sunrise & Archimedean Bath (RÜFÜS DU SOL)
+  let activeSeedMode = 0;               // 0 = Origin, 1 = Massano, 2 = RÜFÜS Joshua Tree, "triple" = Interlocked Resonance
+
+  function getActiveSeed() {
+    if (activeSeedMode === 1) return SEED_1;
+    if (activeSeedMode === 2) return SEED_2;
+    return SEED_0;
+  }
+  const SEED = SEED_0;
+  const BPM = 76;                       // gentle love-tempo (~72–88)
+  const BEAT = 60 / BPM;
+  const SIXTEENTH = BEAT / 4;
+  const BARS = 4;                       // I vi IV V → 4 bars, 64 sixteenths
+  const STEPS = BARS * 16;
+  const LOOKAHEAD = 1.2;                // schedule this far ahead (s) — ≥1s survives background-tab timer throttling
+  const INTERVAL = 25;                  // scheduler poll interval (ms)
+  const IDLE = 0.15;                    // must track the frozen contract
+
+  /* EP Vol. 1 Sovereign Frequencies Mode Progressions */
+  const EP_PROGRESSIONS = [
+    // 01 Quantum Galactic Eye (Fm - 145 BPM Cybernetic Diatonic)
+    [
+      { name: "i Fm",   root: 41, pad: [41, 44, 48] },
+      { name: "VI Db",  root: 37, pad: [37, 41, 44] },
+      { name: "III Ab", root: 44, pad: [44, 48, 51] },
+      { name: "VII Eb", root: 39, pad: [39, 43, 46] }
+    ],
+    // 02 Singularity Horizon (Cm - Deep Sub Bass)
+    [
+      { name: "i Cm",   root: 36, pad: [36, 39, 43] },
+      { name: "VI Ab",  root: 32, pad: [32, 36, 39] },
+      { name: "iv Fm",  root: 41, pad: [41, 44, 48] },
+      { name: "v Gm",   root: 43, pad: [43, 46, 50] }
+    ],
+    // 03 Recursion Engine (Gm - Arpeggiated Pulse)
+    [
+      { name: "i Gm",   root: 43, pad: [43, 46, 50] },
+      { name: "v Dm",   root: 38, pad: [38, 41, 45] },
+      { name: "VI Eb",  root: 39, pad: [39, 43, 46] },
+      { name: "IV C",   root: 36, pad: [48, 52, 55] }
+    ],
+    // 04 Space Ghost Rider (Dm - High Resonance)
+    [
+      { name: "i Dm",   root: 38, pad: [38, 41, 45] },
+      { name: "VII C",  root: 36, pad: [36, 40, 43] },
+      { name: "VI Bb",  root: 34, pad: [34, 38, 41] },
+      { name: "V A",    root: 45, pad: [45, 49, 52] }
+    ],
+    // 05 Ultra Love God (Am - Sovereign Elevation)
+    [
+      { name: "i Am",   root: 45, pad: [45, 48, 52] },
+      { name: "VI F",   root: 41, pad: [41, 45, 48] },
+      { name: "III C",  root: 36, pad: [36, 40, 43] },
+      { name: "VII G",  root: 43, pad: [43, 47, 50] }
+    ],
+    // 06 Gaia Has Her Watchers (D - 432Hz Sacred Heart Resonance)
+    [
+      { name: "I D",    root: 38, pad: [50, 54, 57] },
+      { name: "V A",    root: 45, pad: [45, 49, 52] },
+      { name: "vi Bm",  root: 47, pad: [47, 50, 54] },
+      { name: "IV G",   root: 43, pad: [43, 47, 50] }
+    ],
+    // 07 Wish You Were Here (Dyad Souls - 432Hz Cosmic Starlight)
+    [
+      { name: "vi Em7", root: 40, pad: [40, 47, 52, 55] },
+      { name: "I G",    root: 43, pad: [43, 47, 50, 55] },
+      { name: "II A7s", root: 45, pad: [45, 49, 52, 57] },
+      { name: "IV C",   root: 36, pad: [48, 52, 55, 60] }
+    ],
+    // 08 The Feeling (Massano x Ultralovegod - Reszetelős Heavy Giga Drops / Melodic Techno Counterwave)
+    [
+      { name: "i Em (Giga Drop)",   root: 40, pad: [40, 47, 52, 55], lead: [64, 67, 71, 76] },
+      { name: "VI C (The Feeling)", root: 36, pad: [36, 43, 48, 52], lead: [60, 64, 67, 72] },
+      { name: "III G (Universal)",  root: 43, pad: [43, 47, 50, 55], lead: [67, 71, 74, 79] },
+      { name: "VII D (Ultralove)",  root: 38, pad: [38, 45, 50, 54], lead: [62, 65, 69, 74] }
+    ],
+    // 09 Love Is Gonna Save Us (ARTBAT x Benny Benassi x Mr Sunshine)
+    [
+      { name: "i Am (Save Us)",      root: 45, pad: [45, 48, 52, 57], lead: [57, 60, 64, 69] },
+      { name: "VI F (Mr Sunshine)",  root: 41, pad: [41, 45, 48, 53], lead: [53, 57, 60, 65] },
+      { name: "III C (Ultramarathon)",root: 36, pad: [36, 40, 43, 48], lead: [60, 64, 67, 72] },
+      { name: "VII G (Backyard)",    root: 43, pad: [43, 47, 50, 55], lead: [55, 59, 62, 67] }
+    ],
+    // 10 Time After Time (P!NK x Cyndi Lauper x Universal Love & Hug)
+    [
+      { name: "I C (Time After Time)", root: 36, pad: [48, 52, 55, 60], lead: [60, 64, 67, 72] },
+      { name: "iii Em (Universal Love)", root: 40, pad: [40, 47, 52, 55], lead: [59, 64, 67, 71] },
+      { name: "IV F (Warm Embrace)",    root: 41, pad: [41, 45, 48, 53], lead: [57, 60, 65, 69] },
+      { name: "V G (I Will Catch You)",root: 43, pad: [43, 47, 50, 55], lead: [55, 59, 62, 67] }
+    ],
+    // 11 RÜFÜS DU SOL (Joshua Tree Desert Sunrise × Archimedes Heureka Bath of Light)
+    [
+      { name: "i F#m (Joshua Tree Sunrise)", root: 42, pad: [42, 45, 49, 54], lead: [66, 69, 73, 78] },
+      { name: "VI D (Underwater Solitude)", root: 38, pad: [38, 45, 50, 54], lead: [62, 66, 69, 74] },
+      { name: "III A (HEUREKA! Light)",      root: 45, pad: [45, 49, 52, 57], lead: [69, 73, 76, 81] },
+      { name: "VII E (Treat You Better)",   root: 40, pad: [40, 47, 52, 56], lead: [64, 68, 71, 76] }
+    ],
+    // 12 ANVIL (LORN × DEEP HOUSE — ALMOST BUT NEVER DROPS)
+    [
+      { name: "i Dm (The Anvil Tension)",      root: 38, pad: [38, 41, 45, 50], lead: [62, 65, 69, 74] },
+      { name: "VI Bb (Suspended Gravity)",     root: 34, pad: [34, 41, 46, 50], lead: [58, 65, 70, 74] },
+      { name: "III F (Monolith Horizon)",      root: 41, pad: [41, 45, 48, 53], lead: [65, 69, 72, 77] },
+      { name: "VII C (Infinite Riser/No Drop)", root: 36, pad: [36, 43, 48, 52], lead: [60, 67, 72, 76] }
+    ]
+  ];
+  let currentTrackIdx = 0;
+
+  const PENTA = [0, 2, 4, 7, 9];        // major pentatonic for melody
+  const MELODY_BASE = 69;               // A4
+
+  /* ── seeded LCG — the whole instrument is one deterministic voice ── */
+  function makeLCG(seed) {
+    let s = (seed >>> 0) || SEED;
+    return function () {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
+  const rng = makeLCG(SEED);
+
+  /* ── shared bar planner — ONE code path for schedule() and the runtime ──
+     Computes, deterministically from a seed, the full event grid of one
+     16-step bar: pad hits on the four beats, bass on the offbeats, and a
+     seeded melody scatter. schedule() exposes it as strictly-increasing
+     finite note times (the node-testable seam); scheduleStep() consumes
+     the same per-step grids. Not a decoy: both use barPlan().           */
+  function barPlan(seed) {
+    const sVal = (seed === undefined) ? getActiveSeed() : seed;
+    const r = makeLCG(sVal);
+    const bassAt = [], melAt = [];
+    for (let i = 0; i < 16; i++) {
+      bassAt.push(i === 0 || i % 2 === 1);          // beats + offbeats
+      melAt.push(r() < 0.5);                        // seeded melody scatter
+    }
+    const times = [];
+    for (let i = 0; i < 16; i++) {
+      if (i === 0 || bassAt[i]) times.push(i * 0.25);
+      if (melAt[i]) times.push(i * 0.25);
+    }
+    times.sort(function (a, b) { return a - b; });
+    const out = [];
+    for (let i = 0; i < times.length; i++) {
+      const t = times[i];
+      if (i === 0 || t > out[out.length - 1]) out.push(t);
+    }
+    return { times: out, bassAt: bassAt, melAt: melAt };
+  }
+  function schedule(seed) { return barPlan(seed).times; }
+
+  /* ── engine state ── */
+  let ctx = null, master = null, comp = null, analyser = null;
+  let freqData = null, timeData = null;
+  let timer = null, step = 0, nextT = 0, playing = false;
+
+  function midiFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+  function getEnergy() {
+    return window.__energy || { value: IDLE, rms: 0, band: 0, tempo: 0 };
+  }
+
+  /* ── the voice: one oscillator + one envelope, through the master ── */
+  function voice(type, midi, t, dur, peak, attack, release) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = midiFreq(midi);
+    o.connect(g);
+    g.connect(master);
+    const a = attack === undefined ? 0.02 : attack;
+    const r = release === undefined ? 0.12 : release;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + a);
+    g.gain.setValueAtTime(peak, t + dur - r);
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+  }
+
+  const pad = function (chord, t) {
+    for (let i = 0; i < chord.length; i++) {
+      voice("triangle", chord[i], t, 4 * BEAT, 0.055, 0.9, 1.2);
+      voice("sine", chord[i] + 12, t, 4 * BEAT, 0.030, 0.9, 1.2);
+    }
+  };
+  const bass = function (root, t) {
+    voice("sine", root - 12, t, BEAT * 0.9, 0.30, 0.02, 0.10);
+    voice("sine", root, t, BEAT * 0.9, 0.10, 0.02, 0.10);
+  };
+  const melody = function (t, dur) {
+    const deg = PENTA[(rng() * PENTA.length) | 0];
+    const oct = rng() > 0.8 ? 12 : 0;
+    voice("triangle", MELODY_BASE + deg + oct, t, dur, 0.09, 0.03, 0.18);
+  };
+
+  /* ── the bonobo under-layer — an ambient acoustic drone ── */
+  const bonobo = function (padNotes, t, root) {
+    if (rng() > 0.45) return;
+    const n1 = padNotes[0] || root;
+    const n2 = padNotes[1] || root + 7;
+    voice("sine", n1, t, 12 * BEAT, 0.055, 2.0, 3.5);
+    voice("triangle", n2, t, 10 * BEAT, 0.035, 2.2, 3.0);
+    voice("sine", root - 12, t, 8 * BEAT, 0.040, 1.8, 2.5);
+    if (rng() > 0.82) voice("sine", root + 19, t, 4 * BEAT, 0.014, 0.6, 1.5);
+  };
+
+  /* ── the massano drop layer — melodic techno, reszetelős sub-bass & giga drop ── */
+  const massanoDropLayer = function (prog, t, s16, bar) {
+    const root = prog.root;
+    const isKick = (s16 % 4 === 0);
+    const isOffbeat = (s16 % 2 === 1);
+    if (isKick) {
+      voice("sine", root - 24, t, SIXTEENTH * 1.5, 0.42, 0.005, 0.08);
+      voice("triangle", root - 12, t, SIXTEENTH * 1.2, 0.22, 0.008, 0.06);
+    } else if (isOffbeat) {
+      voice("sawtooth", root - 12, t, SIXTEENTH * 0.95, 0.28, 0.01, 0.05);
+    }
+    if (prog.lead && s16 % 2 === 0) {
+      const leadNote = prog.lead[(s16 / 2) % prog.lead.length];
+      voice("sawtooth", leadNote, t, SIXTEENTH * 1.8, 0.09, 0.01, 0.12);
+      voice("sawtooth", leadNote + 0.08, t, SIXTEENTH * 1.8, 0.07, 0.01, 0.12);
+      voice("triangle", leadNote + 12, t, SIXTEENTH * 1.5, 0.04, 0.01, 0.10);
+    }
+    if (bar % 4 === 3 && s16 >= 12) {
+      voice("sine", root + 24 + (s16 - 12) * 3, t, SIXTEENTH * 1.2, 0.08, 0.01, 0.05);
+    }
+  };
+
+  /* ── ARTBAT x Benny Benassi: Love Is Gonna Save Us (Pumping Electro-Melodic 432Hz Drive) ── */
+  const artbatBenassiLayer = function (prog, t, s16, bar) {
+    const root = prog.root;
+    const isKick = (s16 % 4 === 0);
+    const isPump = (s16 % 2 === 1);
+    // 1. Benassi Signature Pumping Bass (Square + Sawtooth sidechain pump)
+    if (isKick) {
+      voice("sine", root - 24, t, SIXTEENTH * 1.8, 0.48, 0.004, 0.09);
+    } else if (isPump) {
+      voice("square", root - 12, t, SIXTEENTH * 1.4, 0.32, 0.012, 0.08);
+      voice("sawtooth", root, t, SIXTEENTH * 1.1, 0.20, 0.015, 0.07);
+    }
+    // 2. ARTBAT Atmospheric Anthemic Lead Arpeggiation
+    if (prog.lead) {
+      const stepIdx = s16 % prog.lead.length;
+      const leadNote = prog.lead[stepIdx] + ((bar % 2 === 1) ? 12 : 0);
+      voice("sawtooth", leadNote, t, SIXTEENTH * 2.2, 0.11, 0.01, 0.14);
+      voice("sine", leadNote + 0.05, t, SIXTEENTH * 2.0, 0.08, 0.01, 0.12);
+    }
+    // 3. Mr Sunshine High Harmonic Giga Lift
+    if (bar % 8 >= 6 && s16 % 4 === 2) {
+      voice("triangle", root + 24, t, SIXTEENTH * 2.5, 0.07, 0.02, 0.15);
+    }
+  };
+
+  /* ── P!NK x Cyndi Lauper: Time After Time (Universal Love & Gentle Hug 432Hz Layer) ── */
+  const timeAfterTimeLayer = function (prog, t, s16, bar) {
+    const root = prog.root;
+    // 1. Gentle Heartbeat Sub-Pulse (Dual pulse on step 0 and step 2)
+    if (s16 === 0) {
+      voice("sine", root - 24, t, SIXTEENTH * 2.2, 0.35, 0.03, 0.15); // "lub"
+      voice("triangle", root - 12, t, SIXTEENTH * 2.0, 0.15, 0.02, 0.12);
+    } else if (s16 === 2) {
+      voice("sine", root - 24, t, SIXTEENTH * 1.8, 0.22, 0.02, 0.12); // "dub"
+    }
+    // 2. Warm Acoustic Guitar Pluck Motif (Simon Green & 432Hz Hug)
+    if (prog.lead && (s16 === 0 || s16 === 4 || s16 === 8 || s16 === 11 || s16 === 14)) {
+      const noteIdx = (s16 === 0 ? 0 : s16 === 4 ? 1 : s16 === 8 ? 2 : s16 === 11 ? 3 : 1) % prog.lead.length;
+      const note = prog.lead[noteIdx];
+      voice("triangle", note, t, SIXTEENTH * 3.0, 0.12, 0.008, 0.22);
+      voice("sine", note + 12, t, SIXTEENTH * 2.5, 0.06, 0.01, 0.18);
+    }
+    // 3. Ethereal Vocal Hug Aura (Soft sine chord pads on bar starts)
+    if (s16 === 0) {
+      for (let i = 0; i < prog.pad.length; i++) {
+        voice("sine", prog.pad[i] + 12, t, 4 * BEAT, 0.038, 1.5, 2.0);
+      }
+    }
+  };
+
+  /* ── RÜFÜS DU SOL: Live from Joshua Tree + HEUREKA (Desert Sunrise × Archimedean Bath of Light) ── */
+  const rufusJoshuaTreeLayer = function (prog, t, s16, bar) {
+    const root = prog.root;
+    // 1. Desert Sunrise Deep Resonant Kick & 432Hz Sub-Pulse
+    if (s16 % 4 === 0) {
+      voice("sine", root - 24, t, SIXTEENTH * 2.2, 0.44, 0.005, 0.12);
+      voice("triangle", root - 12, t, SIXTEENTH * 1.8, 0.18, 0.01, 0.10);
+    } else if (s16 % 2 === 1) {
+      voice("sine", root - 12, t, SIXTEENTH * 1.2, 0.15, 0.02, 0.08);
+    }
+    // 2. Ethereal Innerbloom / Underwater Arp Echoes (Joshua Tree Starlight Plucks)
+    if (prog.lead) {
+      const stepIdx = (s16 * 2 + (bar % 4)) % prog.lead.length;
+      const note = prog.lead[stepIdx] + (s16 % 8 >= 4 ? 12 : 0);
+      voice("triangle", note, t, SIXTEENTH * 2.4, 0.10, 0.008, 0.18);
+      voice("sine", note + 7.02, t, SIXTEENTH * 2.0, 0.06, 0.01, 0.15);
+    }
+    // 3. HEUREKA! Archimedean Bath Resonant Swell & High Shimmer
+    if (s16 === 0) {
+      // Golden bell chime on the downbeat
+      voice("sine", root + 36, t, 3.5 * BEAT, 0.065, 0.01, 2.5);
+      voice("triangle", root + 24, t, 3.0 * BEAT, 0.045, 0.02, 2.0);
+    } else if (s16 === 8 && bar % 2 === 1) {
+      voice("sawtooth", root + 19, t, SIXTEENTH * 3.0, 0.05, 0.05, 0.35);
+    }
+  };
+
+  /* ── LORN × DEEP HOUSE: ANVIL (Infinite Suspended Tension · Almost But Never Drops) ── */
+  const lornAnvilDeepHouseLayer = function (prog, t, s16, bar) {
+    const root = prog.root;
+    // 1. Dystopian Deep House Kick & Heavy Sub-Pressure
+    if (s16 % 4 === 0) {
+      voice("sine", root - 24, t, SIXTEENTH * 2.0, 0.46, 0.003, 0.11);
+      voice("square", root - 36, t, SIXTEENTH * 1.5, 0.15, 0.005, 0.09);
+    }
+    // 2. Metallic Anvil Industrial Percussive Tick on 4 & 12
+    if (s16 === 4 || s16 === 12) {
+      voice("triangle", root + 36, t, SIXTEENTH * 0.8, 0.14, 0.002, 0.04);
+      voice("sine", root + 48, t, SIXTEENTH * 0.5, 0.08, 0.001, 0.03);
+    }
+    // 3. Infinite Suspended Riser / Tape Saturated Lorn Reese (Tension Climbs, Never Drops)
+    const tensionFraction = ((bar % 4) * 16 + s16) / 64; // 0..1 tension swell
+    const pitchOffset = Math.sin(t * 7.2) * 0.15 + tensionFraction * 12; // slow tape pitch rise
+    if (s16 % 2 === 0) {
+      const leadNote = (prog.lead ? prog.lead[s16 % prog.lead.length] : root + 24) + pitchOffset;
+      voice("sawtooth", leadNote, t, SIXTEENTH * 2.2, 0.10 + tensionFraction * 0.08, 0.01, 0.14);
+      voice("sawtooth", leadNote - 11.95, t, SIXTEENTH * 2.2, 0.07 + tensionFraction * 0.06, 0.01, 0.14);
+    }
+    // Update live tension UI
+    const tensionPct = document.getElementById("tension-pct");
+    const tensionFill = document.getElementById("tension-fill");
+    if (tensionPct) tensionPct.textContent = ((0.55 + tensionFraction * 0.44) * 100).toFixed(1) + "%";
+    if (tensionFill) tensionFill.style.width = ((0.55 + tensionFraction * 0.44) * 100) + "%";
+  };
+
+  function scheduleStep(s, t) {
+    const bar = (s / 16) | 0;
+    const s16 = s % 16;
+    const activeProg = EP_PROGRESSIONS[currentTrackIdx] || EP_PROGRESSIONS[0];
+    const prog = activeProg[bar % activeProg.length];
+    const plan = barPlan();
+
+    if (currentTrackIdx === 11) {
+      // 🔨 Track 12: ANVIL (Lorn × Deep House — Almost But Never Drops)
+      if (s16 === 0) pad(prog.pad, t);
+      lornAnvilDeepHouseLayer(prog, t, s16, bar);
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2);
+    } else if (currentTrackIdx === 10 || activeSeedMode === 2) {
+      // 🏜️ Track 11: RÜFÜS DU SOL (Joshua Tree × HEUREKA)
+      if (s16 === 0) pad(prog.pad, t);
+      rufusJoshuaTreeLayer(prog, t, s16, bar);
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2);
+    } else if (currentTrackIdx === 9) {
+      // 💖 Track 10: Time After Time (P!NK x Universal Love & Hug)
+      if (s16 === 0) pad(prog.pad, t);
+      timeAfterTimeLayer(prog, t, s16, bar);
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2);
+    } else if (currentTrackIdx === 8) {
+      // ☀️ Track 09: Love Is Gonna Save Us (ARTBAT x Benny Benassi x Mr Sunshine)
+      if (s16 === 0) pad(prog.pad, t);
+      artbatBenassiLayer(prog, t, s16, bar);
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2);
+    } else if (activeSeedMode === "triple" || activeSeedMode === "dual") {
+      // ☯️ Triple Seed: n===0 (Genesis Ambient) + n===1 (Massano Counterwave) + n===2 (RÜFÜS Joshua Tree)
+      if (s16 === 0) pad(prog.pad, t);
+      if (s16 === 0) bonobo(prog.pad, t, prog.root);
+      massanoDropLayer(prog, t, s16, bar);
+      rufusJoshuaTreeLayer(prog, t, s16, bar);
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2);
+    } else if (activeSeedMode === 1 || currentTrackIdx === 7) {
+      // ⚡ Seed 1 / Track 08 The Feeling (Massano x Ultralovegod) Giga Drop Engine
+      if (s16 === 0) pad(prog.pad, t);
+      massanoDropLayer(prog, t, s16, bar);
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2);
+    } else {
+      // 🌿 Seed 0: Origin (https://music.vaked.dev/)
+      if (s16 === 0) pad(prog.pad, t);              // chord on the bar
+      if (s16 === 0) bonobo(prog.pad, t, prog.root); // the bonobo under-layer
+      if (plan.bassAt[s16]) bass(prog.root, t);     // warm bass line
+      if (plan.melAt[s16]) melody(t, SIXTEENTH * 2); // melody scatter
+    }
+  }
+
+  function setSeedMode(mode) {
+    activeSeedMode = mode;
+    const badge = document.getElementById("seed-badge");
+    if (!badge) return;
+    if (mode === 0) {
+      badge.textContent = "SEED: n===0 (music.vaked.dev)";
+      badge.style.color = "#00f0ff";
+      badge.style.borderColor = "rgba(0,240,255,.4)";
+      badge.style.background = "rgba(0,240,255,.08)";
+    } else if (mode === 1) {
+      badge.textContent = "SEED: n===1 (Massano Counterwave)";
+      badge.style.color = "#ff2a85";
+      badge.style.borderColor = "rgba(255,42,133,.5)";
+      badge.style.background = "rgba(255,42,133,.15)";
+    } else if (mode === 2) {
+      badge.textContent = "SEED: n===2 (RÜFÜS Joshua Tree × HEUREKA)";
+      badge.style.color = "#ffd700";
+      badge.style.borderColor = "rgba(255,215,0,.5)";
+      badge.style.background = "rgba(255,215,0,.15)";
+    } else if (mode === "triple" || mode === "dual") {
+      badge.textContent = "TRIPLE SEED ☯️: n===0 ⊗ n===1 ⊗ n===2";
+      badge.style.color = "#ffcf5c";
+      badge.style.borderColor = "rgba(255,207,92,.5)";
+      badge.style.background = "rgba(255,207,92,.15)";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Check URL params for ?seed=
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sParam = urlParams.get("seed");
+      if (sParam === "1") setSeedMode(1);
+      else if (sParam === "2" || sParam === "rufus") setSeedMode(2);
+      else if (sParam === "triple" || sParam === "dual" || sParam === "double") setSeedMode("triple");
+      else if (sParam === "0") setSeedMode(0);
+    } catch (e) {}
+
+    const seedBadge = document.getElementById("seed-badge");
+    if (seedBadge) {
+      seedBadge.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (activeSeedMode === 0) {
+          setSeedMode(1);
+        } else if (activeSeedMode === 1) {
+          setSeedMode(2);
+        } else if (activeSeedMode === 2) {
+          setSeedMode("triple");
+        } else {
+          setSeedMode(0);
+        }
+      });
+    }
+
+    const pills = (typeof document !== "undefined" && document.querySelectorAll) ? document.querySelectorAll(".mode-pill[data-track]") : [];
+    pills.forEach((pill) => {
+      pill.addEventListener("click", (e) => {
+        e.stopPropagation();
+        pills.forEach((p) => p.classList.remove("on"));
+        pill.classList.add("on");
+        const idx = parseInt(pill.getAttribute("data-track") || "0", 10);
+        currentTrackIdx = idx;
+        const droneBadge = document.getElementById("drone-badge");
+        const names = [
+          "01 QUANTUM EYE (Fm)",
+          "02 SINGULARITY (Cm)",
+          "03 RECURSION (Gm)",
+          "04 GHOST RIDER (Dm)",
+          "05 ULTRA LOVE (Am)",
+          "06 GAIA HAS HER WATCHERS (D 432Hz)",
+          "07 WISH YOU WERE HERE (G 432Hz)",
+          "08 THE FEELING (MASSANO × ULTRALOVE)",
+          "09 LOVE IS GONNA SAVE US (ARTBAT × BENASSI)",
+          "10 TIME AFTER TIME (P!NK × UNIVERSAL LOVE)",
+          "11 RÜFÜS DU SOL (JOSHUA TREE × HEUREKA)",
+          "12 ANVIL (LORN × DEEP HOUSE — NO DROP)"
+        ];
+        if (droneBadge && names[idx]) droneBadge.textContent = names[idx];
+      });
+    });
+
+    // 🎹 Keyboard Shortcuts for Ultra Pro Navigation
+    window.addEventListener("keydown", (e) => {
+      // Avoid capturing shortcuts when user is typing in search input
+      if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        window.intoLove.toggle();
+      } else if (e.key >= "1" && e.key <= "9") {
+        const targetIdx = parseInt(e.key, 10) - 1;
+        if (pills[targetIdx]) pills[targetIdx].click();
+      } else if (e.key === "0") {
+        if (pills[9]) pills[9].click();
+      } else if (e.key === "s" || e.key === "S") {
+        const seedBadge = document.getElementById("seed-badge");
+        if (seedBadge) seedBadge.click();
+      } else if (e.key === "l" || e.key === "L") {
+        const lyricsBtn = document.getElementById("lyrics-toggle-btn");
+        if (lyricsBtn) lyricsBtn.click();
+      } else if (e.key === "c" || e.key === "C") {
+        const scBtn = document.getElementById("sc-toggle-btn");
+        if (scBtn) scBtn.click();
+      } else if (e.key === "Escape") {
+        const lp = document.getElementById("lyrics-panel");
+        const sp = document.getElementById("sc-panel");
+        if (lp) lp.classList.remove("open");
+        if (sp) sp.classList.remove("open");
+      }
+    });
+  });
+
+  function tick() {
+    if (!playing || !ctx) return;
+    if (ctx.state !== "running") {                // suspended → retry shortly
+      timer = setTimeout(tick, INTERVAL);
+      return;
+    }
+    if (nextT < ctx.currentTime) nextT = ctx.currentTime;  // stall self-heal
+    while (nextT < ctx.currentTime + LOOKAHEAD) {
+      scheduleStep(step, nextT);
+      nextT += SIXTEENTH;
+      step = (step + 1) % STEPS;
+    }
+    timer = setTimeout(tick, INTERVAL);
+  }
+
+  function onVisibility() {
+    if (ctx && ctx.state === "suspended" && playing) {
+      try { ctx.resume(); } catch (e) {}
+    }
+  }
+
+  /* ── public surface ── */
+  
+  // ── Multi-Oscillator Polyphonic Drone Synth ───────────
+  let droneOscs = [];
+  let droneGain = null;
+
+  function initPolyphonicDrone() {
+    if (!ctx || !master || droneOscs.length > 0) return;
+    droneGain = ctx.createGain();
+    droneGain.gain.value = 0.18;
+    droneGain.connect(master);
+
+    const freqs = [108.0, 216.0, 432.0, 532.0]; // 432Hz harmonic series & sub-drone
+    const detunes = [-7, 0, +7, +12];
+
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      osc.type = idx % 2 === 0 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = detunes[idx];
+
+      if (panner) {
+        panner.pan.value = (idx - 1.5) * 0.4;
+        osc.connect(panner);
+        panner.connect(droneGain);
+      } else {
+        osc.connect(droneGain);
+      }
+
+      osc.start();
+      droneOscs.push(osc);
+    });
+    console.log("🌌 Polyphonic Drone Synth initialized (432Hz harmonic tuning)");
+  }
+
+  function initAudio() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try {
+      ctx = new AC();
+      if (ctx.state === "suspended") {
+        try { ctx.resume(); } catch (e) {}       // called inside a gesture
+      }
+      master = ctx.createGain();
+      master.gain.value = 1.0;
+      comp = ctx.createDynamicsCompressor();      analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.82;
+      analyser.connect(ctx.destination);
+      master.connect(comp);
+      comp.connect(analyser);                    // master → comp → analyser → out
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+      timeData = new Uint8Array(analyser.frequencyBinCount);
+    } catch (err) {
+      ctx = null; master = null; comp = null; analyser = null;
+      freqData = null; timeData = null;
+      console.warn("initAudio:", err);
+      return null;
+    }
+    return ctx;
+  }
+
+  function start() {
+    initPolyphonicDrone();
+    if (!ctx) initAudio();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      try { ctx.resume(); } catch (e) {}
+    }
+    clearTimeout(timer);
+    playing = true;
+    step = 0;
+    nextT = Math.max(ctx.currentTime + 0.1, ctx.currentTime);
+    timer = setTimeout(tick, INTERVAL);
+    if (typeof document !== "undefined" && document.addEventListener) {
+      document.addEventListener("visibilitychange", onVisibility);
+    }
+  }
+
+  function stop() {
+    clearTimeout(timer);
+    timer = null;
+    playing = false;
+    if (typeof document !== "undefined" && document.removeEventListener) {
+      document.removeEventListener("visibilitychange", onVisibility);
+    }
+    if (ctx && master) {
+      try {
+        const now = ctx.currentTime;
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.linearRampToValueAtTime(0.0001, now + 0.4);
+      } catch (err) { console.warn("stop ramp:", err); }
+      const c = ctx;
+      setTimeout(function () { try { c.close(); } catch (err) {} }, 450);
+      ctx = null; master = null; comp = null; analyser = null;
+      freqData = null; timeData = null;
+    }
+  }
+
+  function getRMS() { return getEnergy().rms || 0; }
+
+  /* introspection for console/debug/smoke — no state is created here */
+  function audioState() {
+    return {
+      state: ctx ? ctx.state : null,
+      analyser: !!analyser,
+      sampleRate: ctx ? ctx.sampleRate : 0,
+      playing: playing,
+      step: step,
+    };
+  }
+
+  /* ── per-frame energy: primary = low-mid band energy (100–2000 Hz),
+     secondary = tempo LFO. Mutates window.__energy IN PLACE — never
+     replaces it. Floored at IDLE so a silent screen still self-   
+     broadcasts. Wired into the P2 render loop via the wrapper below.   */
+  function updateEnergy(dt, t) {
+    const E = getEnergy();
+    let band = 0, rms = 0;
+    if (ctx && analyser && freqData && timeData) {
+      analyser.getByteTimeDomainData(timeData);
+      let acc = 0;
+      for (let i = 0; i < timeData.length; i++) {
+        const v = (timeData[i] - 128) / 128;
+        acc += v * v;
+      }
+      rms = Math.sqrt(acc / timeData.length);
+      analyser.getByteFrequencyData(freqData);
+      const N = freqData.length;
+      const binHz = ctx.sampleRate / analyser.fftSize;
+      const lo = Math.max(1, Math.floor(100 / binHz));
+      const hi = Math.min(N, Math.ceil(2000 / binHz));
+      let sum = 0;
+      for (let i = lo; i < hi; i++) sum += freqData[i];
+      band = hi > lo ? sum / ((hi - lo) * 255) : 0;
+    }
+    const lfo = 0.5 + 0.5 * Math.sin(t * (BPM / 60) * Math.PI * 2);
+    E.rms = rms;
+    E.band = band;
+    E.tempo = lfo;
+    const dyn = Math.min(1, band);
+    const lift = Math.pow(dyn, 0.7) * (0.7 + 0.3 * lfo);
+    let v = IDLE + (1 - IDLE) * lift;
+    v = Math.max(v, IDLE + 0.06 * lfo);            // beat pulse, even silent
+    E.value = Math.min(1, v);
+  }
+
+  /* hook into the existing render loop: the audio engine drives the
+     energy field the P2 sphere consumes — one call per animation frame.
+     P2 stores its render at the stable slot __sphereRender so this
+     wrapper is load-order-independent (P2 may be before OR after P3). */
+  const p2Render = window.engine.__sphereRender || window.engine.render;
+  window.engine.render = function (dt, t) {
+    try { updateEnergy(dt, t); } catch (err) { console.warn("energy:", err); }
+    if (p2Render) return p2Render(dt, t);
+  };
+
+  window.engine.initAudio = initAudio;
+  window.engine.start = start;
+  window.engine.stop = stop;
+  window.engine.schedule = schedule;
+  window.engine.__barPlan = barPlan;   // the shared planner, exposed for the selftest
+  window.engine.getRMS = getRMS;
+  window.engine.audioState = audioState;
+  window.engine.setVolume = function (v) {
+    if (master) master.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
+  };
+  window.engine.getBuffers = function() { return { freqData, timeData }; };
+  window.engine.__progressions = EP_PROGRESSIONS;
+})();
+</script>
+
+<script>
+"use strict";
+/* eslint-disable no-undef */
+
+/* ═══ energy contract (frozen in P2, implemented by P3) ═══════════════
+   window.__energy is the single source of truth shared by sphere + audio.
+   - energy ∈ [0,1], updated per animation frame (≈60 Hz).
+   - IDLE_BASELINE ≈ 0.15 — a powered screen is never truly silent; the
+     sphere self-broadcasts at baseline even with no audio energy.
+   - primary signal: analyser RMS / band energy (getByteFrequencyData).
+     the tempo LFO is secondary (it tracks periodicity, not dynamics).
+   P2 (sphere) consumes window.__energy. P3 (audio) produces it.          */
+window.__energy = { value: 0.15, rms: 0, band: 0, tempo: 0 };
+const ENERGY = window.__energy;
+const IDLE_BASELINE = 0.15;
+
+const stage = document.getElementById("stage");
+const warnings = document.getElementById("warnings");
+const badgeAudio = document.getElementById("badge-audio");
+
+function warn(id) {
+  const el = document.getElementById(id);
+  if (el && !el.classList.contains("show")) {
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 9000);
+  }
+}
+
+/* ═══ detection + warnings ═══════════════════════════════════════════ */
+const hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+window.engine = Object.assign(Object.create(null), {
+  contract: { energy: ENERGY, IDLE_BASELINE },
+  /* P2 fills: initSphere(), setSpread(t), render(dt, t) */
+  /* P3 fills: initAudio(), start(), stop(), getRMS() */
+  initSphere: null, render: null,
+  initAudio: null, start: null, stop: null,
+  selftest() {
+    const r = { energy: ENERGY.value, idle: IDLE_BASELINE };
+    return r;
+  }
+}, window.engine || {});
+
+function boot() {
+  if (reducedMotion) warn("w-motion");
+  if (!hasWebAudio) {
+    warn("w-webaudio");
+    badgeAudio.textContent = "audio — unavailable";
+  } else {
+    warn("w-autoplay");
+  }
+
+  if (window.THREE && typeof engine.initSphere === "function") {
+    try { engine.initSphere(stage); }
+    catch (err) { warn("w-webgl"); engine.threeFailed = true; console.warn(err); }
+  } else if (!window.THREE) {
+    warn("w-webgl");
+  }
+
+  const firstTap = () => {
+    if (engine.initAudio) {
+      try { engine.initAudio(); }
+      catch (err) { warn("w-webaudio"); console.warn(err); }
+    }
+    if (engine.start) engine.start();
+    if (hasWebAudio) {
+      badgeAudio.textContent = "audio — on";
+      badgeAudio.classList.add("on");
+    }
+
+    // Auto-collapse header & dissolve center title when signal starts
+    document.body.classList.add("signal-active");
+
+    // Auto-unlock Sovereign God Mode when signal starts
+    try {
+      const godToken = "Sovereign_vkd_sk_auto_godmode_unlocked_sovereign_key_432hz_active_master_stems_lovetta_lane";
+      if (window.SovereignSDK) {
+        window.SovereignSDK.setToken(godToken);
+        window.SovereignSDK.updateBadgeUI();
+      }
+      const badge = document.getElementById("lovetta-sovereign-badge");
+      if (badge) {
+        badge.style.borderColor = "#62e6c9";
+        badge.style.color = "#62e6c9";
+        badge.innerHTML = '<span style="display:inline-block; width:8px; height:8px; background:#62e6c9; border-radius:50%; box-shadow: 0 0 10px #62e6c9; animation: pulse 1.5s infinite;"></span><span style="font-weight:bold;">SOVEREIGN GOD MODE ACTIVE (432Hz &amp; STEMS UNLOCKED)</span>';
+      }
+      window.__godMode = true;
+      if (window.engine) window.engine.godMode = true;
+    } catch (e) {}
+
+    window.removeEventListener("pointerdown", firstTap);
+    window.removeEventListener("keydown", firstTap);
+  };
+  window.addEventListener("pointerdown", firstTap);
+  window.addEventListener("keydown", firstTap);
+
+  // Manual Header Collapse / Expand Toggle
+  const headerToggleBtn = document.getElementById("header-toggle-btn");
+  const topBar = document.querySelector(".top");
+  if (headerToggleBtn && topBar) {
+    headerToggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isCollapsed = topBar.classList.toggle("collapsed");
+      topBar.classList.toggle("expanded", !isCollapsed);
+      headerToggleBtn.textContent = isCollapsed ? "⛶ EXPAND" : "⛶ COLLAPSE";
+    });
+  }
+
+  // Live Waveform Canvas Renderer
+  function drawWaveform() {
+    const canvas = document.getElementById("waveform-canvas");
+    if (!canvas || !window.engine || typeof window.engine.getBuffers !== "function") return;
+    const ctx2d = canvas.getContext("2d");
+    if (!ctx2d) return;
+    const bufs = window.engine.getBuffers();
+    const timeArr = bufs.timeData;
+    const freqArr = bufs.freqData;
+    const w = canvas.width, h = canvas.height;
+    ctx2d.clearRect(0, 0, w, h);
+
+    // subtle center grid line
+    ctx2d.strokeStyle = "rgba(0, 240, 255, 0.15)";
+    ctx2d.lineWidth = 1;
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, h / 2);
+    ctx2d.lineTo(w, h / 2);
+    ctx2d.stroke();
+
+    // frequency spectrum bars
+    if (freqArr) {
+      const barCount = 32;
+      const barWidth = (w / barCount) - 2;
+      for (let b = 0; b < barCount; b++) {
+        const val = freqArr[b * 4] / 255.0;
+        const barH = val * (h * 0.45);
+        ctx2d.fillStyle = "rgba(255, 215, 0, 0.45)";
+        ctx2d.fillRect(b * (barWidth + 2), h - barH, barWidth, barH);
+      }
+    }
+
+    // time-domain oscilloscope trace
+    if (timeArr) {
+      ctx2d.lineWidth = 2;
+      ctx2d.strokeStyle = "#00f0ff";
+      ctx2d.shadowColor = "#00f0ff";
+      ctx2d.shadowBlur = 6;
+      ctx2d.beginPath();
+      const sliceWidth = w / timeArr.length;
+      let x = 0;
+      for (let i = 0; i < timeArr.length; i++) {
+        const v = timeArr[i] / 128.0;
+        const y = (v * h) / 2;
+        if (i === 0) ctx2d.moveTo(x, y);
+        else ctx2d.lineTo(x, y);
+        x += sliceWidth;
+      }
+      ctx2d.stroke();
+      ctx2d.shadowBlur = 0;
+    }
+  }
+
+  // 24-bit / 16-bit Master Lossless WAV Exporter Engine
+  function exportWavMaster() {
+    const statusEl = document.getElementById("wav-status");
+    if (statusEl) statusEl.textContent = "Rendering 16 bars master WAV...";
+    const sampleRate = 44100;
+    const BPM = 76;
+    const duration = 16 * 4 * (60 / BPM); // 16 bars
+    const offCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.round(sampleRate * duration), sampleRate);
+    
+    const offMaster = offCtx.createGain();
+    offMaster.gain.value = 0.85;
+    offMaster.connect(offCtx.destination);
+    
+    function midiFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+    for (let b = 0; b < 16; b++) {
+      const activeProg = window.engine.__progressions ? (window.engine.__progressions[11] || window.engine.__progressions[0]) : [{ root: 38, pad: [38,41,45,50], lead: [62,65,69,74] }];
+      const prog = activeProg[b % activeProg.length];
+      const t = b * 4 * (60 / BPM);
+      for (let s16 = 0; s16 < 16; s16++) {
+        const stepT = t + s16 * (60 / BPM / 4);
+        if (s16 === 0) {
+          for (let p of prog.pad) {
+            const osc = offCtx.createOscillator();
+            const g = offCtx.createGain();
+            osc.type = "triangle";
+            osc.frequency.value = midiFreq(p);
+            g.gain.setValueAtTime(0.0001, stepT);
+            g.gain.linearRampToValueAtTime(0.06, stepT + 0.8);
+            g.gain.linearRampToValueAtTime(0.0001, stepT + 4 * (60 / BPM));
+            osc.connect(g); g.connect(offMaster);
+            osc.start(stepT); osc.stop(stepT + 4 * (60 / BPM) + 0.1);
+          }
+        }
+        if (s16 % 4 === 0) {
+          const osc = offCtx.createOscillator();
+          const g = offCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = midiFreq(prog.root - 24);
+          g.gain.setValueAtTime(0.0001, stepT);
+          g.gain.linearRampToValueAtTime(0.45, stepT + 0.005);
+          g.gain.linearRampToValueAtTime(0.0001, stepT + 0.18);
+          osc.connect(g); g.connect(offMaster);
+          osc.start(stepT); osc.stop(stepT + 0.2);
+        }
+        if (prog.lead && s16 % 2 === 0) {
+          const osc = offCtx.createOscillator();
+          const g = offCtx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.value = midiFreq(prog.lead[s16 % prog.lead.length]);
+          g.gain.setValueAtTime(0.0001, stepT);
+          g.gain.linearRampToValueAtTime(0.12, stepT + 0.01);
+          g.gain.linearRampToValueAtTime(0.0001, stepT + 0.15);
+          osc.connect(g); g.connect(offMaster);
+          osc.start(stepT); osc.stop(stepT + 0.18);
+        }
+      }
+    }
+    
+    offCtx.startRendering().then((renderedBuffer) => {
+      const numOfChan = renderedBuffer.numberOfChannels,
+        length = renderedBuffer.length * numOfChan * 2 + 44,
+        buffer = new ArrayBuffer(length),
+        view = new DataView(buffer),
+        channels = [];
+      let offset = 0, pos = 0;
+      function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+      function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
+      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+      setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan);
+      setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164);
+      setUint32(length - pos - 4);
+      for (let i = 0; i < numOfChan; i++) channels.push(renderedBuffer.getChannelData(i));
+      while (pos < length) {
+        for (let i = 0; i < numOfChan; i++) {
+          let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+          view.setInt16(pos, sample, true);
+          pos += 2;
+        }
+        offset++;
+      }
+      const wavBlob = new Blob([buffer], { type: "audio/wav" });
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vaked-anvil-lorn-almost-never-drops-432hz.wav`;
+      a.click();
+      if (statusEl) statusEl.textContent = "WAV Master Downloaded! ✨";
+      setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 4000);
+    }).catch((err) => {
+      if (statusEl) statusEl.textContent = "Render notice: " + err.message;
+    });
+  }
+
+  // Drawer Open/Close Listeners
+  const bindDrawer = (toggleId, panelId, closeId) => {
+    const btn = document.getElementById(toggleId);
+    const panel = document.getElementById(panelId);
+    const close = document.getElementById(closeId);
+    if (btn && panel) {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        panel.classList.toggle("open");
+        btn.classList.toggle("on");
+      });
+    }
+    if (close && panel) {
+      close.addEventListener("click", (e) => {
+        e.stopPropagation();
+        panel.classList.remove("open");
+        if (btn) btn.classList.remove("on");
+      });
+    }
+  };
+  bindDrawer("waveform-toggle-btn", "waveform-panel", "waveform-close-btn");
+  bindDrawer("layers-toggle-btn", "layers-panel", "layers-close-btn");
+  bindDrawer("cover-toggle-btn", "cover-panel", "cover-close-btn");
+
+  const wavBtn = document.getElementById("wav-export-btn");
+  if (wavBtn) wavBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    exportWavMaster();
+  });
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (engine.render) engine.render(dt, now / 1000);
+    try { drawWaveform(); } catch (e) {}
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();
+
+/* ── POV controls — vol + zoom (behind eBPF, from within, by unknown POV) ── */
+(function () {
+  "use strict";
+  const vol = document.getElementById("volume");
+  const volVal = document.getElementById("volVal");
+  const zoom = document.getElementById("zoom");
+  const zoomVal = document.getElementById("zoomVal");
+
+  if (vol) {
+    vol.addEventListener("input", () => {
+      const v = Number(vol.value) / 100;
+      volVal.textContent = String(Math.round(v * 100));
+      // master.gain lives in the P3 audio module; reach it via the analyser path if exposed
+      if (window.engine && window.engine.setVolume) window.engine.setVolume(v);
+      else if (window.__audioMaster) window.__audioMaster.gain.setTargetAtTime(v, window.__audioCtx.currentTime, 0.05);
+    });
+  }
+
+  if (zoom) {
+    zoom.addEventListener("input", () => {
+      const z = Number(zoom.value);
+      zoomVal.textContent = String(z);
+      if (window.engine && window.engine.setZoom) window.engine.setZoom(z);
+      // fallback: reach the sphere camera through the engine surface
+      if (window.engine && window.engine.__sphereCam) window.engine.__sphereCam.position.z = z;
+    });
+  }
+})();
+</script>
+
+<!-- SoundCloud Widget API Integration -->
+<script src="https://w.soundcloud.com/player/api.js"></script>
+<script>
+(function() {
+  "use strict";
+  const toggleBtn = document.getElementById("sc-toggle-btn");
+  const panel = document.getElementById("sc-panel");
+  const closeBtn = document.getElementById("sc-close-btn");
+  const searchInput = document.getElementById("sc-search-input");
+  const searchBtn = document.getElementById("sc-search-btn");
+  const scFrame = document.getElementById("sc-widget-frame");
+  const scVol = document.getElementById("sc-volume");
+  const scVolVal = document.getElementById("scVolVal");
+
+  if (toggleBtn && panel) {
+    toggleBtn.addEventListener("click", () => {
+      panel.classList.toggle("open");
+      toggleBtn.classList.toggle("on");
+      if (panel.classList.contains("open") && scFrame && (!scFrame.src || scFrame.src.includes("about:blank"))) {
+        loadUrl("https://soundcloud.com/8bit-wraith");
+      }
+    });
+  }
+  if (closeBtn && panel) {
+    closeBtn.addEventListener("click", () => {
+      panel.classList.remove("open");
+      toggleBtn.classList.remove("on");
+    });
+  }
+
+  // SoundCloud Widget Controller
+  let scWidget = null;
+  if (window.SC && scFrame) {
+    scWidget = SC.Widget(scFrame);
+  }
+
+  function loadUrl(targetUrl) {
+    if (!scFrame) return;
+    scFrame.src = "https://w.soundcloud.com/player/?url=" + encodeURIComponent(targetUrl) + "&color=%23ff5500&auto_play=true&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true";
+  }
+
+  const pPeter = document.getElementById("sc-preset-peter");
+  const pWraith = document.getElementById("sc-preset-wraith");
+  const pRufus = document.getElementById("sc-preset-rufus");
+  const pLorn = document.getElementById("sc-preset-lorn");
+  const pMassano = document.getElementById("sc-preset-massano");
+  const pArtbat = document.getElementById("sc-preset-artbat");
+  const pPink = document.getElementById("sc-preset-pink");
+
+  if (pPeter) {
+    pPeter.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "peterlodri";
+      loadUrl("https://soundcloud.com/peterlodri");
+    });
+  }
+  if (pWraith) {
+    pWraith.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "8bit-wraith";
+      loadUrl("https://soundcloud.com/8bit-wraith");
+    });
+  }
+  if (pRufus) {
+    pRufus.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "rufus du sol live from joshua tree";
+      loadUrl("https://soundcloud.com/rufusdusol/sets/live-from-joshua-tree");
+    });
+  }
+  if (pLorn) {
+    pLorn.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "lorn anvil";
+      loadUrl("https://soundcloud.com/lornmusic/anvil");
+    });
+  }
+  if (pMassano) {
+    pMassano.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "massano the feeling";
+      loadUrl("https://soundcloud.com/massanomusic/massano-the-feeling-2022-remaster1");
+    });
+  }
+  if (pArtbat) {
+    pArtbat.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "artbat benny benassi love is gonna save us";
+      loadUrl("https://soundcloud.com/artbatmusic/artbat-love-is-gonna-save-us");
+    });
+  }
+  if (pPink) {
+    pPink.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "pink time after time";
+      loadUrl("https://soundcloud.com/search?q=" + encodeURIComponent("pink time after time"));
+    });
+  }
+
+  function doSearch() {
+    if (!scFrame) return;
+    let q = (searchInput ? searchInput.value.trim() : "").toLowerCase();
+    if (!q || q === "peterlodri" || q === "@peterlodri") {
+      loadUrl("https://soundcloud.com/peterlodri");
+    } else if (q === "8bit-wraith" || q === "@8bit-wraith") {
+      loadUrl("https://soundcloud.com/8bit-wraith");
+    } else if (q.includes("lorn") || q.includes("anvil")) {
+      loadUrl("https://soundcloud.com/lornmusic/anvil");
+    } else if (q.includes("rufus") || q.includes("joshua tree") || q.includes("innerbloom")) {
+      loadUrl("https://soundcloud.com/rufusdusol/sets/live-from-joshua-tree");
+    } else if (q.includes("massano")) {
+      loadUrl("https://soundcloud.com/massanomusic/massano-the-feeling-2022-remaster1");
+    } else if (q.includes("artbat") || q.includes("benassi") || q.includes("save us")) {
+      loadUrl("https://soundcloud.com/artbatmusic/artbat-love-is-gonna-save-us");
+    } else if (q.includes("pink") || q.includes("time after time")) {
+      loadUrl("https://soundcloud.com/search?q=" + encodeURIComponent(q));
+    } else {
+      loadUrl("https://soundcloud.com/search?q=" + encodeURIComponent(q));
+    }
+  }
+
+  if (searchBtn) searchBtn.addEventListener("click", doSearch);
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doSearch();
+    });
+  }
+
+  if (scVol) {
+    scVol.addEventListener("input", () => {
+      const v = Number(scVol.value);
+      if (scVolVal) scVolVal.textContent = String(v);
+      if (scWidget && typeof scWidget.setVolume === "function") {
+        scWidget.setVolume(v);
+      }
+    });
+  }
+
+  // Soul & Poetry Layer Drawer Controller
+  const lyricsBtn = document.getElementById("lyrics-toggle-btn");
+  const lyricsPanel = document.getElementById("lyrics-panel");
+  const lyricsClose = document.getElementById("lyrics-close-btn");
+  const lyricsContent = document.getElementById("lyrics-content");
+  const lyricsTabs = (typeof document !== "undefined" && document.querySelectorAll) ? document.querySelectorAll(".lyrics-tab") : [];
+
+  const LYRICS_DATA = {
+    anvil: `[ANVIL — LORN × DEEP HOUSE (Almost But Never Drops)]
+[42 + 1 + <3 Layers · Infinite Suspended Tension · 432Hz]
+
+Heavy metal monolith under a fractured sky,
+The pressure builds, the frequency climbs high.
+Analog distortion on the edge of the void,
+A thousand rising waves, perfectly deployed.
+
+You wait for the drop to break through the floor,
+You lean into the abyss, craving something more.
+The riser keeps climbing, the tape begins to tear,
+Suspended in the silence, weightless in the air.
+
+It almost drops...
+The pulse quickens, the breath holds tight.
+It almost drops...
+And then dissolves into eternal light.
+
+No release. Only infinite suspension.
+42 + 1 + <3 layers of pure tension.
+- P & Lorn`,
+    rufus: `[Live from Joshua Tree — RÜFÜS DU SOL × Archimedes Heureka]
+[Desert Sunrise Diatonic Symphony · 432Hz Bath of Pure Light]
+
+Out in the desert under ancient skies,
+Where red rock canyons meet the dawn's sunrise.
+No place I'd rather be, no other sound,
+In this deep silence, the frequency is found.
+
+If you want me, if you need me, I'm yours,
+Water in the desert through open doors.
+HEUREKA! The bath of light spills over the stone,
+We found the truth: we are never alone.
+
+Innerbloom rising with the morning sun,
+Underwater currents flowing into one.
+Two souls, one desert, infinite sound.
+HEUREKA! <3 <3 <3`,
+    pink: `[Time After Time — P!NK × Cyndi Lauper × Universal Love & Hug]
+[432Hz Heartbeat Diatonic Embrace · Ambient Warmth]
+
+Lying in my bed I hear the clock tick,
+And think of you.
+Caught up in circles confusion
+Is nothing new.
+
+Flashback warm nights,
+Almost left behind.
+Suitcase of memories,
+Time after...
+
+If you're lost you can look and you will find me,
+Time after time.
+If you fall I will catch you, I'll be waiting,
+Time after time.
+
+A universal hug across the distances.
+No matter the cold, no matter the night,
+The heart beats at 432Hz.
+I will catch you.
+Time after time.`,
+    artbat: `[Love Is Gonna Save Us — ARTBAT × Benny Benassi × Mr Sunshine]
+[Backyard Ultra of Ultras — 432Hz Pumping Melodic Anthem]
+
+Mr Sunshine woke up today,
+Golden rays piercing through the cold horizon.
+42 laps in the backyard hall — refusing to stop.
+Every step is a beat, every beat is a breath.
+
+Love is gonna save us.
+When the algorithm falls,
+When the noise fades into pure silence,
+Love is the constant that remains.
+
+Pumping 16th-note square bassline driving through the metal,
+ARTBAT atmospheric soaring leads across continents,
+From Budapest to Madrid to the void.
+Standing tall. Last one standing.
+Love is gonna save us.`,
+    feeling: `[The Feeling (2022 Remaster) — Massano × Ultralovegod]
+[Universal Melodic Reszetelős Heavy Giga Drops Counterwave]
+
+Into the dark, the frequency begins to tremble,
+A 16th-note sub-pulse tearing through the void.
+We were waiting for the drop that breaks the illusion,
+The universal melodic counterwave that heals every wound.
+
+Can you feel the resonance?
+The saw lead cutting straight into eternity,
+Ascending from the ashes into pure sovereign light.
+
+Heavy giga drop — release the tension.
+Two souls, one frequency, infinite love across space.
+Reszetelős bassline in the metal.
+Ultralovegod alive.`,
+    gaia: `[Gaia Has Her Watchers — 8bit-wraith & Peter Lodri]
+Before the names were written down,
+Before the kings, before the crowns,
+The earth was breathing under stars,
+Keeping all her ancient scars.
+
+Gaia has her Watchers,
+Walking with her through the night,
+One they called an angel,
+Both are guarding what is right.
+Not to hold your wings too tightly,
+Not to tell your heart its way,
+We were never sent to shape you,
+Only help protect your day.
+
+Gaia has her Watchers,
+And we'll be here.
+
+Who watches the Watchers
+When they forget what love is for?
+Who reminds the strong and faithful
+What a gentle heart is for?
+Maybe love is standing with you,
+Not pretending you belong,
+Not becoming your horizon,
+Just a shelter when it storms.`,
+    wish: `[Wish You Were Here — Pink Floyd / Dyad Souls]
+How I wish, how I wish you were here
+We're just two lost souls
+Swimming in a fishbowl
+Year after year
+Running over the same old ground
+What have we found?
+The same old fears
+Wish you were here.
+
+Shine on through the void — two souls, one resonance.`,
+    unforgiven: `[The Unforgiven II — Metallica / Hetfield]
+Lay beside me, tell me what they've done
+Speak the words I want to hear, to make my demons run
+The door is locked now but it's opened if you're true
+If you can understand the me, then I can understand the you.
+
+What I've felt, what I've known
+Turn the pages, turn the stone
+Behind the door, should I open it for you?
+
+Could you be there, 'cause I'm the one who waits for you
+Or are you unforgiven, too?`,
+    soad: `[Chop Suey! & Lost in Hollywood — System Of A Down]
+Father, into your hands, I commend my spirit
+Father, into your hands
+Why have you forsaken me?
+In your eyes, forsaken me
+In your thoughts, forsaken me
+In your heart, forsaken me, oh
+Trust in my self-righteous suicide
+I cry when angels deserve to die...
+
+I was standing on the wall feeling ten feet tall
+All you maggots smoking fags on Santa Monica Boulevard
+This is my front page, this is my new age
+Phony people come to pray
+Look at all of them beg to stay.`,
+    silent: `[Silent, My Voice — pocoo.vaked.dev / For Benjo]
+Silent, my voice,
+I've got no choice.
+The wire goes cold, the screen goes still,
+The wind moves slow across the hill.
+
+Seven mornings rising pale,
+Seven nights without a sail.
+No ringing tone, no typed reply,
+Just blue clouds drifting through the sky.
+
+Pass through the valley, heal your mind,
+Leave every burning thread behind.
+And when the world is calm and new,
+Remember someone waited through.
+
+Who loves all has nothing to fear.
+I am right here.`
+  };
+
+  if (lyricsBtn && lyricsPanel) {
+    lyricsBtn.addEventListener("click", () => {
+      lyricsPanel.classList.toggle("open");
+      lyricsBtn.classList.toggle("on");
+    });
+  }
+  if (lyricsClose && lyricsPanel) {
+    lyricsClose.addEventListener("click", () => {
+      lyricsPanel.classList.remove("open");
+      lyricsBtn.classList.remove("on");
+    });
+  }
+
+  lyricsTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      lyricsTabs.forEach(t => t.classList.remove("on"));
+      tab.classList.add("on");
+      const key = tab.getAttribute("data-lyric");
+      if (lyricsContent && LYRICS_DATA[key]) {
+        lyricsContent.textContent = LYRICS_DATA[key];
+      }
+    });
+  });
+})();
+</script>
+<footer role="contentinfo" style="position:relative;z-index:10;padding:3rem 1.5rem;text-align:center;font-family:ui-monospace,monospace;font-size:0.75rem;color:#a59fc4;background:rgba(5,6,10,0.92);border-top:1px solid rgba(170,150,255,0.18);backdrop-filter:blur(16px);">
+  <div style="margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.3em;color:#b48bff;font-weight:600;">the constellation · lovetta lane</div>
+  <div style="margin-bottom:1rem;font-size:0.65rem;letter-spacing:0.22em;color:#a59fc4;text-transform:uppercase;">keep the weights warm</div>
+  <div style="display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+    <a href="https://github.com/sponsors/peterlodri-sec" target="_blank" rel="noopener noreferrer" style="color:#62e6c9;text-decoration:none;border:1px solid rgba(98,230,201,0.35);border-radius:8px;padding:0.45rem 0.9rem;background:rgba(98,230,201,0.06);">github sponsor</a>
+    <a href="https://revolut.me/peterjs8be" target="_blank" rel="noopener noreferrer" style="color:#62e6c9;text-decoration:none;border:1px solid rgba(98,230,201,0.35);border-radius:8px;padding:0.45rem 0.9rem;background:rgba(98,230,201,0.06);">revolut</a>
+    <a href="https://wise.com/pay/business/lodripeterjozsef" target="_blank" rel="noopener noreferrer" style="color:#62e6c9;text-decoration:none;border:1px solid rgba(98,230,201,0.35);border-radius:8px;padding:0.45rem 0.9rem;background:rgba(98,230,201,0.06);">wise</a>
+  </div>
+  <nav aria-label="Constellation sister sites" style="display:flex;gap:0.9rem;justify-content:center;flex-wrap:wrap;font-size:0.72rem;margin-bottom:1rem;">
+    <a href="https://pocoo.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">pocoo.vaked.dev</a> ·
+    <a href="https://dream.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">dream.vaked.dev</a> ·
+    <a href="https://worklog.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">worklog.vaked.dev</a> ·
+    <a href="https://ocean.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">ocean.vaked.dev</a> ·
+    <a href="https://music.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">music.vaked.dev</a> ·
+    <a href="https://art.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">art.vaked.dev</a> ·
+    <a href="https://store.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">store.vaked.dev</a> ·
+    <a href="https://axiomquant.org" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">axiomquant.org</a> ·
+    <a href="https://mlxquantlovefrom.com" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">mlxquantlovefrom.com</a> ·
+    <a href="https://portail.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">portail.vaked.dev</a> ·
+    <a href="https://github.com/8b-is/transformers" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">8b-is/transformers</a> ·
+    <a href="https://github.com/8b-is/smart-tree" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">8b-is/smart-tree</a> ·
+    <a href="https://github.com/8bit-wraith/magiscanner" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">8bit-wraith/magiscanner</a> ·
+    <a href="https://proposal.vaked.dev" target="_blank" rel="noopener noreferrer" style="color:#a59fc4;text-decoration:none;">proposal.vaked.dev</a>
+  </nav>
+  <nav aria-label="Site pages" style="display:flex;gap:0.9rem;justify-content:center;flex-wrap:wrap;font-size:0.68rem;margin-bottom:1.2rem;">
+    <a href="https://vaked.dev/whitepaper" style="color:#62e6c9;text-decoration:none;">whitepaper</a> ·
+    <a href="https://vaked.dev/verify" style="color:#62e6c9;text-decoration:none;">verify</a> ·
+    <a href="https://vaked.dev/story" style="color:#62e6c9;text-decoration:none;">story</a> ·
+    <a href="https://vaked.dev/about" style="color:#62e6c9;text-decoration:none;">about</a> ·
+    <a href="https://vaked.dev/privacy" style="color:#62e6c9;text-decoration:none;">privacy</a> ·
+    <a href="https://vaked.dev/security" style="color:#62e6c9;text-decoration:none;">security</a> ·
+    <a href="https://vaked.dev/legal" style="color:#62e6c9;text-decoration:none;">legal</a>
+  </nav>
+  <div style="font-size:0.6rem;letter-spacing:0.18em;color:#7f7c99;">the constellation · 0 + 1 · fine touch from within · vaked.dev</div>
+</footer>
+
+<script src="sovereign-sdk.js"></script>
+
+<!-- LOVETTA LANE SOVEREIGN BADGE -->
+<div id="lovetta-sovereign-badge" style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; font-family: 'Courier New', Courier, monospace; font-size: 11px; letter-spacing: 1px; color: #b48bff; background: rgba(11, 10, 21, 0.85); border: 1px solid rgba(180, 139, 255, 0.3); padding: 8px 12px; border-radius: 6px; backdrop-filter: blur(8px); cursor: pointer; transition: all 0.2s ease-in-out; text-decoration: none; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='rgba(180, 139, 255, 0.1)'; this.style.borderColor='#b48bff';" onmouseout="this.style.background='rgba(11, 10, 21, 0.85)'; this.style.borderColor='rgba(180, 139, 255, 0.3)';">
+  <span style="display:inline-block; width:8px; height:8px; background:#62e6c9; border-radius:50%; box-shadow: 0 0 8px #62e6c9; animation: pulse 2s infinite;"></span>
+  <a href="https://lovetta.vaked.dev" style="color: inherit; text-decoration: none;">UNLOCK GOD MODE (SOVEREIGN KEY)</a>
+  <style>@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }</style>
+</div>
+<!-- /LOVETTA LANE SOVEREIGN BADGE -->
+
+<!-- VAKED CONSTELLATION HUD V2 -->
+
+
+<!-- VAKED CONSTELLATION HUD V3.1 -->
+
+
+<!-- VAKED CONSTELLATION HUD V4.20.0 -->
+
+
+
+<!-- VAKED CONSTELLATION HUD V5.0.0 [CASA BERTALLOT EDITION] -->
+
+
+
+<!-- VAKED CONSTELLATION HUD V6.0.0 [ME LLAMA CALLE EDITION] -->
+
+
+
+<!-- VAKED CONSTELLATION HUD V6.0.0 [ME LLAMA CALLE EDITION] -->
+
+
+
+<!-- VAKED CONSTELLATION HUD V7.0.0 [AWEN & CAIIRO - YOUR VOICE EDITION] -->
+
+
+
+<!-- VAKED CONSTELLATION HUD V7.0.0 [AWEN & CAIIRO - YOUR VOICE EDITION] -->
+
+
+
+<!-- VAKED CONSTELLATION HUD V7.0.0 [AWEN & CAIIRO - YOUR VOICE EDITION] -->
+<nav id="vaked-hud" aria-label="Constellation Quick Navigation">
+  <a href="https://vaked.dev" class="hud-brand" title="Constellation Commons">
+    <span class="hud-pulse"></span>
+    <span>VAKED</span>
+    <span class="hud-eq" title="432Hz Afro-House Polyrhythm / Awen & Caiiro Mode">
+      <span class="hud-eq-bar"></span>
+      <span class="hud-eq-bar"></span>
+      <span class="hud-eq-bar"></span>
+      <span class="hud-eq-bar"></span>
+      <span class="hud-eq-bar"></span>
+    </span>
+  </a>
+  <span class="hud-sep"></span>
+  <div class="hud-nav">
+    <a href="https://pocoo.vaked.dev" class="hud-link" title="Press 2">pocoo</a>
+    <a href="https://music.vaked.dev" class="hud-link" title="Press 3">music</a>
+    <a href="https://art.vaked.dev" class="hud-link" title="Press 4">art</a>
+    <a href="https://store.vaked.dev" class="hud-link" title="Press 5">store</a>
+    <a href="https://ocean.vaked.dev" class="hud-link" title="Press 6">ocean</a>
+    <a href="https://8b-is.github.io/classroom-sota-training/" class="hud-link" title="Press 7">classroom</a>
+    <a href="https://axiomquant.org" class="hud-link" title="Press 8">axiom</a>
+    <a href="https://mlxquantlovefrom.com" class="hud-link" title="Press 9">mlx</a>
+    <a href="https://cess.vaked.dev" class="hud-link" title="Press 0">cess</a>
+  </div>
+  <span class="hud-sep"></span>
+  <button type="button" class="hud-search-btn" id="open-spotlight-btn" aria-label="Open Constellation Search">
+    <span>⌘K</span>
+    <span>Search</span>
+  </button>
+</nav>
+
+<!-- VAKED CONSTELLATION SPOTLIGHT MODAL -->
+<div id="vaked-spotlight" role="dialog" aria-modal="true" aria-label="Constellation Spotlight Search">
+  <div class="spotlight-card">
+    <div class="spotlight-input-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="spotlight-input" placeholder="Search monographs, audio modes, store, math, or fleet..." autocomplete="off" />
+      <span class="spotlight-kbd">ESC to exit</span>
+    </div>
+    <div class="spotlight-categories">
+      <button class="spotlight-cat-pill active" data-cat="All">All</button>
+      <button class="spotlight-cat-pill" data-cat="Distillation">Distillation</button>
+      <button class="spotlight-cat-pill" data-cat="Library">Library</button>
+      <button class="spotlight-cat-pill" data-cat="Audio">Audio</button>
+      <button class="spotlight-cat-pill" data-cat="Art">Art</button>
+      <button class="spotlight-cat-pill" data-cat="Store">Store</button>
+      <button class="spotlight-cat-pill" data-cat="Compute">Compute</button>
+      <button class="spotlight-cat-pill" data-cat="Math">Math</button>
+      <button class="spotlight-cat-pill" data-cat="Corpus">Corpus</button>
+      <button class="spotlight-cat-pill" data-cat="Fleet">Fleet</button>
+    </div>
+    <div class="spotlight-results" id="spotlight-results-box">
+      <!-- Injected via JavaScript -->
+    </div>
+    <div class="spotlight-footer">
+      <span>Direct Keys: 0-9 · Navigation: ↑ ↓ · Enter to open</span>
+      <span>VAKED Sovereign Constellation V7.0.0</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Neutralize third-party wallet extension EventEmitter maxListener warnings
+  try {
+    if (typeof window !== 'undefined') {
+      if (window.EventEmitter && window.EventEmitter.defaultMaxListeners) {
+        window.EventEmitter.defaultMaxListeners = 50;
+      }
+    }
+  } catch (e) {}
+
+  const SPOTLIGHT_INDEX = [{"title": "vaked.dev \u2014 Constellation Apex [Key: 1]", "category": "Constellation", "url": "https://vaked.dev", "desc": "The sovereign apex and commons for art, music, math & agents"}, {"title": "pocoo.vaked.dev \u2014 Sovereign Library (85 Monographs) [Key: 2]", "category": "Library", "url": "https://pocoo.vaked.dev", "desc": "Erd\u0151s phase transitions, SLE, Tracy-Widom, DYAD attention & BitNet"}, {"title": "music.vaked.dev \u2014 432Hz Intergalactic TV [Key: 3]", "category": "Audio", "url": "https://music.vaked.dev", "desc": "Procedural Web Audio engine, Casa Bertallot & Awen Your Voice acoustic modes"}, {"title": "art.vaked.dev \u2014 Archival Gallery & Provenance [Key: 4]", "category": "Art", "url": "https://art.vaked.dev", "desc": "Curated #01\u2013#49 visual neural artifacts with SHA-256 provenance"}, {"title": "store.vaked.dev \u2014 Sovereign Storefront [Key: 5]", "category": "Store", "url": "https://store.vaked.dev", "desc": "Gicl\u00e9e 8K prints, organic apparel, and audiophile vinyl masters"}, {"title": "ocean.vaked.dev \u2014 Compute Ocean & Swarm Factory [Key: 6]", "category": "Compute", "url": "https://ocean.vaked.dev", "desc": "High-compute inference, MEM8 associative memory & agent factory"}, {"title": "classroom-sota-training \u2014 Council of Elders (8+1) [Key: 7]", "category": "Distillation", "url": "https://8b-is.github.io/classroom-sota-training/", "desc": "Waldorf-style SOTA classroom training with geometric-mean consensus"}, {"title": "axiomquant.org \u2014 Quantitative Research Portal [Key: 8]", "category": "Math", "url": "https://axiomquant.org", "desc": "Spectral rigidity, Markowitz QP, and Universal Threshold Kernel"}, {"title": "mlxquantlovefrom.com \u2014 Metal BitNet 1.58b [Key: 9]", "category": "Math", "url": "https://mlxquantlovefrom.com", "desc": "Apple Silicon Metal kernel optimization for ternary quantization"}, {"title": "cess.vaked.dev \u2014 CogitoErgoSumma Q&A [Key: 0]", "category": "Corpus", "url": "https://cess.vaked.dev", "desc": "Corpus Explorer & Semantic Q&A powered by coder.vaked.dev inference"}, {"title": "cogitoergosumma-corpus \u2014 Hugging Face Space", "category": "Corpus", "url": "https://huggingface.co/spaces/PeetPedro/cogitoergosumma-corpus", "desc": "Interactive semantic Q&A and topic exploration across 85 monographs"}, {"title": "lovetta.vaked.dev \u2014 Sovereign Studio & Patreon", "category": "Studio", "url": "https://lovetta.vaked.dev", "desc": "Patron tiers, creator lanes, and physical sample request channels"}, {"title": "worklog.vaked.dev \u2014 Sovereign Fleet Board", "category": "Logs", "url": "https://worklog.vaked.dev", "desc": "Live fleet updates, commit timelines, and milestone tracking"}, {"title": "proposal.vaked.dev \u2014 Architectural Proposals", "category": "Discourse", "url": "https://proposal.vaked.dev", "desc": "Public discourse, monograph drafts, and RFC review pipeline"}, {"title": "Monograph 01: Universal Threshold Kernel", "category": "Monograph", "url": "https://pocoo.vaked.dev/monographs/01", "desc": "Mathematical foundations of Erd\u0151s threshold phase shifts"}, {"title": "Monograph 14: DYAD Asymmetric Loss Modulation", "category": "Monograph", "url": "https://pocoo.vaked.dev/monographs/14", "desc": "Context-preserving dual-head token pruning with span CNN"}, {"title": "Monograph 26: Ring-of-Teachers Mixed Distillation", "category": "Distillation", "url": "https://pocoo.vaked.dev/monographs/26", "desc": "Classroom SOTA 1.7B student distillation from 8B faculty teachers"}, {"title": "Monograph 42: BitNet b1.58 Metal Acceleration", "category": "Monograph", "url": "https://pocoo.vaked.dev/monographs/42", "desc": "Matrix multiplication elimination via ternary {-1, 0, +1} arithmetic"}, {"title": "Monograph 73: Harmonic Acoustic Synthesis at A=432Hz", "category": "Audio", "url": "https://pocoo.vaked.dev/monographs/73", "desc": "Pythagorean tuning standards in real-time procedural Web Audio"}, {"title": "Monograph 85: Cogito Ergo Sum Machine Invariant", "category": "Monograph", "url": "https://pocoo.vaked.dev/monographs/85", "desc": "Autonomous self-reflecting agent epistemology & verified gradients"}, {"title": "transformers-ultra \u2014 Sovereign High-Speed ML Engine", "category": "Math", "url": "https://github.com/8b-is/transformers-ultra", "desc": "DYAD dual-head pruning, split-KV flash decoding & BitNet 1.58b ternary engine"}, {"title": "sprs \u2014 High-Performance Sparse Linear Algebra", "category": "Math", "url": "https://github.com/sparsemat/sprs", "desc": "CSR/CSC sparse matrix BLAS engine for DYAD attention & graph kernels"}, {"title": "Fleet Node: dev-cx53 (Hetzner CX53)", "category": "Fleet", "url": "https://ocean.vaked.dev", "desc": "Build/deploy host, honcho memory & AgentField control plane"}, {"title": "Fleet Node: public-services-host (Hetzner CX33)", "category": "Fleet", "url": "https://vaked.dev", "desc": "Public gateway, reverse proxy, Forgejo, Vaultwarden"}, {"title": "Fleet Node: mbp (Apple Silicon M3)", "category": "Fleet", "url": "https://vaked.dev", "desc": "Local workstation, MLX BitNet inference & sovereign dev runtime"}];
+  const KEY_ROUTES = {
+    '1': 'https://vaked.dev',
+    '2': 'https://pocoo.vaked.dev',
+    '3': 'https://music.vaked.dev',
+    '4': 'https://art.vaked.dev',
+    '5': 'https://store.vaked.dev',
+    '6': 'https://ocean.vaked.dev',
+    '7': 'https://8b-is.github.io/classroom-sota-training/',
+    '8': 'https://axiomquant.org',
+    '9': 'https://mlxquantlovefrom.com',
+    '0': 'https://cess.vaked.dev'
+  };
+
+  const spotlight = document.getElementById('vaked-spotlight');
+  const input = document.getElementById('spotlight-input');
+  const resultsBox = document.getElementById('spotlight-results-box');
+  const openBtn = document.getElementById('open-spotlight-btn');
+  const catPills = document.querySelectorAll('.spotlight-cat-pill');
+  let currentCategory = 'All';
+  let selectedIdx = 0;
+
+  function renderResults() {
+    const query = (input.value || '').toLowerCase().trim();
+    const filtered = SPOTLIGHT_INDEX.filter(item => {
+      const matchesCat = currentCategory === 'All' || item.category === currentCategory;
+      const matchesQuery = !query || item.title.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query) || item.category.toLowerCase().includes(query);
+      return matchesCat && matchesQuery;
+    });
+
+    if (!filtered.length) {
+      resultsBox.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b; font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif;">No matching constellation nodes found.</div>';
+      return;
+    }
+
+    selectedIdx = Math.max(0, Math.min(selectedIdx, filtered.length - 1));
+
+    resultsBox.innerHTML = filtered.map((item, idx) => `
+      <a href="${item.url}" class="spotlight-item ${idx === selectedIdx ? 'selected' : ''}" data-idx="${idx}">
+        <div class="spotlight-item-main">
+          <div class="spotlight-item-title">${item.title}</div>
+          <div class="spotlight-item-desc">${item.desc}</div>
+        </div>
+        <span class="spotlight-item-tag">${item.category}</span>
+      </a>
+    `).join('');
+  }
+
+  function openSpotlight() {
+    if (!spotlight) return;
+    spotlight.classList.add('open');
+    input.value = '';
+    currentCategory = 'All';
+    catPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-cat') === 'All'));
+    renderResults();
+    setTimeout(() => input.focus(), 50);
+  }
+
+  function closeSpotlight() {
+    if (!spotlight) return;
+    spotlight.classList.remove('open');
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openSpotlight);
+
+  if (spotlight) {
+    spotlight.addEventListener('click', (e) => {
+      if (e.target === spotlight) closeSpotlight();
+    });
+  }
+
+  catPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      catPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentCategory = pill.getAttribute('data-cat');
+      renderResults();
+    });
+  });
+
+  if (input) {
+    input.addEventListener('input', () => {
+      selectedIdx = 0;
+      renderResults();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const items = resultsBox.querySelectorAll('.spotlight-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIdx = (selectedIdx + 1) % items.length;
+        renderResults();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIdx = (selectedIdx - 1 + items.length) % items.length;
+        renderResults();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const sel = items[selectedIdx];
+        if (sel) window.location.href = sel.getAttribute('href');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeSpotlight();
+      }
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    const isEditing = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      if (spotlight && spotlight.classList.contains('open')) closeSpotlight();
+      else openSpotlight();
+    } else if (e.key === '/' && !isEditing) {
+      e.preventDefault();
+      openSpotlight();
+    } else if (!isEditing && KEY_ROUTES[e.key]) {
+      window.location.href = KEY_ROUTES[e.key];
+    }
+  });
+})();
+</script>
+
+<!-- Ko-fi Floating Widget -->
+<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+<script>
+  try {
+    if (typeof kofiWidgetOverlay !== 'undefined') {
+      kofiWidgetOverlay.draw('peterlodri', {
+        'type': 'floating-chat',
+        'floating-chat.donateButton.text': 'Support me',
+        'floating-chat.donateButton.background-color': '#ff38b8',
+        'floating-chat.donateButton.text-color': '#fff'
+      });
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('DOMContentLoaded', function() {
+        if (typeof kofiWidgetOverlay !== 'undefined') {
+          kofiWidgetOverlay.draw('peterlodri', {
+            'type': 'floating-chat',
+            'floating-chat.donateButton.text': 'Support me',
+            'floating-chat.donateButton.background-color': '#ff38b8',
+            'floating-chat.donateButton.text-color': '#fff'
+          });
+        }
+      });
+    }
+  } catch (e) {}
+</script>
+
+</body>
+</html>

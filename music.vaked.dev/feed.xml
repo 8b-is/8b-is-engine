@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>music.vaked.dev — Sovereign Frequencies (24-Bit Lossless Masters)</title>
+    <link>https://music.vaked.dev/</link>
+    <language>en-us</language>
+    <copyright>© 2026 Peter Lodri / Sovereign Commons</copyright>
+    <itunes:author>Peter Lodri</itunes:author>
+    <description>Lossless 24-bit 48kHz audio masters, procedural synthesizer experiments, and 432Hz Pythagorean soul frequency tuning from the vaked.dev constellation.</description>
+    <itunes:type>episodic</itunes:type>
+    <itunes:image href="https://music.vaked.dev/og-image.png"/>
+    <itunes:category text="Music"/>
+
+    <item>
+      <title>Golpin Drown: Om Mani Padme Hum (8b.is Quant Mix)</title>
+      <link>https://music.vaked.dev/#golpin-drown</link>
+      <guid>https://music.vaked.dev/tracks/golpin-drown-8bis-quant</guid>
+      <pubDate>Sat, 05 Sep 2026 00:00:00 GMT</pubDate>
+      <description>John Frusciante ': || .' modular acid TB-303 arpeggiator × Massano 126 BPM melodic techno × 432 Hz Tibetan throat hum drone signed with 8b.is ternary {-1, 0, +1} lattice.</description>
+      <enclosure url="https://music.vaked.dev/assets/golpin_drown_om/golpin_drown_om.mp3" type="audio/mpeg" length="3964180"/>
+      <itunes:duration>01:39</itunes:duration>
+    </item>
+
+    <item>
+      <title>Gaia Has Her Watchers (24-Bit Master / 432Hz)</title>
+      <link>https://music.vaked.dev/#gaia</link>
+      <guid>https://music.vaked.dev/tracks/gaia-has-her-watchers-v1</guid>
+      <pubDate>Sat, 15 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Procedural celestial arpeggiator layered with 432Hz Pythagorean resonance chords and live soul poetry layer.</description>
+      <enclosure url="https://music.vaked.dev/assets/gaia_has_her_watchers.wav" type="audio/wav" length="48291040"/>
+      <itunes:duration>04:32</itunes:duration>
+    </item>
+
+    <item>
+      <title>Wish You Were Here (Soul Resonance Master)</title>
+      <link>https://music.vaked.dev/#wish-you-were-here</link>
+      <guid>https://music.vaked.dev/tracks/wish-you-were-here-432hz</guid>
+      <pubDate>Fri, 14 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Two lost souls swimming in a fishbowl year after year. Acoustic waveform isolation with sub-bass drone and gentle resonance.</description>
+      <enclosure url="https://music.vaked.dev/assets/wish_you_were_here.wav" type="audio/wav" length="51290320"/>
+      <itunes:duration>05:14</itunes:duration>
+    </item>
+
+    <item>
+      <title>Quantum Lo-Fi Jazz Waves (Audiophile Edition)</title>
+      <link>https://music.vaked.dev/#quantum-lofi</link>
+      <guid>https://music.vaked.dev/tracks/quantum-lofi-jazz</guid>
+      <pubDate>Thu, 13 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Rhodes electric piano harmonics over tape saturation and 85 BPM swing drums.</description>
+      <enclosure url="https://music.vaked.dev/assets/quantum_lofi_jazz.wav" type="audio/wav" length="38491020"/>
+      <itunes:duration>03:45</itunes:duration>
+    </item>
+
+    <item>
+      <title>SZAMÁR MADÁR (145 BPM Hungarian Folk Polyrhythm Master)</title>
+      <link>https://music.vaked.dev/#szamar-madar</link>
+      <guid>https://music.vaked.dev/tracks/szamar-madar-145bpm</guid>
+      <pubDate>Wed, 12 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Hungarian acoustic folk melodies reconstructed into 145 BPM cybernetic electronic polyrhythms.</description>
+      <enclosure url="https://music.vaked.dev/assets/szamar_madar.wav" type="audio/wav" length="44102940"/>
+      <itunes:duration>04:12</itunes:duration>
+    </item>
+
+    <item>
+      <title>Polar Galaxy Merge (Cosmic Ambient Exploration)</title>
+      <link>https://music.vaked.dev/#polar-galaxy</link>
+      <guid>https://music.vaked.dev/tracks/polar-galaxy-merge</guid>
+      <pubDate>Tue, 11 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Deep space 8-minute generative ambient piece with organic binaural spatialization.</description>
+      <enclosure url="https://music.vaked.dev/assets/polar_galaxy_merge.wav" type="audio/wav" length="84920110"/>
+      <itunes:duration>08:00</itunes:duration>
+    </item>
+  </channel>
+</rss>

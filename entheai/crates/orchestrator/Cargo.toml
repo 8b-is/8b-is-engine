@@ -1,0 +1,28 @@
+[package]
+name = "entheai-orchestrator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+entheai-config = { path = "../config" }
+entheai-router = { path = "../router" }
+entheai-core = { path = "../core" }
+entheai-memory = { path = "../memory" }
+entheai-tools = { path = "../tools" }
+entheai-permission = { path = "../permission" }
+entheai-mapper = { path = "../mapper" }
+tokio = { workspace = true, features = ["process", "fs", "sync", "time"] }
+futures.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+sha2.workspace = true
+async-trait.workspace = true
+log = "0.4"
+uuid = { version = "1", features = ["v4"] }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
+tempfile = "3"

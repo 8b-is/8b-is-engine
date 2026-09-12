@@ -1,0 +1,6 @@
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: frame-ancestors 'self' https://*.vaked.dev https://vaked.dev https://*.pages.dev;
+  Referrer-Policy: strict-origin-when-cross-origin

@@ -1,0 +1,18 @@
+{
+  "release_id": "VL-019",
+  "title": "Quantum Lo-Fi: Tokyo Singularity",
+  "artist": "Vaked Engine",
+  "genre": "Quantum Lo-Fi / Japan Jazz Fusion",
+  "duration_seconds": 60,
+  "assets": {
+    "master_wav": "/Users/lodripeter/.gemini/antigravity-cli/brain/58b8f08f-d1af-47fc-af4f-749696347093/scratch/quantum_lofi/quantum_lofi_master_24bit.wav",
+    "video_4k_mp4": "/Users/lodripeter/.gemini/antigravity-cli/brain/58b8f08f-d1af-47fc-af4f-749696347093/scratch/quantum_lofi/quantum_lofi_video_4K.mp4",
+    "artwork_jpg": "/Users/lodripeter/.gemini/antigravity-cli/brain/58b8f08f-d1af-47fc-af4f-749696347093/quantum_lofi_jazz_frame_1786561860301.jpg"
+  },
+  "metadata": {
+    "bpm": 85,
+    "key": "A minor",
+    "synthesis_engine": "FFmpeg Lavfi Generative",
+    "visual_engine": "Vaked Vision 4K"
+  }
+}

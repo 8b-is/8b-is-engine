@@ -1,0 +1,54 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.26"
+
+      - name: cross-compile all targets
+        run: ./build.sh
+
+      - name: checksums
+        run: |
+          cd dist
+          sha256sum * > sha256sums.txt
+
+      - name: attach binaries to release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/*
+          generate_release_notes: true
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/8b-is/enthea:${{ github.ref_name }}
+            ghcr.io/8b-is/enthea:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.description=enthea — the deepsiper-enthea engine door

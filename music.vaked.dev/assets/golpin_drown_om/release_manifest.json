@@ -1,0 +1,27 @@
+{
+  "release_id": "VL-024",
+  "title": "Golpin Drown: Om Mani Padme Hum (8b.is Quant Mix)",
+  "artist": "John Frusciante \u00d7 Massano \u00d7 Vaked Constellation",
+  "composer": "John Frusciante, Massano, Peter Lodri",
+  "vibe_lineage": [
+    "John Frusciante - Golpin (: || . / :II.)",
+    "Massano - The Drown (Afterlife Melodic Techno)",
+    "Tibetan Kagyu Om Mani Padme Hum & Resonant Throat Drone",
+    "8b.is Standard Galactic Ternary Quantization {-1, 0, +1}"
+  ],
+  "duration_seconds": 99.05,
+  "bpm": 126,
+  "tuning": "432 Hz Pythagorean / D Minor Dorian",
+  "assets": {
+    "master_wav": "/Users/lodripeter/workspace/peterlodri-sec/music.vaked.dev/assets/golpin_drown_om/golpin_drown_om_master.wav",
+    "stream_mp3": "/Users/lodripeter/workspace/peterlodri-sec/music.vaked.dev/assets/golpin_drown_om/golpin_drown_om.mp3",
+    "artwork_png": "/Users/lodripeter/workspace/peterlodri-sec/music.vaked.dev/assets/golpin_drown_om/cover.png",
+    "artwork_svg": "/Users/lodripeter/workspace/peterlodri-sec/art.vaked.dev/assets/eabstract_quant_8bis.svg",
+    "teaser_video_mp4": "/Users/lodripeter/workspace/peterlodri-sec/music.vaked.dev/assets/golpin_drown_om/golpin_drown_video_1080p.mp4"
+  },
+  "metadata": {
+    "synthesis_engine": "Vectorized Modular DSP + Convolution + 432Hz Throat Drone",
+    "quant_weight_space": "{-1, 0, +1}",
+    "signature": "- p <3"
+  }
+}

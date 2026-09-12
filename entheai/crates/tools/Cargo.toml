@@ -1,0 +1,18 @@
+[package]
+name = "entheai-tools"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+entheai-permission = { path = "../permission" }
+serde_json.workspace = true
+thiserror = { workspace = true }
+async-trait.workspace = true
+walkdir.workspace = true
+tokio = { workspace = true, features = ["fs", "process", "rt", "time"] }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tempfile = "3"

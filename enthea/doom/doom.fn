@@ -1,0 +1,46 @@
+; doom.fn — a maze walker in the enthea language, run on the VM.
+; The game logic — turning, moving, collision, the walk — is this program.
+; Parameters are real: off takes the facing, walk takes the position and
+; the facing, nothing is smuggled through arena cells.
+;
+; arena layout:
+;   0..143  map          (1 = wall, 0 = floor)
+;   64      player index
+;   65      facing 0..3  (0=N 1=E 2=S 3=W)
+;   66      script cursor
+;   70..    move script  (0=w 1=s 2=a 3=d 255=end)
+;   140..   frames       per step: pos, face
+
+; the forward offset for facing f: N=-12 E=+1 S=+12 W=-1 (12-wide map)
+fn off(f) = if(iszero(sub(f, 0)), -12, if(iszero(sub(f, 1)), 1, if(iszero(sub(f, 2)), 12, -1)))
+
+; walk one cell forward if the target is floor, else stay put
+fn walk(pos, f) =
+  let t = aadd(pos, off(f)) in
+  if(iszero(load(aadd(0, t))), t, pos)
+
+; turn left: N→W→S→E→N
+fn turn(f) = if(iszero(sub(f, 0)), 3, if(iszero(sub(f, 1)), 0, if(iszero(sub(f, 2)), 1, 2)))
+
+; step — one command: walk, turn, record the frame, return the new position
+fn step(c, pos, f) =
+  let cmd = load(aadd(70, c)) in
+  let np = if(iszero(asub(cmd, 0)), walk(pos, f), pos) in
+  let nf = if(iszero(asub(cmd, 2)), turn(f), f) in
+  let _ = store(aadd(140, aadd(c, c)), np) in
+  let _ = store(aadd(141, aadd(c, c)), nf) in
+  np
+
+; loop — walk the whole script (tail call); the position threads through.
+; the end marker -1 lives in the arena as byte 255 and loads back as the
+; signed cell -1, so the check compares against -1.
+fn loop(c, pos, f) =
+  let cmd = load(aadd(70, c)) in
+  if(iszero(asub(cmd, -1)), 0,
+    let np = step(c, pos, f) in
+    let nf = if(iszero(asub(cmd, 2)), turn(f), f) in
+    loop(aadd(c, 1), np, nf))
+
+; main: start at (5,5) facing N, cursor 0 — pos and facing live in registers,
+; never in arena cells
+loop(0, 65, 0)

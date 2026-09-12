@@ -1,0 +1,48 @@
+// proto/constellation.proto — the typed formats for the constellation's
+// strings. Every string the the door speaks has a struct here, and every
+// struct has a protobuf wire format — compact, versioned, replayable.
+//
+// The codec is pure-stdlib (see pure/proto.go): varints + length-delimited
+// fields, no generated code, no dependency — the constellation's own wire
+// doctrine. Frames travel as protobuf bytes, then as balanced trits on the
+// ternary wire (t3p:).
+
+syntax = "proto3";
+package vaked.constellation;
+
+// Frame — the ternaryPureASCII wire frame, typed. The raw string form is a
+// projection; the struct is the truth.
+message Frame {
+  string magic = 1;    // "t3:", "t3j:", "t3y:", "t3u:", "t3p:"
+  bytes  payload = 2;  // the balanced-trit payload bytes
+  int32  checksum = 3; // the 1-bit model's verdict trit (-1, 0, 1)
+}
+
+// Language — one tongue on the wire. The eight lanes: espanol (mexican),
+// chinese, japanese, latin, english, hungarian, esperanto, modernQuantTibetian.
+message Language {
+  string name          = 1;
+  string native        = 2;
+  string script        = 3;
+  string family        = 4;
+  bool   agglutinative = 5;
+  string phrase        = 6; // the constellation, in one sentence
+  string wire          = 7; // the ternaryPureASCII frame
+  string bridge        = 8; // cross-lane notes (the esperanto<->hungarian bridge)
+}
+
+// Lane — one component of the scaffold layout (the latest-1 layout).
+message Lane {
+  string name    = 1;
+  string kind    = 2; // door, lsp, mcp, topo, node, shell, sandbox
+  string check   = 3;
+  string install = 4;
+  string note    = 5;
+  bool   warm    = 6;
+}
+
+// ScaffoldLayout — the meta-programmed manifest of the current constellation.
+message ScaffoldLayout {
+  repeated Lane lanes    = 1;
+  string        doctrine = 2; // one door, many lanes — the lane stays dark…
+}

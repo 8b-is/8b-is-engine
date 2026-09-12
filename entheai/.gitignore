@@ -1,0 +1,29 @@
+/target
+/dist
+**/*.rs.bk
+.DS_Store
+node_modules
+.wrangler
+.worktrees
+.repowise
+
+# Secrets — NEVER commit. Real keys live in .env (gitignored); .env.example is the template.
+.env
+.env.*
+!.env.example
+
+public/docs/index.html
+public/llms.txt
+public/llms-full.txt
+.superpowers
+.playwright-mcp
+.crabcc/
+target-repro-a/
+target-repro-b/
+.entheai/
+
+working_memory.md
+.slim/deepwork/
+
+# Stripe Projects CLI cache (project root is the workspace, not this repo)
+.projects/

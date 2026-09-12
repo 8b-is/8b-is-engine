@@ -1,0 +1,31 @@
+# music.vaked.dev (ENTHEA)
+
+> Real-time psychedelic visual synthesizer. WebGL2 + Web Audio. Zero dependencies. No build. No tracking.
+
+29 mathematically-computed visionary modes: neural fields, reaction-diffusion, quasicrystals, Kleinian groups, elliptic functions, and more. Driven by live audio. Vaked Tier 2 telemetry feeds the ultrawhale-dogfood dataset.
+
+## What it is
+
+- Single HTML file, runs in any modern browser
+- 29 modes based on neuroscience (Bressloff-Cowan V1 model, Klüver form constants, Turing bifurcations)
+- 14 entheogen visual signatures (LSD, psilocybin, DMT, mescaline, ayahuasca, 2C-B, ketamine, etc.)
+- Predictive drop detection, MIDI-learn, scene snapshots, breath pacer
+- Source: https://github.com/peterlodri-sec/ENTHEA (AGPL-3.0)
+
+## Vaked ecosystem
+
+- [protocol.vaked.dev](https://protocol.vaked.dev): AG-UI protocol spec + genesis
+- [chat.vaked.dev](https://chat.vaked.dev): G0DM0D3 free-model AI chat
+- [beat.vaked.dev](https://beat.vaked.dev): Vaked-FM swarm avatar
+- [irc.vaked.dev](https://irc.vaked.dev): public IRC community
+- [pocoo.vaked.dev](https://pocoo.vaked.dev): technical blog
+- [pocoo.vaked.dev/feed.xml](https://pocoo.vaked.dev/feed.xml): Atom feed
+
+## Dataset
+
+- [PeetPedro/ultrawhale-dogfood](https://huggingface.co/datasets/PeetPedro/ultrawhale-dogfood): telemetry from this site feeds this dataset
+
+## Author
+
+- GitHub: https://github.com/peterlodri-sec
+- X: https://x.com/0xp3t3rl

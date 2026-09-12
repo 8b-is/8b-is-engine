@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["crates/world-core", "crates/ternary", "crates/qdecorators", "crates/corelib", "crates/pipeline", "crates/mesh-node", "crates/mesh-relay"]
+exclude = ["enthea", "entheai", "music.vaked.dev", "tools", "client", "docs", "scripts"]
 
 [workspace.package]
 edition = "2021"

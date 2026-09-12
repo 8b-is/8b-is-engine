@@ -1,0 +1,586 @@
+use crate::qr::QrGrid;
+use crate::state::State;
+
+/// Packed return of [`params_for`]: glow color, period, amplitude range,
+/// spinner flag, flash alpha.
+struct GlowParams((f32, f32, f32), f64, (f32, f32), bool, f32);
+
+/// Default target frame rate, used as the companion binary's `--fps`
+/// fallback when the caller doesn't pass one explicitly.
+pub const FPS: f64 = 24.0;
+const TRANSITION_S: f64 = 0.3;
+const FLASH_S: f64 = 0.2;
+const SPIN_PERIOD_S: f64 = 6.0; // seconds per full revolution of the working-state orbit dot
+
+const BG: (u8, u8, u8) = (0x0a, 0x0f, 0x14);
+const TEAL: (u8, u8, u8) = (0x00, 0xe5, 0xff);
+const MAGENTA: (u8, u8, u8) = (0xff, 0x00, 0xe5);
+const RED: (u8, u8, u8) = (0xff, 0x44, 0x44);
+const QR_DARK: (u8, u8, u8) = (0x2a, 0x4a, 0x55);
+const QR_LIGHT: (u8, u8, u8) = (0x0d, 0x18, 0x1f);
+const NAME_COLOR: (u8, u8, u8) = (0x00, 0x77, 0x82); // dim teal for the codename label
+
+const GLYPH_QUESTION: [[bool; 5]; 7] = [
+    [false, true, true, true, false],
+    [true, false, false, false, true],
+    [false, false, false, false, true],
+    [false, false, false, true, false],
+    [false, false, true, false, false],
+    [false, false, false, false, false],
+    [false, false, true, false, false],
+];
+
+pub struct AnimationState {
+    target_state: State,
+    target_glow: (f32, f32, f32),
+    glow: (f32, f32, f32),
+    target_period: f64,
+    target_amplitude: (f32, f32),
+    pub target_spinner: bool,
+    target_qr_dim: f32,
+    qr_dim: f32,
+    flash_until: Option<f64>,
+    /// When set, the companion is fading out. Value decreases from 1.0 → 0.0.
+    pub fade_alpha: f32,
+    /// Per-pixel background glow factor, cached for the current `(width,
+    /// height)` — see [`AnimationState::ensure_glow_lut`]. The window is
+    /// non-resizable, so in practice this is built once; the size guard
+    /// only exists to keep it correct if that ever changes.
+    glow_lut: Vec<f32>,
+    glow_lut_size: (u32, u32),
+}
+
+impl Default for AnimationState {
+    fn default() -> Self {
+        let glow = (TEAL.0 as f32, TEAL.1 as f32, TEAL.2 as f32);
+        Self {
+            target_state: State::Idle,
+            target_glow: glow,
+            glow,
+            target_period: 5.0,
+            target_amplitude: (0.2, 0.6),
+            target_spinner: false,
+            target_qr_dim: 0.0,
+            qr_dim: 0.0,
+            flash_until: None,
+            fade_alpha: 1.0,
+            glow_lut: Vec::new(),
+            glow_lut_size: (0, 0),
+        }
+    }
+}
+
+impl AnimationState {
+    pub fn set_state(&mut self, state: State) {
+        if self.target_state == state {
+            return;
+        }
+        self.target_state = state;
+        let GlowParams(glow, period, ampl, spinner, qr_dim) = params_for(state);
+        self.target_glow = glow;
+        self.target_period = period;
+        self.target_amplitude = ampl;
+        self.target_spinner = spinner;
+        self.target_qr_dim = qr_dim;
+    }
+
+    pub fn flash(&mut self, now: f64) {
+        self.flash_until = Some(now + FLASH_S);
+    }
+
+    pub fn tick(&mut self, dt: f64) {
+        let t = (dt / TRANSITION_S).clamp(0.0, 1.0) as f32;
+        self.glow = (
+            lerp_f32(self.glow.0, self.target_glow.0, t),
+            lerp_f32(self.glow.1, self.target_glow.1, t),
+            lerp_f32(self.glow.2, self.target_glow.2, t),
+        );
+        self.qr_dim = lerp_f32(self.qr_dim, self.target_qr_dim, t);
+    }
+
+    /// Builds (or rebuilds, on a `(width, height)` change) the per-pixel
+    /// glow-factor LUT. The factor depends only on pixel coordinate,
+    /// center, and `max_r` — all invariant for a fixed-size window — so
+    /// this replaces a per-frame `sqrt` + [`smooth_falloff`] per pixel
+    /// with a one-time build plus a per-frame array lookup.
+    fn ensure_glow_lut(&mut self, width: u32, height: u32) {
+        if self.glow_lut_size == (width, height) && !self.glow_lut.is_empty() {
+            return;
+        }
+        let w = width as usize;
+        let h = height as usize;
+        let mut lut = Vec::with_capacity(w * h);
+        for y in 0..h {
+            for x in 0..w {
+                lut.push(glow_factor_at(x, y, w, h));
+            }
+        }
+        self.glow_lut = lut;
+        self.glow_lut_size = (width, height);
+    }
+}
+
+/// Pure per-pixel background glow factor for pixel `(x, y)` in a `w`x`h`
+/// frame: distance from center, normalized by `max_r`, run through
+/// [`smooth_falloff`]. Depends only on the pixel coordinate and frame
+/// size, so it's cacheable per `(w, h)` — see
+/// [`AnimationState::ensure_glow_lut`].
+fn glow_factor_at(x: usize, y: usize, w: usize, h: usize) -> f32 {
+    let wf = w as f32;
+    let hf = h as f32;
+    let cx = wf / 2.0;
+    let cy = hf / 2.0;
+    let max_r = wf.min(hf) / 2.0;
+    let dx = x as f32 - cx;
+    let dy = y as f32 - cy;
+    let dist = (dx * dx + dy * dy).sqrt() / max_r;
+    smooth_falloff(dist)
+}
+
+fn params_for(state: State) -> GlowParams {
+    match state {
+        State::Idle => GlowParams(
+            (TEAL.0 as f32, TEAL.1 as f32, TEAL.2 as f32),
+            5.0,
+            (0.2, 0.6),
+            false,
+            0.0,
+        ),
+        State::Working => GlowParams(
+            (TEAL.0 as f32, TEAL.1 as f32, TEAL.2 as f32),
+            2.5,
+            (0.3, 0.8),
+            true,
+            0.0,
+        ),
+        State::PermissionPending => GlowParams(
+            (MAGENTA.0 as f32, MAGENTA.1 as f32, MAGENTA.2 as f32),
+            1.7,
+            (0.4, 1.0),
+            false,
+            0.6,
+        ),
+        State::Error => GlowParams(
+            (RED.0 as f32, RED.1 as f32, RED.2 as f32),
+            6.0,
+            (0.1, 0.3),
+            false,
+            0.7,
+        ),
+    }
+}
+
+#[inline]
+fn pack_bgra(b: u8, g: u8, r: u8, a: u8) -> u32 {
+    u32::from_le_bytes([b, g, r, a])
+}
+
+#[inline]
+fn lerp_u8(a: u8, b: u8, t: f32) -> u8 {
+    (a as f32 + (b as f32 - a as f32) * t.clamp(0.0, 1.0)) as u8
+}
+
+#[inline]
+fn lerp_f32(a: f32, b: f32, t: f32) -> f32 {
+    a + (b - a) * t.clamp(0.0, 1.0)
+}
+
+pub fn render_frame(
+    buffer: &mut [u32],
+    width: u32,
+    height: u32,
+    qr: &QrGrid,
+    anim: &mut AnimationState,
+    time: f64,
+    name: &str,
+) {
+    let w = width as f32;
+    let h = height as f32;
+    let cx = w / 2.0;
+    let cy = h / 2.0;
+
+    anim.ensure_glow_lut(width, height);
+
+    let (pulse_min, pulse_max) = anim.target_amplitude;
+    let pulse_raw = (time * std::f64::consts::TAU / anim.target_period).sin() as f32;
+    let pulse = pulse_min + (pulse_max - pulse_min) * (pulse_raw * 0.5 + 0.5);
+
+    let flash_active = anim.flash_until.is_some_and(|f| time < f);
+    let pulse = if flash_active { 1.0 } else { pulse };
+
+    let (gr, gg, gb) = anim.glow;
+    let fa = anim.fade_alpha;
+
+    for y in 0..height {
+        for x in 0..width {
+            let idx = (y * width + x) as usize;
+            let glow_factor = anim.glow_lut[idx];
+            let alpha = glow_factor * pulse;
+            let r = lerp_u8(BG.0, gr as u8, alpha);
+            let g = lerp_u8(BG.1, gg as u8, alpha);
+            let b = lerp_u8(BG.2, gb as u8, alpha);
+            let a = (255.0 * fa) as u8;
+            buffer[idx] = pack_bgra(b, g, r, a);
+        }
+    }
+
+    let qr_px = (w.min(h) * 0.60) as u32;
+    let module_px = (qr_px / qr.size as u32).max(1);
+    let total_qr_px = module_px * qr.size as u32;
+    let qr_x0 = width.saturating_sub(total_qr_px) / 2;
+    let qr_y0 = height.saturating_sub(total_qr_px) / 2;
+    let dim = anim.qr_dim;
+
+    for my in 0..qr.size {
+        for mx in 0..qr.size {
+            let dark = qr.is_dark(mx, my);
+            let (r, g, b) = if dark {
+                (
+                    lerp_u8(QR_DARK.0, BG.0, dim),
+                    lerp_u8(QR_DARK.1, BG.1, dim),
+                    lerp_u8(QR_DARK.2, BG.2, dim),
+                )
+            } else {
+                (
+                    lerp_u8(QR_LIGHT.0, BG.0, dim),
+                    lerp_u8(QR_LIGHT.1, BG.1, dim),
+                    lerp_u8(QR_LIGHT.2, BG.2, dim),
+                )
+            };
+            let base_x = qr_x0 + mx as u32 * module_px;
+            let base_y = qr_y0 + my as u32 * module_px;
+            for dy in 0..module_px {
+                let py = base_y + dy;
+                if py >= height {
+                    break;
+                }
+                let row_start = (py * width + base_x) as usize;
+                for dx in 0..module_px {
+                    let idx = row_start + dx as usize;
+                    if idx < buffer.len() {
+                        buffer[idx] = pack_bgra(b, g, r, (255.0 * fa) as u8);
+                    }
+                }
+            }
+        }
+    }
+
+    if anim.target_spinner {
+        draw_spinner(buffer, width, height, cx, cy, time, fa);
+    }
+
+    if anim.target_state == State::PermissionPending {
+        draw_glyph(
+            buffer,
+            width,
+            height,
+            &GLYPH_QUESTION,
+            cx,
+            cy,
+            MAGENTA,
+            pulse * fa,
+        );
+    }
+
+    // `draw_text` -> `glyph_3x5` already `to_ascii_uppercase()`s per char,
+    // so pre-uppercasing here would just be a redundant per-frame alloc.
+    draw_text(buffer, width, height, name, fa);
+}
+
+fn draw_spinner(buffer: &mut [u32], w: u32, h: u32, cx: f32, cy: f32, time: f64, fade_alpha: f32) {
+    let radius = w.min(h) as f32 * 0.55;
+    let angle = (time * std::f64::consts::TAU / SPIN_PERIOD_S) as f32;
+    let sx = cx + radius * angle.cos();
+    let sy = cy + radius * angle.sin();
+    let dot_r = 2i32;
+    let a = (255.0 * fade_alpha) as u8;
+    for dy in -dot_r..=dot_r {
+        for dx in -dot_r..=dot_r {
+            if dx * dx + dy * dy > dot_r * dot_r {
+                continue;
+            }
+            let px = (sx + dx as f32) as i32;
+            let py = (sy + dy as f32) as i32;
+            if px >= 0 && px < w as i32 && py >= 0 && py < h as i32 {
+                let idx = (py as u32 * w + px as u32) as usize;
+                if idx < buffer.len() {
+                    buffer[idx] = pack_bgra(TEAL.2, TEAL.1, TEAL.0, a);
+                }
+            }
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn draw_glyph(
+    buffer: &mut [u32],
+    w: u32,
+    h: u32,
+    glyph: &[[bool; 5]; 7],
+    cx: f32,
+    cy: f32,
+    color: (u8, u8, u8),
+    alpha: f32,
+) {
+    let scale = 3u32;
+    let gw = 5 * scale;
+    let gh = 7 * scale;
+    let x0 = (cx as u32).saturating_sub(gw / 2);
+    let y0 = (cy as u32).saturating_sub(gh / 2);
+    for row in 0..7u32 {
+        for col in 0..5u32 {
+            if !glyph[row as usize][col as usize] {
+                continue;
+            }
+            let base_x = x0 + col * scale;
+            let base_y = y0 + row * scale;
+            for dy in 0..scale {
+                let py = base_y + dy;
+                if py >= h {
+                    break;
+                }
+                for dx in 0..scale {
+                    let px = base_x + dx;
+                    if px >= w {
+                        break;
+                    }
+                    let idx = (py * w + px) as usize;
+                    if idx < buffer.len() {
+                        let existing = buffer[idx];
+                        let eb = (existing & 0xFF) as u8;
+                        let eg = ((existing >> 8) & 0xFF) as u8;
+                        let er = ((existing >> 16) & 0xFF) as u8;
+                        let r = lerp_u8(er, color.0, alpha);
+                        let g = lerp_u8(eg, color.1, alpha);
+                        let b = lerp_u8(eb, color.2, alpha);
+                        buffer[idx] = pack_bgra(b, g, r, 255);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Compact 3x5 pixel font covering `A`-`Z`, `0`-`9`, and `-`. Returns a
+/// blank (all-`false`) glyph for any other character. Rows are top-to-
+/// bottom, columns left-to-right.
+fn glyph_3x5(c: char) -> [[bool; 3]; 5] {
+    fn row(bits: u8) -> [bool; 3] {
+        [(bits >> 2) & 1 == 1, (bits >> 1) & 1 == 1, bits & 1 == 1]
+    }
+    match c.to_ascii_uppercase() {
+        'A' => [row(0b010), row(0b101), row(0b111), row(0b101), row(0b101)],
+        'B' => [row(0b110), row(0b101), row(0b110), row(0b101), row(0b110)],
+        'C' => [row(0b011), row(0b100), row(0b100), row(0b100), row(0b011)],
+        'D' => [row(0b110), row(0b101), row(0b101), row(0b101), row(0b110)],
+        'E' => [row(0b111), row(0b100), row(0b110), row(0b100), row(0b111)],
+        'F' => [row(0b111), row(0b100), row(0b110), row(0b100), row(0b100)],
+        'G' => [row(0b011), row(0b100), row(0b101), row(0b101), row(0b011)],
+        'H' => [row(0b101), row(0b101), row(0b111), row(0b101), row(0b101)],
+        'I' => [row(0b111), row(0b010), row(0b010), row(0b010), row(0b111)],
+        'J' => [row(0b001), row(0b001), row(0b001), row(0b101), row(0b010)],
+        'K' => [row(0b101), row(0b101), row(0b110), row(0b101), row(0b101)],
+        'L' => [row(0b100), row(0b100), row(0b100), row(0b100), row(0b111)],
+        'M' => [row(0b111), row(0b101), row(0b101), row(0b101), row(0b101)],
+        'N' => [row(0b101), row(0b110), row(0b101), row(0b011), row(0b101)],
+        'O' => [row(0b111), row(0b101), row(0b101), row(0b101), row(0b111)],
+        'P' => [row(0b110), row(0b101), row(0b110), row(0b100), row(0b100)],
+        'Q' => [row(0b111), row(0b101), row(0b101), row(0b111), row(0b001)],
+        'R' => [row(0b110), row(0b101), row(0b110), row(0b101), row(0b101)],
+        'S' => [row(0b011), row(0b100), row(0b010), row(0b001), row(0b110)],
+        'T' => [row(0b111), row(0b010), row(0b010), row(0b010), row(0b010)],
+        'U' => [row(0b101), row(0b101), row(0b101), row(0b101), row(0b111)],
+        'V' => [row(0b101), row(0b101), row(0b101), row(0b101), row(0b010)],
+        'W' => [row(0b101), row(0b101), row(0b101), row(0b111), row(0b101)],
+        'X' => [row(0b101), row(0b101), row(0b010), row(0b101), row(0b101)],
+        'Y' => [row(0b101), row(0b101), row(0b010), row(0b010), row(0b010)],
+        'Z' => [row(0b111), row(0b001), row(0b010), row(0b100), row(0b111)],
+        '0' => [row(0b111), row(0b101), row(0b101), row(0b101), row(0b111)],
+        '1' => [row(0b010), row(0b110), row(0b010), row(0b010), row(0b111)],
+        '2' => [row(0b111), row(0b001), row(0b111), row(0b100), row(0b111)],
+        '3' => [row(0b111), row(0b001), row(0b111), row(0b001), row(0b111)],
+        '4' => [row(0b101), row(0b101), row(0b111), row(0b001), row(0b001)],
+        '5' => [row(0b111), row(0b100), row(0b111), row(0b001), row(0b111)],
+        '6' => [row(0b111), row(0b100), row(0b111), row(0b101), row(0b111)],
+        '7' => [row(0b111), row(0b001), row(0b001), row(0b001), row(0b001)],
+        '8' => [row(0b111), row(0b101), row(0b111), row(0b101), row(0b111)],
+        '9' => [row(0b111), row(0b101), row(0b111), row(0b001), row(0b111)],
+        '-' => [row(0b000), row(0b000), row(0b111), row(0b000), row(0b000)],
+        _ => [[false; 3]; 5],
+    }
+}
+
+/// Draws `text` in the compact 3x5 bitmap font (scaled 2x), centered
+/// horizontally and anchored near the bottom of the window, in dim teal.
+/// If the rendered text would overflow the buffer width it is skipped
+/// entirely rather than clipped mid-glyph.
+fn draw_text(buffer: &mut [u32], w: u32, h: u32, text: &str, alpha: f32) {
+    const SCALE: u32 = 2;
+    const GLYPH_W: u32 = 3 * SCALE;
+    const GLYPH_H: u32 = 5 * SCALE;
+    const SPACING: u32 = SCALE;
+    const ADVANCE: u32 = GLYPH_W + SPACING;
+    const MARGIN_BOTTOM: u32 = 6;
+
+    if text.is_empty() || GLYPH_H + MARGIN_BOTTOM > h {
+        return;
+    }
+
+    let char_count = text.chars().count() as u32;
+    let total_w = char_count * ADVANCE - SPACING;
+    if total_w > w {
+        // Would overflow the window width — skip rather than clip.
+        return;
+    }
+
+    let x0 = (w - total_w) / 2;
+    let y0 = h - GLYPH_H - MARGIN_BOTTOM;
+    let a = (255.0 * alpha.clamp(0.0, 1.0)) as u8;
+    let (cr, cg, cb) = NAME_COLOR;
+
+    for (i, ch) in text.chars().enumerate() {
+        let glyph = glyph_3x5(ch);
+        let gx0 = x0 + i as u32 * ADVANCE;
+        for (row_idx, cols) in glyph.iter().enumerate() {
+            for (col_idx, &on) in cols.iter().enumerate() {
+                if !on {
+                    continue;
+                }
+                let base_x = gx0 + col_idx as u32 * SCALE;
+                let base_y = y0 + row_idx as u32 * SCALE;
+                for dy in 0..SCALE {
+                    let py = base_y + dy;
+                    if py >= h {
+                        continue;
+                    }
+                    for dx in 0..SCALE {
+                        let px = base_x + dx;
+                        if px >= w {
+                            continue;
+                        }
+                        let idx = (py * w + px) as usize;
+                        if idx < buffer.len() {
+                            buffer[idx] = pack_bgra(cb, cg, cr, a);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn smooth_falloff(dist: f32) -> f32 {
+    if dist < 0.6 {
+        1.0
+    } else if dist > 1.1 {
+        0.0
+    } else {
+        let t = (dist - 0.6) / 0.5;
+        1.0 - t * t * (3.0 - 2.0 * t)
+    }
+}
+
+/// Frame interval for the given target frame rate. `fps` is clamped to a
+/// minimum of 1.0 to guard against a divide-by-zero / busy-loop if a config
+/// value of `0.0` (or negative) ever reaches this call.
+pub fn frame_interval(fps: f64) -> std::time::Duration {
+    std::time::Duration::from_secs_f64(1.0 / fps.max(1.0))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pack_bgra() {
+        let pixel = pack_bgra(0xAB, 0xCD, 0xEF, 0xFF);
+        let bytes = pixel.to_le_bytes();
+        assert_eq!(bytes[0], 0xAB);
+        assert_eq!(bytes[1], 0xCD);
+        assert_eq!(bytes[2], 0xEF);
+        assert_eq!(bytes[3], 0xFF);
+    }
+
+    #[test]
+    fn test_lerp_u8() {
+        assert_eq!(lerp_u8(0, 100, 0.5), 50);
+        assert_eq!(lerp_u8(0, 255, 1.0), 255);
+        assert_eq!(lerp_u8(0, 255, 0.0), 0);
+    }
+
+    #[test]
+    fn test_smooth_falloff() {
+        assert!((smooth_falloff(0.0) - 1.0).abs() < 0.01);
+        assert!((smooth_falloff(0.3) - 1.0).abs() < 0.01);
+        assert!(smooth_falloff(0.85) < 1.0 && smooth_falloff(0.85) > 0.0);
+        assert!((smooth_falloff(1.2) - 0.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_glow_lut_matches_glow_factor_at() {
+        // The LUT is purely a cache of `glow_factor_at`; this proves the
+        // cached values equal the inline math they replace in the
+        // per-frame hot loop.
+        let (w, h) = (10u32, 8u32);
+        let mut anim = AnimationState::default();
+        anim.ensure_glow_lut(w, h);
+        for &(x, y) in &[(0usize, 0usize), (5, 4), (9, 7), (3, 6), (0, 7)] {
+            let idx = y * w as usize + x;
+            assert_eq!(
+                anim.glow_lut[idx],
+                glow_factor_at(x, y, w as usize, h as usize)
+            );
+        }
+    }
+
+    #[test]
+    fn test_params_for_each_state() {
+        for state in &[
+            State::Idle,
+            State::Working,
+            State::PermissionPending,
+            State::Error,
+        ] {
+            let GlowParams(..) = params_for(*state);
+        }
+    }
+
+    #[test]
+    fn test_animation_state_transitions() {
+        let mut anim = AnimationState::default();
+        anim.set_state(State::Working);
+        assert!(anim.target_spinner);
+        anim.tick(0.15);
+        anim.tick(0.15);
+        assert!((anim.glow.0 - TEAL.0 as f32).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_glyph_3x5_known_char_is_nonempty() {
+        let g = glyph_3x5('A');
+        assert!(g.iter().flatten().any(|&on| on));
+    }
+
+    #[test]
+    fn test_glyph_3x5_unknown_char_is_blank() {
+        let g = glyph_3x5('!');
+        assert!(g.iter().flatten().all(|&on| !on));
+    }
+
+    #[test]
+    fn test_draw_text_full_width_string_no_panic() {
+        // "QUIET-LYNX" is a representative 10-char codename; must fit and
+        // actually draw something into a 180x180 buffer without panicking.
+        let mut buffer = vec![0u32; 180 * 180];
+        draw_text(&mut buffer, 180, 180, "QUIET-LYNX", 1.0);
+        assert!(buffer.iter().any(|&px| px != 0));
+    }
+
+    #[test]
+    fn test_draw_text_overflow_is_skipped_without_panic() {
+        let mut buffer = vec![0u32; 20 * 20];
+        draw_text(&mut buffer, 20, 20, "THIS-NAME-IS-WAY-TOO-LONG", 1.0);
+        // Overflowing text is skipped entirely — buffer stays untouched.
+        assert!(buffer.iter().all(|&px| px == 0));
+    }
+}

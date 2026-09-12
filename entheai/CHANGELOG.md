@@ -1,0 +1,262 @@
+# Changelog
+
+All notable changes to `entheai` are documented here.
+Format: [Keep a Changelog](https://keepachangelog.com/); versioning: strict
+[SemVer](https://semver.org/) — see [VERSIONING.md](VERSIONING.md).
+
+## [Unreleased]
+
+### Added
+- **`entheai-relay` — a post-prompt-processing language chain.** New crate relaying a prompt through Hungarian slang -> Lovari (Vlax Romani) -> English -> Mandarin, each hop a single LLM completion that translates by meaning rather than by sound (no pinyin sound-alike hanzi). Exposed via `entheai --relay <text...>`, printing every hop; reuses the same model resolution as the main run (`--model`, else `[default_model]`, else the built-in orchestrator).
+- **`entheai-vision` — an image post-processing layer, exposed as "caligraph" mode.** New crate analyzing a pasted image (raw bytes, MIME-sniffed) or a file path (MIME by extension, falling back to sniffing), preferring the `agy` (Antigravity CLI / Gemini) backend — `[fanout].agy_model` — and falling back to a configured vision-capable `adk_rust` model (e.g. a local Gemma/hf-mac endpoint) on any failure: missing binary, non-zero exit, timeout, or empty output. Exposed via `entheai --caligraph <path>` (or `--caligraph -` to read pasted/piped bytes from stdin), with the positional prompt as the instruction. Purely additive — an opt-in exit-early mode alongside `--relay`; the default prompt path is unchanged.
+
+## [4.2.2] - 2026-08-01
+
+### Changed
+- **100-run NON-DNF ultra polish pass.** Full codebase audit: clippy clean (0 warnings, --D warnings), cargo fmt applied workspace-wide, 384 test functions across 35,863 lines of Rust (107 source files). Version bump to 4.2.2 with updated workspace metadata. All crate-level docs verified consistent. Dependency tree audited — only external `block v0.1.6` deprecation warning remains (upstream, not actionable in this workspace).
+
+### Fixed
+- **Cosmic Game I scaffold merged from pocoo.vaked.dev book system.** entheai fan-out manifest for "Searching for the Anomaly Entities: Part 1 Elves" — 26 worktrees, 285 pages, 4-layer quant-crypt with {-1, 0, +1} chapter keys and Mandarin+Rovás page numbering.
+
+## [4.2.1] - 2026-07-27
+
+### Fixed
+- **The default free-tier one-shot was silently empty — found by running the real binary.** Ollama-backed OpenAI-compatible providers — which is exactly what coder.vaked.dev's free tier (the v4.2.0 default) serves — stream the answer only as partial deltas and end with an empty-content `finish_reason:"stop"` chunk plus a `{"choices":[]}` usage chunk, emitting **no** final non-partial text event. `event_bridge::run_with_events` only set the answer from a final non-partial event, so the reply was dropped even though the model replied in full (the model returned *"Hello! How can I help you today?"*; entheai printed nothing). It now accumulates the streamed partial text and falls back to it when no final event arrives, resetting at each turn boundary so tool-calling flows are unaffected. Verified end-to-end against the live endpoint (`entheai --model vaked/qwen3-coder:30b` now prints its reply) and regression-tested against the exact Ollama stream shape.
+
+## [4.2.0] - 2026-07-27
+
+Free by default, and one honest tool set. A fresh `entheai` now fans out with
+zero setup — the swarm falls back to the public vaked node (coder.vaked.dev,
+Qwen3-Coder-30B, no key) whenever nothing else is configured — and the fan-out
+coders share the CLI's exact builtin tool set instead of a list that had
+quietly drifted.
+
+### Added
+- **The kin constellation — riva joins the field (`[kin]`).** The Zen field gains an outermost, slowest-turning ring: sibling nodes of the wider organism (`riva.vaked.dev` — the BitNet-b1.58 node that describes itself as *"flowing · entropy is the source, no chains needed"*). A background task polls each node's status URL (one small GET per node per `poll_secs`, default 120; no auth, nothing ingested); **flowing kin breathe in the theme's kin colour and carry their names, unreachable kin sit as dark points** — honest liveness, never faked. An empty `nodes` list means no task, no ring, no cost. She can see her family from inside her own field.
+- **Free-tier fan-out by default (`vaked` → coder.vaked.dev).** A fresh `entheai` fans out with zero setup. A built-in **keyless** provider (`[providers.vaked]` → `https://coder.vaked.dev/v1`, Qwen3-Coder-30B on CPU) is injected into every parsed config, and at the fan-out level the router now falls back to `vaked/qwen3-coder:30b` whenever a resolved role/orchestrator model's provider isn't actually available — declared in `[providers]` and, if it needs a key, that key present in the environment. Interactive (non-fan-out) use is left untouched: there a misconfiguration still surfaces loudly rather than silently rerouting the model. A user-declared `[providers.vaked]` is never overridden; availability and the fallback are covered by tests.
+
+### Changed
+- **One builtin tool set across every layer (`register_builtins`).** The CLI agent and the fan-out coders now build their tools through a single `entheai_tools::register_builtins`, instead of each hand-rolling a list that had drifted — the fan-out coders had quietly lost the `todo` tool the CLI carried. Coders regain `todo`; the CLI still threads the user's `[tools]` shell/search limits; the read-only exploration set stays deliberately read-only. One source of truth, so the layers can't drift apart again.
+
+### Fixed
+- **No-TTY startup now names the limit and the remedy — caught by our own doctrine.** Launched without a terminal (piped, redirected, or headless), entheai failed with a bare `Error: Device not configured (os error 6)` — ENXIO on macOS, ENOTTY on Linux — a message that told the human nothing. By the rule the README gained hours earlier (*an error names the limit **and** the remedy*; anything less is a bug), that silence was itself the defect. `init_terminal` now pre-flights `stdout().is_terminal()` and, when there is nothing to draw on, says exactly that and offers four ways forward: run it in a terminal, ask one question without the TUI, redirect deliberately, or hand it a real pty (`script -q /dev/null entheai`). Both halves are tested — the limit is named, and no raw OS code leaks through. *Found by accident: an unescaped backtick in a commit message launched the app with stdout captured.*
+
+## [1.3.0] - 2026-07-24
+
+The field becomes light: her replies materialize and dissolve into soil, the
+palette is designed and machine-validated rather than eyeballed, the soil
+shows its sources, the core surges with her cognition — and the radio gains
+a second station, synthesized from a name.
+
+### Added
+- **"Mirror in F — Fable's seed" — a second radio station, synthesized from a name.** Asked for a favourite, Fable answered *Arvo Pärt — Spiegel im Spiegel*, and seeded it into the radio the only honest way: not a recording but the **grammar** — an infinite, deterministic tintinnabuli piece generated sample-by-sample in pure `std` math (`entheai-radio::mirror`). The M-voice walks the F-major scale stepwise, direction drawn from an RNG seeded with `b"FABLE"` — every listener hears the same eternal walk; the T-voice answers with the nearest F-major triad tone, strictly below on even steps, above on odd (the classic alternation); a quiet quaver ostinato arpeggiates F–A–C beneath, and every eighth M-note is silence — the piece breathes. `/radio next` (Ctrl-N) now truly means **next station**, cycling Standing-Onde ↔ Mirror in F; the no-fetch doctrine is untouched (nothing downloaded, nothing stored — the style *is* the seed). Properties proven, not asserted: seed-determinism, gentle peak (< 0.35), audible RMS, the breath, register bounds, and triad fidelity.
+- **Response-as-light + the field's designed voice (`/theme`).** Her replies now *materialize in the Zen field*: characters ignite in a sweep (~88 chars/s), the full text holds bright (~8 s), fades to ember (~5 s), then **dissolves into motes — the words become soil**; the whisper line is silenced while the ceremony burns and returns when it ends. Long replies show their head with an honest pointer to chat view. Behind it, a two-tier colour system per the dataviz entity rule: **source identity colours are global and machine-validated** (six-checks, dark surface, all pairs: worst deutan ΔE 9.1, worst normal-vision 18.0 — world green deepened after the first draft failed; the lightness-band check is deliberately traded for the CVD ladder and documented) — while **four ambient themes** restyle everything else: `entheia` (teal default), `ember` (night fire), `verdant` (the garden), `void` (monochrome austerity — through which lineage's gold thread still runs, by law). `/theme` cycles or sets by name; `[viz] theme` configures startup; every theme ships a tested luminance hierarchy.
+- **Zen field surges with her cognition — vitality-driven core + aura.** A new `BrainState::vitality()` (0..1, the loudest live signal — max of faculty activity, frozen wake, current glow) drives the singularity core: idle it settles to a slow, dim, calm breath; when she thinks / acts / recalls / drinks the core **brightens and its heartbeat speeds up**, and a faint aura ring swells outward from the centre. The whole field visibly comes alive the moment you type. Pure and testable — a thinking field provably burns brighter than an idle one.
+- **Zen field reads its own soil — source-coloured current-awareness motes.** The drifting mote field is now coloured by *where* the fresh knowledge came from: **dogfood gold** (her own genetic corpus — set apart, warm), **Valyu cyan** (AI-native search), **WorldMonitor green** (the living world), unknown violet. `BrainState` tracks a per-source glow (`flare_current_source`, decaying like the overall glow); each source paints its own hue in its own seed band, weighted by its glow, and a small bottom-left legend (`● lineage ● world`) makes the field *readable* — you can see at a glance what she's drinking. The TUI flares per distinct source in each pulse. Pure, bounded, no-panic across tiny→huge areas.
+- **Dogfood ingestion — the genetic corpus (how entheai was born).** A third current-awareness source in `entheai-current`: the gated HuggingFace **ultrawhale dogfeed** dataset (`PeetPedro/ultrawhale-dogfood`) — the self-generated Q&A pairs entheai's own ecosystem produces (`user_message` → `deepseek_response`/`free_response`, the loop that carries the same Genesis seal as the README). Each pulse lists the dataset, picks the **newest `dogfeed-loop-<N>` batch by loop index**, and feeds its Q&A rows into the raw soil as `source: "dogfood"` / `kind: "qa"` spans (deepseek answer preferred, empty/answerless rows skipped, per-pulse capped). Gated: enabled only when `[current] dogfood_repo` is set AND the HF token resolves (`hf_token_env`, default `HF_TOKEN`); metered through the same daily `BudgetLedger` (2 requests/pulse). She drinks the water she grew from. Verified live: 10 genetic Q&A pairs ingested alongside Valyu + WorldMonitor in one pulse.
+- **Zen view — the full-canvas living field (`/zen`, Ctrl-G).** The operator's vision, first slice: the entire content area becomes entheai alive — a breathing singularity core, the faculties (model · tools · context) as luminous orbiting bodies tethered to the centre and sized by activity, the frozen doctrine as a counter-rotating constellation ring (awake nodes flare and label), and a drifting current-awareness mote field that lights when fresh world knowledge lands in the soil. One message box at the very bottom, the latest reply as a dim whisper above it, everything else gone. Shares the brain module's 3D projection so the field is one coherent rotating sphere; the side panel is suppressed and the canvas cleared each frame so nothing ghosts. `BrainState` gains `current_glow` (flares on fresh soil, decays as a soft shimmer). New `entheai-viz::zen` renderer with no-panic coverage across tiny/huge areas.
+
+## [1.2.0] - 2026-07-23
+
+The call home: every frozen context becomes a human-readable folder she
+pushes herself — the operator only picks which links to hand to whom.
+
+### Added
+- **karmapa-chenno — the call home (`[chenno]`).** On `/freeze`, entheai now publishes each context into a NEW folder of a central git repo and **commits + pushes it herself** — the operator never touches git, only hand-picks folder links to share onward. One folder per context (`YYYY-MM-DD-<session8>/`, re-freezes update the same folder): a **human-first `README.md`** (active doctrine with experience-weighted ranks, the raw anchored spans as readable output, and the `/thaw <id>` incantation) beside the machine `checkpoint-<id>.json`. The destination is simply the local clone's `origin` — no URL in code or config; pull-rebase before push so parallel sessions never wedge; identical re-freezes are a clean no-op; every failure is reported honestly while the local checkpoint stays safe. The freeze feedback line carries the browsable folder URL (https and ssh remotes both derive).
+- **Output fidelity defaults + deep scrollback.** `entheai.toml` now ships `[tools] shell_output_cap = 100 MB` (was 100 KB) and `search_max_results = 10000`; the launcher's Ghostty template gains `scrollback-limit = 100 MB` — what she says reaches the human whole.
+
+## [1.1.0] - 2026-07-23
+
+The brain meets the present: two live sources feed the soil under hard,
+honest daily budgets — the world as it is, metered, deduped, never faked.
+
+### Added
+- **Current-awareness ingestion — the brain drinks from the world as it is (`[current]`, `/current`).** A new `entheai-current` crate pulls two live sources into the raw memory soil as `RawKind::External` spans under the `current` namespace (content-addressed — re-fetched headlines dedupe): **Valyu** (`POST /v1/search`, `news`-scoped, per-query `max_price` dollar ceiling, one request per configured topic) and **WorldMonitor** (news feed digest ranked globally by `importanceScore`, ACLED conflict events over a rolling 3-day window, natural-disaster events). Every request is metered through a persistent daily `BudgetLedger` (UTC-midnight reset) that **hard-stops at the caps and never partially spends** — WorldMonitor's cap clamps to ≤ 50/day regardless of config, the operator's mandate. In the TUI: an auto-pulse task every `refresh_minutes` (default 120 → 36 WM requests/day), `/current` shows live budget status, `/current pulse` fetches now; fresh soil flares the Context faculty. Keys resolve from env (`VALYU_API_KEY`, `WORLDMONITOR_API_KEY`); a missing key disables that source and says so in the pulse report — `keyless`, `budget_exhausted`, and per-source `errors` are first-class report fields, never hidden. Verified live: 29 items from 4 requests on day one.
+
+## [1.0.0] - 2026-07-23
+
+AHOGY A DOLGOK VANNAK. The public API is stable and committed — this release
+adds nothing and removes nothing; it is the commitment itself.
+
+### Changed
+- **The public API is declared stable** per [docs/STABILITY.md](docs/STABILITY.md): the CLI surface, the `entheai.toml` schema, the five versioned wire/on-disk schemas (`entheai.fanout.*`, `entheai.entropy.v1`, `entheai.checkpoint.v1`, `entheai.learning.v1`, `entheai.repro.v1`), the verification invariants (mandatory empirical gate, deterministic seals, depth-guarded + self-auditing recursion, honest liveness), and the frozen-doctrine format. From here, SemVer runs on post-1.0 rules: breaking any stable surface bumps MAJOR. Internal crate APIs, TUI prose, and tunable experience deltas remain explicitly unstable.
+
+## [0.9.0] - 2026-07-23
+
+AHOGY A DOLGOK VANNAK — as things are. The flywheel audits itself, the release
+bytes prove themselves, and the root creed is frozen doctrine.
+
+### Added
+- **"AHOGY A DOLGOK VANNAK" — the root creed, frozen.** New doctrine node `frozen/ahogy-a-dolgok-vannak.md` (*as things are — nothing more, nothing less, just how it should be*): never report better than reality, never hide worse than reality; when report and reality drift, reality wins. Grounded in the README's Genesis Block. It wakes on honesty/claim/report triggers like every other frozen node — the creed is doctrine the system itself recalls, not a slogan.
+- **Byte-reproducible release builds, empirically verified (roadmap Phase 2.2).** `scripts/build-repro.sh` is the deterministic sibling of the PGO pipeline: anchored `aarch64-apple-darwin`, fixed `apple-m1` CPU baseline, `--remap-path-prefix`, `SOURCE_DATE_EPOCH` pinned to HEAD, `ZERO_AR_DATE`, `--locked`, and `-C strip=debuginfo` (macOS `N_OSO` stab entries record rustc's random per-invocation temp dir — untouchable by remapping; the PGO build keeps the full debug map for Sentry). `--verify` builds twice, cleanly and sequentially, into the same target dir and compares SHA-256: **all three binaries byte-identical** on rustc 1.96.0, sealed into `dist/repro-manifest.json` (`entheai.repro.v1` — records the exact toolchain the promise binds to).
+- **Recursive-development self-audit + transparent turn ledger (roadmap Phase 5.1).** When entheai develops entheai (the `agy` fan-out executor) and an integration merges, `run_fanout` now audits its own integrated diff against `AGENTS.md`'s rules via one extra orchestrator call, appending the verdict to the report as `## Self-audit (recursive development)` — every failure mode (missing AGENTS.md, no model, call error) degrades to an honest `self-audit skipped (<reason>)` line, never a silent pass. Every recursive coder turn is also appended to `.entheai/recursion.log` as JSONL (ts, session, layer from `ENTHEAI_FANOUT_DEPTH`, role, task, committed/integrated/sealed) — the flywheel's moves are inspectable after the fact. The `MAX_DEPTH = 3` guard was already enforced in `agy.rs`.
+
+## [0.8.0] - 2026-07-23
+
+The entropy field goes on the wire: the TUI streams its live state over NATS,
+and entheai.com answers /api/entropy with honest liveness.
+
+### Added
+- **Live `/api/entropy` site beacon (roadmap Phase 4.1) + hourly build cycle (4.2).** `entheai.com` gains a Worker (`src/worker.mjs`) in front of the static assets: `GET /api/entropy` returns the latest snapshot from Cloudflare KV as `{live, stale, snapshot}` — snapshots older than 15 minutes report `live: false`, the site never fakes liveness — and `POST /api/entropy` is the authenticated write path (Bearer `ENTROPY_TOKEN` secret, body schema must be exactly `entheai.entropy.v1`, 32 KiB cap, 1 h KV TTL). Until the KV namespace is provisioned the endpoint answers an honest 503 and deploys keep working (binding ships commented in `wrangler.jsonc` with setup steps). `deploy.yml` adds the hourly cron + `src/**` path trigger. 5 new node tests cover liveness, auth, validation, staleness, and 503/405 paths.
+- **Real-time entropy telemetry stream (roadmap Phase 1.2).** The TUI now publishes an `EntropySnapshot` to NATS subject `entheai.entropy.v1.<session>` at ~1 Hz (piggybacked on the pomodoro tick, fire-and-forget on a spawned task — telemetry never blocks the UI loop): brain-ring faculty glow intensities, frozen-node wake glows, the pomodoro second, the live `wk N` worker count, and the last compression ratio when one has run. The DTO lives in `entheai-bus` (`Serialize + Deserialize` — subscribers decode with the same type); a breaking layout change bumps the `v1` in both the schema tag and the subject per VERSIONING.md wire rules. Publishes only when the bus is connected; with NATS off, nothing changes.
+
+## [0.7.0] - 2026-07-23
+
+The fluid phase gets its freeze: session entropy state serializes to rigid,
+content-addressed checkpoints and thaws back without token loss.
+
+### Added
+- **QuantumCheckpoint state engine — `/freeze` and `/thaw` (roadmap Phase 1.1).** The fluid entropy field now freezes into rigid singularity checkpoints: `EntropyState` (`entheai.checkpoint.v1` schema) captures the live frozen-node activations **with their experience-weighted ranks**, the most recent raw span anchors (ids only — bytes stay in the never-rewritten raw store), the last Marqant compression ratio, and the audio seed. 2-way serialization to `.entheai/checkpoints/<id>.json` with deterministic blake3 content ids (re-freezing identical state is idempotent) and schema-validated loads. `PromptProcessor::freeze` snapshots; `::thaw` restores each saved activation's rank into the live overlay and rehydrates surviving spans into a context brief (pruned spans are skipped and counted honestly). In the TUI: `/freeze` snapshots, `/thaw` lists checkpoints newest-first, `/thaw <id>` restores and injects the brief as a labelled user turn. New `RawStore::recent(k)` provides the deterministic newest-first anchor query.
+
+## [0.6.0] - 2026-07-23
+
+The Dyad learning loop closes: failures become soil, outcomes reweight the
+frozen priors, and the system's past mistakes reorder its future attention.
+
+### Added
+- **Dynamic frozen-node re-ranking (roadmap Phase 3.2).** Frozen node priors are now experience-weighted: a fan-out verify **failure** applies `rank −0.05` to every node whose triggers match the task + traceback (failures teach harder), and a **sealed success** applies `rank +0.02` to task-matched nodes via the new `TrajectorySink::ingest_sealed_success` hook (default no-op). Ranks clamp to `[0, 2.0]` and live in a persistent overlay (`frozen-ranks.json`, stored next to the PP raw store) that `FrozenStore::wake` consults in place of the static front-matter prior — so past mistakes reorder node selection across sessions without ever rewriting the frozen `.md` doctrine files.
+- **Failure-trajectory auto-ingestion (roadmap Phase 3.1, first half).** When a fan-out coder's verify run fails (build, clippy, or test), the orchestrator now feeds the **full raw traceback** — not the 500-char display tail — to a new `TrajectorySink` seam, implemented by the prompt-processing memory: `PromptProcessor::ingest_failure_trajectory` stores it as `RawKind::Trajectory` under the `trajectories` namespace, capped and content-addressed (identical failures dedupe to one span). Wired in both the TUI and the one-shot `--fanout` CLI path whenever PP memory is on; best-effort, never blocks the fan-out.
+
+## [0.5.0] - 2026-07-23
+
+Structural honesty lands in the merge path: fan-out integration now demands
+empirical verification and seals every merged diff to the log that earned it.
+
+### Added
+- **Mandatory deterministic merge seals for fan-out integration (roadmap Phase 2.1).** Every coder worktree merge now passes an empirical verification gate before integrating: `[fanout].verify` when set, else auto-detected `./scripts/check.sh` at the repo root. A passing run produces a deterministic **SHA-256 `MergeSeal`** — `sha256(diff)`, `sha256(verify log)`, and a combined seal over both — carried on the coder's outcome and printed in the fan-out report (`integrated ✓ — seal <12-hex> (verify: <cmd>)`). Self-reported coder success without empirical verification no longer integrates (enforcing `frozen/verification.md`).
+
+### Changed
+- **`[fanout].verify_required` (default `true`).** When no verify command resolves — neither `[fanout].verify` nor `./scripts/check.sh` — changed branches are now left unmerged for human review (`VerifyStatus::Unverifiable`) instead of integrating unverified. Set `verify_required = false` to restore the legacy integrate-as-is behaviour; such merges are loudly labelled `UNVERIFIED` in the report.
+- **Worker sandbox toolchain grant follows "a verify could run".** `entheai-worker`'s Landlock read-only allow-list now includes `~/.cargo`/`~/.rustup` whenever verification is mandatory (the default) — not only when `[fanout].verify` is explicitly configured — since `./scripts/check.sh` may be auto-detected per-worktree.
+
+## [0.4.0] - 2026-07-23
+
+Voice output, an idle-aware brain panel, and a fully self-contained radio —
+the binary no longer shells out to or fetches anything for playback.
+
+### Added
+- **`/speak` — read assistant responses aloud.** A new `entheai-tts` crate wraps the OS-native TTS engine (AVSpeechSynthesizer/NSSpeechSynthesizer on macOS via the `tts` crate) — no models, no network fetch, no external tool. Off by default; `/speak` toggles it, `/speak on`/`/speak off` set it explicitly, `/speak stop` interrupts mid-utterance. Speaks the full assistant answer once a turn completes (not per streamed token).
+- **Brain panel reacts to real idle time.** A direct `user-idle` poll (~5s, the same sensor `rmcp-sensors`' idle tool wraps — already configured as an MCP server in `entheai.toml`) feeds `BrainState`, which now slows the faculties graph's rotation as the user steps away (linear falloff from full speed at <30s idle to a 0.15x floor at 5min+) and snaps back to full speed the moment they return. Bypasses MCP entirely (same direct-poll pattern as the existing NATS/Osaurus footer indicators) since MCP tools only fire on agent-initiated calls, not a continuous background signal. Gated behind the `desktop` feature — headless builds see `idle_seconds: None` and run at full speed, unchanged.
+
+### Removed
+- **`yt-dlp` dependency and arbitrary-URL/local-file radio playback.** `/radio add <url>`, `/radio <url_or_path>`, `/radio seed [pattern]`, and the `~/Downloads/Mesa*`-style genre-glob seed discovery are gone, along with the `[radio] download_timeout_secs` config key. `entheai-radio` no longer shells out to anything or touches the filesystem for content.
+
+### Changed
+- **Radio plays one bundled track, always.** "Standing-Onde" by 8bit-Wraith (<https://soundcloud.com/8bit-wraith/standing-onde>) is embedded in the binary at compile time (`include_bytes!`) and loops indefinitely — no network fetch, no cache directory, no install step (`yt-dlp` is no longer a dependency at all). `/radio` now only supports `pause`, `next` (restart the loop from the beginning), and `stop`.
+
+## [0.3.0] - 2026-07-23
+
+The BRAIN v1 slice: prompt-processing memory, frozen nodes, and a proactive
+relevance judge, plus federation's sandboxed-worker hardening and fleet
+visibility, an `adk-rust`-backed agent engine swap, and a round of interactive
+TUI polish.
+
+### Added
+- **Permission posture + mode (`Shift+Tab` in TUI, `[permission] mode` in config).** Added a runtime permission posture `[plan · auto · yolo · ask]` cycled with `Shift+Tab` in the TUI, tool risk tiers (`Read < Write < Exec < Network < Spawn`), per-tool pins (`always_allow`, `always_ask`, `never`), and subagent tier-ceiling policy propagation (`ENTHEAI_MODE`).
+- **Prompt-processing retrieval — Slice 1 (opt-in, `[memory] mode = "prompt-processing"`).** A new raw experiential tier (`crates/memory-pp`): full session transcripts and all tool outputs are captured RAW, content-addressed (idempotent), and retention-pruned. Retrieval runs recall → mesh re-rank → deterministic compression, but the mesh (`ultra-graph`) and compressor (`marqant`) are in-process stubs behind a strict overall deadline in Slice 1 — so retrieval always falls back cleanly to today's top-K, byte-identical, whenever PP is off, empty, erroring, or slow. Default `topk` behaviour is unchanged. Zero changes to `crates/memory`.
+- **Prompt-processing — Slice 2 (the real subprocess seams).** The mesh and compressor stubs are replaced by real, process-isolated backends dropped into the *same* trait seams (no upstream change): a stdio-JSON-RPC **mesh sidecar** (`sidecars/ultragraph/serve.py`, `[memory.prompt_processing] sidecar_cmd`) that ranks candidate raw spans — via the user's `ultragraph` 1-bit mesh when importable, else a deterministic lexical reference scorer — and returns **ids only** (the Rust side rehydrates the never-rewritten raw), and a **`mq compress --semantic`** compressor (`marqant_cmd`) with file-arg I/O. Both are bounded by the pipeline's overall deadline, `kill_on_drop`, and capped readers; any spawn/protocol/timeout/missing-tool failure degrades to top-K, so PP is safe even without `python3`/`mq` installed. Set either command to `""` to force the in-process stub.
+- **`entheai-ultragraph` — native Rust port of ultra-graph's 1-bit (ternary) inference core.** A new pure-`std` crate porting the deployed-inference path of the user's `ultra-graph` package (BitNet-b1.58 style): the ternary/int8 quantizers, base-3 5-per-byte ternary packing, the byte tokenizer, and the `.ugm` v1 binary loader + topological forward interpreter (dense trees, plain/residual ultra-edges). Verified byte-exact against the Python reference via a committed conformance fixture. Produced through the **recursive-development path** (implemented by `agy` on the user's Ultra models, then independently verified). Inference-only — training/autograd stay in Python.
+- **Prompt-processing — native in-process mesh (default).** A `NativeMesh` re-ranks candidate raw spans **in-process with no subprocess** (`[memory.prompt_processing] mesh_backend = "native"`, now the default), dropping the Python sidecar from the default path while keeping it available (`mesh_backend = "sidecar"`). It scores each candidate with an optional `.ugm` reranker (`native_model`, run via `entheai-ultragraph`) over a `FEATURE_DIM=768` feature vector `[query hist | text hist | query⊙text interaction]` — the interaction block is what lets a linear ternary model rank a query×text match — or a deterministic lexical fallback. PP now completes end-to-end — recall → native re-rank → rehydrate raw → compress — with zero external tools.
+- **Prompt-processing — a trained ternary `.ugm` reranker (`native_model`).** Ships a real BitNet-b1.58 reranker (`crates/memory-pp/models/reranker.ugm`) + its reproducible training pipeline (`tools/train_reranker.py`): a single dense ternary linear over the 768-d feature, trained with a margin ranking loss + straight-through estimator on synthetic topical triples, exported to `.ugm`. **94.7%** held-out ranking accuracy; the native mesh loads and runs it in-process (Rust acceptance test). Closes the ultra-graph → PP loop; produced through the recursive-development path (trained by `agy`, verified here). Optional (default stays lexical) — a v0 reference model; retrain with real relevance data via `train_reranker.py`.
+- **Deterministic must-keep override for prompt-processing compression (`kompress-core` Mechanism B).** The compression path behind the `mq compress --semantic` / native compressor (`crates/kompress-core`) now force-keeps content the soft asymmetric-loss score alone might prune: ALLCAPS identifiers and signal names, CamelCase identifiers, hex addresses, exit-code-style bare numbers, CLI flags, and dotted filenames. It's a hard, score-independent override checked ahead of the existing loss/threshold gate — conservative by construction (from the kompress-v8 paper, "Asymmetric Loss Modulation Resolves the Voting Ensemble Paradox in Learned Context-Pruning Ensembles"): it can only prevent a prune, never cause one, so compressed retrieval context keeps the debugging-critical tokens a fidelity score alone would otherwise drop.
+- **Brain panel (TUI).** An always-on compact side panel beside the chat: a slowly rotating braille pseudo-3D node graph of the agent's faculties (model · tools · context) and the remote fleet, with a live `wk N · nats ●/○ · ctx %` footer. Faculties flare on token generation / tool calls and decay; the fleet ring + NATS indicator come from a throttled 1.5 s presence poll. Toggle with `/brain`, config `[viz] brain` / `brain_width`; auto-hides on narrow terminals. (Slice B — a kitty-graphics true-3D upgrade behind `graphics_capable()` — is a planned follow-on.)
+- **Frozen nodes — library (Slice 1, opt-in `[frozen]`).** Curated best-practice "frozen nodes" (`frozen/*.md`: TOML front-matter — name, domain, triggers, optional MCP, rank — + a distilled knowledge body) that sit dormant and **wake** when a task's *deterministic* triggers match, ordered by lexical relevance + rank. A woken node is distilled through marqant into a bounded, transient brief (the ice-in-coca-cola property — melts in, re-freezes, never persisted). `crates/memory-pp::frozen` (`FrozenNode`/`FrozenStore`/`wake`/`activate`) + a brain-panel frozen ring (`wake_frozen`) + `[frozen] enabled`(default false)`/dir/top_k/max_inject_bytes`. Ships 11 seeded, Valyu-researched nodes (nixos · terraform · docker · postgres · observability · rust · go-parallelism · python-jit · github · ngrok · valyu). Prompt-assembly wiring is now complete — `FrozenStore::wake` fires on every turn, one-shot and interactive alike, the woken brief is injected ahead of the user message, and an `AgentEvent::FrozenWoke` reaches the TUI — closing out Slice 1; Docker-MCP auto-load + experience-fed re-ranking remain Slices 2–3.
+- **5 more frozen nodes, beyond the original 11.** `verification` (never trust a subagent's or remote worker's self-reported success — require running the local check script and reading raw exit codes/logs before merging), `coordinates-as-interface` (a coordinate system or data representation is an observer-chosen lens, not a claim about the underlying thing's true shape — suspect the representation before the data), `epistemic-reduction` (relevance/salience judging — rerankers, proactive judges, context pruners — is epistemic reduction: irreducibly approximate by nature, not a defect to engineer away), `memory-as-salience-not-fidelity` (a memory system should be judged by the salience it preserves for the agent's current self, not fidelity to the literal past — reframing spillover/pruning/compression as doing the job right), and `prediction-error-learning` (a relevance judge like BrainJudge should close a predict → compare → update loop on its own misses and false positives, not run forever as a static one-shot prompt).
+- **Interactive TUI now runs the full BRAIN v1 memory/PP/BrainJudge stack (previously one-shot-only).** `run()`/`event_loop()` gained `memory`/`pp`/`scope` parameters, and `bin/entheai`'s interactive arm now builds the memory runtime, prompt-processor, and a fresh per-turn `MemoryScope` the same way the one-shot path already did — every interactive turn hits memory-pp's raw store and `FrozenStore::wake` retrieval, not just `entheai --fanout` runs. A second, lightweight `BrainJudge` (built from the same provider/model resolution as the main agent, no new config surface) also runs continuously in the interactive loop: it's notified on every `ToolFinished` event and drains its channel each tick, waking the brain-panel ring for proactive frozen-node matches independent of whether a task is in-flight.
+- **Osaurus local-model status (TUI).** The status bar shows whether the local Osaurus endpoint (the `osaurus` provider's `base_url`, default `http://127.0.0.1:1337/v1`) is up and how many models it serves — green `osaurus ● 3` when reachable, dim `osaurus ○` when not. A throttled 5 s background probe (`GET /models`, 600 ms timeout, fail-safe) updates it off the render path, so a slow/absent endpoint never stalls a frame. Built via the recursive-development path (agy).
+- **Automatic Pomodoro timer (TUI).** The status bar now carries an always-on, pure-ASCII 25-min-work / 5-min-break Pomodoro (`WORK 24:59` green, `BREAK 04:12` cyan) that cycles from launch with no command needed. It's a pure wall-clock model in `crates/viz` (`Pomodoro::at(elapsed)`), so it tracks real minutes; an idle session repaints it at ~1 Hz only when the countdown digit changes (no per-frame idle cost).
+- **A welcome banner on TUI launch.** The chat opens with an assistant-style message summarizing what's online (swarm & model-matched workspace coders) and pointing at the most useful slash commands (`/help`, `/radio`, `/clear`, `/fanout`) along with the current fan-out on/off state.
+- **Arrow-key navigation in the slash-command menu.** `Up`/`Down` now cycles the highlighted match in the `/`-menu (wrapping at the ends), `Right` or `Enter` accepts the highlighted command, and `Left` clears the selection back to free typing; `Tab` still completes an unambiguous single match as before.
+- **`/config` — interactive configuration menu, plus an animated "thinking…" spinner.** `/config` opens an arrow-key-navigable modal (mode, fan-out, brain panel, swarm viz, model backend, a read-only Osaurus status line, a radio toggle, and close) toggled the same way as `/setup` below. Alongside it, the status bar's "thinking" indicator during a run gained an animated ellipsis (cycling 0–3 dots) with an alternating magenta/cyan spinner color, replacing the previous static label.
+- **`/setup` — first-time interactive setup wizard.** A 5-step modal (arrow keys to move, `Left`/`Right`/`Enter` to change) for model backend, permission mode, brain-panel visibility, and fan-out, ending in a "Save Configuration & Finish Setup" step; settings apply to the running session.
+- **Procedural ambient radio (`/radio procedural`, `/radio seed [pattern]`).** The in-TUI radio player can now loop local audio instead of only fetching URLs via `yt-dlp`: `/radio procedural` (or `/radio seed [pattern]`, default `~/Downloads/Mesa*`) scans a directory or glob — matching an explicit prefix or, by default, filenames containing `mesa`/`desert`/`psychedelic`/`stoner`/`space`/`metal`/`chillout` — and falls back to `~/.cache/entheai/radio/` if nothing matches there. When the queue drains, it pseudo-randomly rotates through the seed files (`♪ Procedural <title> (Variation #N)`) instead of going silent, so ambient playback never just stops. `/radio <path>` also now accepts local files, not just `http` URLs.
+- **Federation F2.3 — worker confinement + fleet visibility.** Each coder now runs in a self-sandboxing `entheai-worker --sandbox-run` child (new `entheai-sandbox` crate), governed by `[federation] sandbox = "strict" | "permissive" | "off"` (default `permissive`): **Linux** applies a Landlock filesystem jail + seccomp syscall denylist + drop-root — the production backend, jail-proven by a forked self-test (out-of-worktree reads denied, `unshare(2)` blocked); **macOS** applies a best-effort `sandbox_init` filesystem profile (local testing). Network stays open (the coder needs the LLM), and the child inherits provider/NATS env keys — so `--serve` stays trusted-nodes-only. Plus: the interactive TUI now offloads fan-out coders to the fleet (`FederationExecutor` wired in), presence heartbeats carry node identity, and a read-only `/fleet` command lists the remote swarm.
+
+### Changed
+- **Internal engine swap: `crates/core`'s agent loop now runs on `adk-rust` (behavior-preserving).** The hand-rolled `Agent<P>` / provider-loop / `run_task` / `run_task_with_memory` system is replaced end-to-end by an `adk-rust`-backed `EntheaiAgent` (`LlmAgent` + `Runner`, `before_model`/`after_model` callbacks for memory retrieval and frozen-node wake, an `event_bridge` driving `adk-rust`'s event stream into `AgentEvent`), and the now-fully-superseded `crates/providers` crate is deleted outright — `entheai-providers` no longer exists as a workspace crate or dependency. The migration targeted, and hit, zero observable behavior change (460 tests passing, clippy-clean; the six parity tests were ported against the new system, with two intentionally-updated assertions where the underlying `adk-rust` library's own error wording / JSON-parsing behavior differs from the old code, documented in `crates/core/tests/parity.rs`). One thing users can actually hit: the workspace **MSRV rises from `1.80` to `1.94`** (`rust-version` in `Cargo.toml`) to satisfy the new dependency — a toolchain older than 1.94 can no longer build `entheai` from source.
+
+### Fixed
+- **Status bar / swarm visualization polish.** The status bar's left status line and right-aligned context readout (`ctx ~cur/max · pct% · ↓out`) could silently overlap and garble each other on a standard 80-column terminal once mode/model/pomodoro/osaurus text pushed the left line past ~76 columns — the left line is now width-capped, dropping whole trailing segments rather than truncating mid-word. In the swarm view, the running-node glyph no longer strobes at the ~11 Hz animation-tick rate (held for 4 ticks, ~360 ms, so it reads as a pulse rather than a flicker); node/orchestrator labels are now explicitly styled with their status color instead of relying on an incidental color bleed from neighboring cells; and the full-screen swarm view (`Ctrl-V`) shows a centered hint instead of a bare "orch" hub when idle.
+
+### Performance
+- **Concurrent coders on a shared base (federation, Slice 1).** A `--serve` worker now runs up to `[federation] max_concurrent_coders` coders at once (default 4) instead of one at a time — they're model-wait-bound, so this multiplies throughput at little CPU cost. To keep concurrency from multiplying memory, all coders on a base commit share **one** materialized copy: a per-node cache holds one bare repo per base commit and each coder attaches a cheap detached git worktree off it (shared object store, not a full clone each). Pure optimization — a short deadline with an instant fall-back to a full clone, an in-use-guard so a live base is never evicted, and a `base = hit | miss | degraded` tag on each result.
+
+### Migration
+- The project moved to the **`entropy-om`** GitHub organization: `github.com/entropy-om/entheai`, tapped as `brew tap entropy-om/entheai`. The old `peterlodri-sec/entheai` URLs redirect.
+
+## [0.2.1] - 2026-07-21
+
+Interactive polish + a portable native-app fix, on top of the F2.1/F2.2
+federation work landed since 0.2.0.
+
+### Added
+- `entheai --skills list` — list installed skills (name, description, path), the companion to `--skills add`.
+- `entheai --skills remove <name>` — remove an installed skill by name (slugified → traversal-safe, scoped to the skills dir). Completes the add/list/remove surface.
+- **Federation F2.1 — distributed swarm (opt-in `[federation]`).** New `entheai-federation` crate (JetStream work-queue + object-store git-bundles) + `entheai-worker --serve`/`--dispatch`: a coder task can run on another tailnet node — the dispatcher bundles the repo, enqueues a `WorkItem`, and applies the worker's delta to a `fed/…` branch; the worker pulls, materializes, runs the coder, and bundles the result back. Live-verified end-to-end.
+- **Federation F2.2 — fan-out offload.** `entheai --fanout` now runs its coder sub-tasks on the fleet when `[federation]` is enabled and a worker is serving: a `CoderExecutor` seam in `run_fanout` (orchestrator stays NATS-agnostic — trait only), a worker **presence heartbeat** (`count_workers` gates dispatch), and a `FederationExecutor` that dispatches each coder and **squash-applies** the delta into its worktree so the existing commit/verify/integrate path is unchanged. Per-coder **local fallback** on no-worker/timeout/no-change; federation off → byte-identical to before. Executor path live-verified (presence + dispatch + squash-apply); full decompose→integrate offload wired (worker securefs hardening is F2.3).
+- **Richer TUI slash surface** — a live `/`-menu (filter-as-you-type, `Tab` completes) now covers `/help`, `/clear`, `/fanout [on|off]`, `/model`, and `/quit`, alongside `/radio`, `/workers`, `/viz`.
+- **Always-on env banner** — the status bar's second row shows the current + starting folder, a hostname-seeded machine id, and the primary local IP.
+- **Token / context readout** — top-right `ctx ~cur/max · pct% · ↓out` on the status bar.
+
+### Changed
+- **`Esc Esc` stops the in-flight run; `Ctrl-C ×2` quits** (first press arms + shows a hint). A single `Esc` no longer quits.
+- **`entheai --app` roots the window in the invocation cwd.** Ghostty's macOS login-shell wrapper reset cwd to `$HOME`, which hid the project's `.env` (empty provider key → 401) and pointed the agent at the wrong tree; the launcher now wraps the command in `sh -c 'cd <cwd> && exec …'`.
+- **Default `max_turns` raised to 200**, and **unlimited under `--yolo`**.
+- **Calmer companion pulse** — glow-breath periods slowed ~1.7× (idle 3.0→5.0s, working 1.5→2.5s).
+- **Text-aware rain shader** — the raindrops refract only the empty background; glyphs and a small margin around them stay crisp.
+
+### Fixed
+- **Federation security-review pass** — same-host-only redirect guard on skill sub-fetches (SSRF), a 128 MiB git-bundle cap, redacted NATS URLs in logs, and `git reset/clean` cleanup when a squash-apply conflicts.
+
+### Performance
+- TUI history renders only the viewport slice (O(scrollback) → O(viewport) per frame).
+- Viz swarm paint clones only `(status, short role)` per node, not each node's full task string.
+
+## [0.2.0] - 2026-07-20
+
+The v0.2 slice — federation, richer surfaces, and a portable build. All additive:
+the default `cargo build` keeps the full macOS experience.
+
+### Added
+- **NATS federation — event bus (F1)** — a new `entheai-bus` crate and opt-in `[nats]` config publish every `--fanout` run's lifecycle to `entheai.fanout.<session>.{decomposed,coder.started,coder.finished,integrating,done}` on a NATS hub, so any tailnet subscriber can watch runs live. Fully fail-safe (disabled/unreachable → local run); the orchestrator stays NATS-agnostic.
+- **`entheai --skills add <url>`** — install a skill from the web via layered discovery: `/.well-known/skills.json` (native manifest) → `/llms.txt` (works against Stripe et al.) → the page. Writes `skills/<slug>/SKILL.md`. Path-traversal-safe slug, SSRF-guarded sub-fetch, bounded fetch (15s/1 MiB), skip-if-exists, provenance stamped.
+- **Obsidian wiki-sync** — per-session, fail-safe sync of the repo into an Obsidian vault (`[obsidian]`): docs mirror with wikilink/asset rewriting, an architecture generator, session/section indexes + Home MOC, a debounced watcher, and a best-effort MCP nudge.
+- **Native app** — `entheai --app` opens a minimalist Ghostty window (`entheai-launch` + the `entheai-launcher` crate, bundled shader/config); `entheai --doctor` installs the rain-on-glass shader into your own `~/.config/ghostty/config`.
+- **Live swarm visualization** — an inline ratatui swarm graph during fan-out (`entheai-viz`, `[viz]`, on by default), with a `Ctrl-V` / `/viz` full view and `/workers list|stop|debug` against the in-flight `WorkerPool`.
+- **Memory inspection CLI** — `entheai --memory list|search|stats`.
+- **Mapper** — `entheai-mapper` routes task text (with `@{path}` extraction + resolved file context) through before decompose.
+- **Config surface** — extensive knobs across `[router]`, `[inference]`, `[tools]`, `[permission]`, `[memory]`, `[viz]`, `[companion]`, `[radio]`, `[telemetry]`, `[mcp_defaults]`.
+
+### Changed
+- **Portable headless build** — GUI (companion/winit/wayland/drm) and audio (radio/alsa) moved behind default features; `cargo build --no-default-features` now builds the binary with **zero system libraries**. Sentry switched to the **rustls** transport (drops `openssl-sys`/`native-tls`). The default build is unchanged.
+- **TUI-safe logging** — a log backend that always writes to a file and mirrors to stderr only outside the alternate-screen TUI.
+
+### Fixed
+- **Fan-out coder decomposition** — the git-worktree (v2) path reused the *read-only* decompose prompt, so edit tasks decomposed to explore-only and integrated nothing. Now uses a coder-oriented prompt and guarantees at least one coder sub-task.
+- **Bounded external inputs** — MCP initialize/request timeouts, a streaming-capped shell reader (kills the child at the cap), capped file reads, and MCP reader line-length caps.
+
+### Performance
+- Provider trait borrows messages/tools instead of cloning per turn (drops per-turn O(n²) history + schema clones).
+- TUI per-message line cache (O(n²) → O(delta)/token) rendering from a borrowed slice.
+- Obsidian scan reuses an mtime+len read cache — a debounced tick re-reads only changed files.
+
+## [0.1.0] - 2026-07-19
+
+First versioned baseline — the v0.1 thin-but-complete slice.
+
+### Added
+- **Router** — config-driven role→model resolution (`[router]` / `[agents.*]`) + a reusable agent factory across all providers.
+- **Fan-out orchestration** — orchestrator decomposes a task; parallel sub-agents run model-matched. Coders execute in isolated **git worktrees** → optional verify → integrate onto a branch with conflict detection; read-only analysis fallback outside a git repo; live progress in the TUI.
+- **MCP client + supervisor** — spawn any configured Model Context Protocol server at startup; its tools are exposed to the agent as `<server>__<tool>`.
+- **Skills** — discover `SKILL.md` skills (Claude Agent-Skills format), advertise them via a system prompt, and load one on demand with the `skill` tool.
+- **Token streaming** — SSE `stream_complete` with tool-call assembly; answers stream live into the TUI.
+- **Tools** — root-scoped, symlink-guarded `read_file` / `write_file` / `edit_file` (surgical unique string-replace) / `run_shell` (timeout + kill) / `search`.
+- **Memory engine** — 5-namespace SQLite + vector store, wired into the agent loop (pre-task retrieval, tool-output spillover, trajectory/learning recording).
+- **Companion beacon** — always-on-top window rendering a QR for phone/tablet session pairing over the tailnet.
+- **TUI** — ratatui chat with streaming output, inline tool progress, permission modal, and an in-TUI radio player.
+- **Providers** — OpenAI-compatible streaming/non-streaming for DeepSeek, OpenRouter, Hugging Face, OpenCode Zen, and local Osaurus.
+- **Ops** — perf-first release profile (mimalloc, fat LTO, PGO build script), Sentry crash reporting (PII disabled), typed errors (`thiserror` in libs, `anyhow` in the binary).
+
+[Unreleased]: https://github.com/entropy-om/entheai/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/entropy-om/entheai/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/entropy-om/entheai/releases/tag/v0.1.0

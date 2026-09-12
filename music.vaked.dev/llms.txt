@@ -1,0 +1,23 @@
+# music.vaked.dev
+
+> An intergalactic cogito-ergo-sum TV — a self-generating constellation that
+> broadcasts its own music. Three.js particle sphere + procedural Web Audio.
+> No samples, no assets, no backend.
+
+Source: https://github.com/peterlodri-sec/music.vaked.dev
+
+## What it is
+
+- A Three.js particle sphere that spreads into a constellation with the music's
+  energy (SPREAD SPHERE ALL), breathing at an idle baseline even when silent.
+- A procedural Web Audio engine (INTO LOVE) — love-diatonic pads, melody, bass,
+  generated live from a seeded voice. 0 + 1: an LFO and an analyser agree on the
+  energy that drives the sphere.
+- Single-file static site, zero build step, no dependencies beyond the pinned
+  Three.js CDN build.
+
+## Sibling ecosystem
+
+- art.vaked.dev — generative gallery
+- ENTHEA — visual synthesizer (formerly on this domain; still at entheai.pages.dev)
+- loop-radio — procedural Web Audio engine (AGPL-3.0)

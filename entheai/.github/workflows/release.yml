@@ -1,0 +1,125 @@
+# Production / release CI — builds the optimized binary, signs + notarizes it
+# (Developer ID), and cuts a GitHub Release.
+# There is deliberately no test/lint CI here (dev checks run locally via scripts/check.sh).
+#
+# Triggers: pushing a version tag (v1.2.3), or manual "Run workflow".
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed to create the release
+
+jobs:
+  build-release:
+    # Apple Silicon runner — entheai is macOS/Apple-Silicon only.
+    runs-on: blacksmith-6vcpu-macos-15
+    environment: main
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        # rust-toolchain.toml pins the channel (1.96.0), components, and the
+        # aarch64-apple-darwin target; `rustup show` installs exactly that.
+        run: |
+          rustup show
+          rustup component add llvm-tools-preview
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-pgo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install cargo-pgo
+        run: cargo install cargo-pgo
+
+      - name: PGO production build
+        run: ./scripts/build-release.sh
+
+      # ── Code signing + notarization (Developer ID). Requires the 7 repo secrets
+      # from human-task.md. Signs the binary in place so the tarball below carries
+      # the signed + notarized Mach-O.
+      - name: Import Developer ID cert into a temporary keychain
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+        run: |
+          echo "$MACOS_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PWD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PWD" build.keychain
+          security import cert.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PWD" build.keychain
+          rm cert.p12
+
+      - name: Codesign (Developer ID, hardened runtime)
+        env:
+          IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: |
+          BIN="target/aarch64-apple-darwin/release/entheai"
+          APP="dist/entheai.app"
+          
+          # Sign bare CLI binary
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" "$BIN"
+          codesign --verify --strict --verbose=2 "$BIN"
+
+          # Sign entheai.app bundle (including nested binaries)
+          if [ -d "$APP" ]; then
+            codesign --force --options runtime --timestamp --deep --sign "$IDENTITY" "$APP"
+            codesign --verify --strict --verbose=2 "$APP"
+          fi
+
+      - name: Notarize + Staple entheai.app
+        env:
+          NOTARY_KEY: ${{ secrets.NOTARY_KEY }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          echo "$NOTARY_KEY" | base64 --decode > AuthKey.p8
+          
+          # Notarize entheai.app bundle
+          APP="dist/entheai.app"
+          if [ -d "$APP" ]; then
+            ditto -c -k --keepParent "$APP" dist/entheai-app-notarize.zip
+            xcrun notarytool submit dist/entheai-app-notarize.zip \
+              --key AuthKey.p8 --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER_ID" --wait
+            rm -f dist/entheai-app-notarize.zip
+
+            # Staple notarization ticket to the app bundle
+            xcrun stapler staple "$APP"
+
+            # Re-create final signed + stapled zip archive
+            ( cd dist && ditto -c -k --keepParent entheai.app entheai-app-macos-arm64.zip )
+          fi
+
+          rm -f AuthKey.p8
+
+      - name: Package release artifacts
+        run: |
+          BIN="target/aarch64-apple-darwin/release/entheai"
+          test -f "$BIN" || { echo "binary not found at $BIN"; exit 1; }
+          tar -czf entheai-macos-arm64.tar.gz -C "$(dirname "$BIN")" entheai
+          shasum -a 256 entheai-macos-arm64.tar.gz | tee entheai-macos-arm64.tar.gz.sha256
+
+          if [ -f "dist/entheai-app-macos-arm64.zip" ]; then
+            shasum -a 256 dist/entheai-app-macos-arm64.zip | tee dist/entheai-app-macos-arm64.zip.sha256
+          fi
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            entheai-macos-arm64.tar.gz
+            entheai-macos-arm64.tar.gz.sha256
+            dist/entheai-app-macos-arm64.zip
+            dist/entheai-app-macos-arm64.zip.sha256
+          generate_release_notes: true
