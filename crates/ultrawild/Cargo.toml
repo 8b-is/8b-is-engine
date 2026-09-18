@@ -1,0 +1,8 @@
+[package]
+name = "ultrawild"
+version = "0.1.0"
+edition = "2024"
+description = "ultra-wild rust performance tricks & demoscene bit hacks — the macro layer"
+license = "MIT"
+
+[dependencies]
