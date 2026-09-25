@@ -38,6 +38,7 @@
 - [quick-start — local dev](#quick-start--local-dev)
 - [host system requirements](#host-system-requirements)
 - [the client stack — CSS + HTML + WASM](docs/client-ui.md)
+- [Aye world renderer — proposed privacy, shared reflections, and upgrade boundaries](docs/aye-world-renderer.md)
 - [GAIA — the world-memory](docs/gaia-world-memory.md)
 - [ultra-cogniM8 — the cognitive substrate, the two memories, the deities](docs/ultra-cogniM8.md)
 - [layer 1 — content creation, ideation → mid-pipeline](docs/first-layer-content-creation.md)
